@@ -49,7 +49,7 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     }
 
     // load image curve degree
-    degree_ = yaml["curve_degree"].as<int>();
+    // degree_ = yaml["curve_degree"].as<int>();
 
     // load lidar-camera extrinsic
     loadLidar2CameraExtrinsic(yaml);
