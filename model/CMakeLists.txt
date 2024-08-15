@@ -6,10 +6,11 @@ include_directories(include)
 # add_definitions(-DMAUNAL_DIFF)
 
 add_library(curveModel_lib SHARED
-    src/curve_factor.cpp
     src/curve_modeling.cpp
 )
-target_link_libraries(curveModel_lib ${CERES_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp)
+target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp)
+
+enable_testing()
 
 add_executable(test test.cpp)
-target_link_libraries(test curveModel_lib ${OpenCV_LIBS})
+target_link_libraries(test curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${PCL_LIBRARIES} pthread)

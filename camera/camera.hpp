@@ -100,10 +100,12 @@ public:
     }
 
     /// @brief  project a point from 3D to 2D using internal parameters
-    void spaceToPlane(const Eigen::Vector3d &P, Eigen::Vector2d &p) {
-        p(0) = fx_ * P(0) / P(2) + cx_;
-        p(1) = fy_ * P(1) / P(2) + cy_;
+    template <typename T>
+    void spaceToPlane(const Eigen::Matrix<T, 3, 1> &P, Eigen::Matrix<T, 2, 1> &p) const {
+        p(0) = T(fx_) * P(0) / P(2) + T(cx_);
+        p(1) = T(fy_) * P(1) / P(2) + T(cy_);
     }
+
 
     /// @brief  distortion to input point
     void distortion(const Eigen::Vector2d &p_u, Eigen::Vector2d& d_u) {

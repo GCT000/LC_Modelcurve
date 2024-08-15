@@ -16,6 +16,7 @@
 DEFINE_string(input_image, "/home/zyp/Lidar/LC-CurveModel/simulation/data/image.png", "输入图像");
 DEFINE_bool(visualize, false, "是否可视化");
 DEFINE_bool(debug, false, "是否输出调试信息");
+DEFINE_bool(resize, false, "是否调整图像大小");
 
 int main(int argc, char **argv)
 {
@@ -27,7 +28,10 @@ int main(int argc, char **argv)
     std::string input_image = FLAGS_input_image;
 
     auto curve = std::make_shared<Curve>(FLAGS_visualize);
-    curve->curveDetection(cv::imread(input_image));
+    cv::Mat image = cv::imread(input_image);
+    if (FLAGS_resize)   cv::resize(image, image, cv::Size(1280, 720), 0, 0, cv::INTER_LINEAR);
+    curve->curveDetection(image);
+    // curve->featuresDetection(image);
 
     std::vector<std::vector<cv::Point>> points = curve->getCurveLines();
 

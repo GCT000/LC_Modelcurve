@@ -11,6 +11,7 @@
 #include "camera.hpp"
 #include "curve.hpp"
 #include "output.hpp"
+#include "loadPCD.hpp"
 
 #include <iostream>
 #include <memory>
@@ -29,6 +30,7 @@ public:
 
     /// @brief  load lidar points from file
     void loadLidarPoints(const std::string &lidar_points_file);
+    void loadLidarPoints(const LoadPCD &load_pcd);
 
     /// @brief  load camera from file
     void loadCamera(const YAML::Node &yaml, const std::string &yaml_file);
@@ -40,7 +42,7 @@ public:
     void lidarPreprocessing();
     
     /// @brief  fitting 3D-curve-line with input lidar points
-    bool curveLidarFitting();
+    void curveLidarFitting();
 
     /// @brief  residual testing
     bool lineResidualTesting();
@@ -51,6 +53,9 @@ public:
     /// @brief  generate points based on curve parameters
     void generateCurvePoints();
 
+    /// @brief  generate curve points on image
+    void generateCurveImagePoints(const std::string& selected_points);
+    
     /// @brief  image curve detection
     void curveImageDetection(bool visualize = false);
 
@@ -63,8 +68,14 @@ public:
     /// @brief  project 3D points to image
     void project3DPointsToImage(const std::vector<Eigen::Vector3d> &points);
 
+    /// @brief  find n-closest points
+    std::pair<double, double> findClosestPoints(const Eigen::Vector3d& lidarPoint, const std::vector<cv::Point>& img_points);
+
+    /// @brief  optimization
+    void optimization();
+    
     /// @brief  optimization 3D-curve-points
-    void optimization3DPoints();
+    void optimization3DPoints(std::vector<std::pair<double, double>> lines);
 
 private:
     std::vector<Eigen::Vector3d> lidar_points_;
@@ -80,7 +91,24 @@ private:
 
     std::vector<Eigen::Vector3d> curve_points_;
     std::vector<std::vector<cv::Point>> curve_lines_;
+    std::vector<cv::Point> img_points_;
     Eigen::VectorXd curve_param_;
+};
+
+/// @brief  transformation struct
+struct Trans{
+    Eigen::Matrix3d R;
+    Eigen::Vector3d t;
+
+    Trans() = default;
+
+    Trans(const Eigen::Matrix3d& _R, const Eigen::Vector3d& _t) 
+        : R(_R), t(_t) {}
+
+    void inverse() {
+        R.transposeInPlace();
+        t = -R * t;
+    }
 };
 
 #endif

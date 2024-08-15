@@ -14,6 +14,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <opencv2/features2d/features2d.hpp>
 #include <glog/logging.h>
 
 class Curve
@@ -39,17 +40,22 @@ public:
         if (visualize_)
         {
             cv::imshow("canny", imgPre);
+            cv::imwrite("canny.png", imgPre);
             cv::waitKey(0);
         }
 
+        // dilate
+        cv::Mat dilated;
+        cv::dilate(imgPre, dilated, cv::Mat(), cv::Point(-1, -1), 2);
+
         // find contours
         std::vector<std::vector<cv::Point>> contours;
-        cv::findContours(imgPre, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
+        cv::findContours(dilated, contours, cv::RETR_EXTERNAL, cv::CHAIN_APPROX_NONE);
         LOG(INFO) << "contours size: " << contours.size() << std::endl;
         if (visualize_)
         {
-            cv::drawContours(imgPre, contours, -1, cv::Scalar(222, 244, 255), 2);
-            cv::imshow("contours", imgPre);
+            cv::drawContours(dilated, contours, -1, cv::Scalar(222, 244, 255), 2);
+            cv::imshow("contours", dilated);
             cv::waitKey(0);
         }
 
@@ -64,6 +70,21 @@ public:
         }
 
         LOG(WARNING) << "detect " << curve_lines_.size() << " curves." << std::endl;
+    }
+
+    [[maybe_unused]]void featuresDetection(const cv::Mat &image)
+    {
+        auto orb = cv::ORB::create(500, 1.2f, 8, 31, 0, 2, cv::ORB::HARRIS_SCORE, 31, 20);
+        std::vector<cv::KeyPoint> keypoints;
+        cv::Mat descriptors;
+        orb->detectAndCompute(image, cv::Mat(), keypoints, descriptors);
+
+        cv::Mat img_keypoints;
+        cv::drawKeypoints(image, keypoints, img_keypoints);
+        if (visualize_) {
+            cv::imshow("keypoints", img_keypoints);
+            cv::waitKey(0);            
+        }
     }
 
     /// @brief  curve judgment

@@ -32,9 +32,17 @@ include_directories(${Glog_INCLUDE_DIRS})
 find_package(gflags REQUIRED)
 include_directories(${gflags_INCLUDE_DIRS})
 
+# gtest
+find_package(GTest REQUIRED)
+include_directories(${GTEST_INCLUDE_DIRS})
+
 # opencv 4
 find_package(OpenCV 4 REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+
+# pcl
+find_package(PCL REQUIRED)
+include_directories(${PCL_INCLUDE_DIRS})
 
 include_directories(camera)
 include_directories(fileio)
