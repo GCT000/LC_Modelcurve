@@ -10,14 +10,14 @@ import sensor_msgs.point_cloud2 as pc2
 bridge = CvBridge()
 
 # Open the bag file
-bag = rosbag.Bag('/home/zyp/DATA/0828/test1.bag')
+bag = rosbag.Bag('/home/zyp/transmission_data/0912/test0912_3.bag')
 
 # Get the actual start time of the bag
 bag_start_time = bag.get_start_time()
 
 # Define the desired time range
-start_time = bag_start_time + 2.0  # 1 second after the start time
-end_time = bag_start_time + 10.0    # 9 seconds after the start time
+start_time = 0.0 + bag_start_time  # the start time
+end_time = 26.0 + bag_start_time    # the start time
 
 # Initialize variables
 point_clouds = []

@@ -39,7 +39,8 @@ std::vector<PointType> calculateBSpline(const std::vector<PointType>& controlPoi
     }
 
     std::vector<PointType> splinePoints;
-    for (int j = numPoints / 10; j < numPoints; ++j) {
+    // for (int j = numPoints / 10; j < numPoints; ++j) {
+    for (int j = 10; j < numPoints; ++j) {
         double t = j / (double)(numPoints - 1);
         double x = 0.0, y = 0.0;
         for (int i = 0; i <= n; ++i) {
@@ -47,10 +48,13 @@ std::vector<PointType> calculateBSpline(const std::vector<PointType>& controlPoi
             x += basis * controlPoints[i].x;
             y += basis * controlPoints[i].y;
         }
-        if (y > controlPoints[n - 1].y && y < controlPoints[0].y) {
-            splinePoints.push_back(PointType(std::round(x), std::round(y))); 
+        if (y != 0) {
+            // splinePoints.push_back(PointType(std::round(x), std::round(y)));
+            splinePoints.push_back(PointType(x, y)); 
         }         
     }
+
+    LOG(INFO) << "Generate " << splinePoints.size() << " spline points.\n";
     return splinePoints;
 }
 
@@ -59,14 +63,14 @@ template<typename PointType>
 std::vector<PointType> samplePointsBetween(PointType p1, PointType p2, int num_samples) {
     std::vector<PointType> sampled_points;
 
-    // 确保num_samples至少为2，这样才能包括p1和p2
+    // num_samples >= 2
     num_samples = std::max(2, num_samples);
 
-    // 计算从p1到p2的向量
+    // p1 -> p2
     double dx = (p2.x - p1.x) / static_cast<double>(num_samples - 1);
     double dy = (p2.y - p1.y) / static_cast<double>(num_samples - 1);
 
-    // 生成均匀采样的点
+    // generate points
     for (int i = 0; i < num_samples; ++i) {
         int x = static_cast<int>(p1.x + i * dx);
         int y = static_cast<int>(p1.y + i * dy);

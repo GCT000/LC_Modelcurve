@@ -3,7 +3,7 @@ import sys
 
 # 初始化变量
 points = []
-file_name = 'points.txt'
+file_name = 'points1.txt'
 
 def on_mouse(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
@@ -21,7 +21,7 @@ def save_points_to_file():
 # 载入图像并缩小尺寸
 image_path = sys.argv[1]
 image = cv2.imread(image_path)
-image = cv2.resize(image, (image.shape[1] // 2, image.shape[0] // 2))
+image = cv2.resize(image, (image.shape[1], image.shape[0]))
 
 cv2.imshow('image', image)
 cv2.setMouseCallback('image', on_mouse)

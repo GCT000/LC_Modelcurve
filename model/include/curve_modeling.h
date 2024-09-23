@@ -12,6 +12,8 @@
 #include "curve.hpp"
 #include "output.hpp"
 #include "loadPCD.hpp"
+#include "ex_optimization.h"
+#include "matcher.h"
 
 #include <iostream>
 #include <memory>
@@ -31,6 +33,9 @@ public:
     /// @brief  load lidar points from file
     void loadLidarPoints(const std::string &lidar_points_file);
     void loadLidarPoints(const LoadPCD &load_pcd);
+
+    /// @brief  merge lidar points when line number bigger than 1
+    void mergeLidarPoints(const std::vector<Eigen::Vector3d>& lidar_points);
 
     /// @brief  load camera from file
     void loadCamera(const YAML::Node &yaml, const std::string &yaml_file);
@@ -68,18 +73,24 @@ public:
     /// @brief  project 3D points to image
     void project3DPointsToImage(const std::vector<Eigen::Vector3d> &points);
 
-    /// @brief  find n-closest points
-    std::pair<double, double> findClosestPoints(const Eigen::Vector3d& lidarPoint, const std::vector<cv::Point>& img_points);
-
     /// @brief  optimization
     void optimization();
     
-    /// @brief  optimization 3D-curve-points
-    void optimization3DPoints(std::vector<std::pair<double, double>> lines);
+    /// @brief  optimize 3D-curve-points
+    void optimization3DPoints(const P2LMatchResult& lines);
+    void optimization3DPoints(const P2PMatchResult& points);
+
+    /// @brief  optimize ex
+    void optimizationEx();
+
+    /// @brief  debug
+    void lidarP2img();
 
 private:
     std::vector<Eigen::Vector3d> lidar_points_;
     std::shared_ptr<Camera> cam_;
+    std::shared_ptr<Matcher> matcher_;
+    bool merge_;
     Eigen::Vector3d end_point_;
     cv::Mat img_;
     Eigen::Matrix3d R_c_l_;
@@ -91,8 +102,12 @@ private:
 
     std::vector<Eigen::Vector3d> curve_points_;
     std::vector<std::vector<cv::Point>> curve_lines_;
-    std::vector<cv::Point> img_points_;
+    std::vector<cv::Point2d> img_points_;
+    std::vector<cv::Point2d> ori_lidar2img_points_;
+    std::vector<double> x_samples_;
     Eigen::VectorXd curve_param_;
+
+    std::shared_ptr<ExOptimization> ex_optimization_;
 };
 
 /// @brief  transformation struct

@@ -11,6 +11,7 @@ void ExOptimization::loadLidarPoints(const std::string& lidar_points_file)
     }
 
     std::string line;
+    // load selected lidar points
     while (std::getline(input, line))
     {
         std::istringstream iss(line);
@@ -38,6 +39,7 @@ void ExOptimization::loadImgPoints(const std::string& img_ref_points_file)
     }
     std::string line;
 
+    // load selected image points
     while (std::getline(file, line))
     {
         std::istringstream iss(line);
@@ -53,6 +55,7 @@ void ExOptimization::loadImgPoints(const std::string& img_ref_points_file)
     LOG(INFO) << "Load " << img_ref_points_.size() << " image reference points.\n";
 }
 
+/// @brief ex optimization factor
 struct ExFactor {
     ExFactor(const Eigen::Vector3d& lidar_point, const cv::Point& img_point, std::shared_ptr<Camera> cam)
         : lidar_point_(lidar_point), img_point_(img_point), cam_(cam) {}

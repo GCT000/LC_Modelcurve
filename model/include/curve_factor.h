@@ -15,7 +15,7 @@
 class CurveFactor {
 public:
     CurveFactor(const std::pair<double, double>& _line, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam) 
-        : line(_line), x(_x), Tcl(_Tcl), cam(_cam) {}
+        : line(_line), x(_x), Tcl(_Tcl), cam(_cam), sqrt_info(sqrt(_x)) {}
 
     template <typename T>
     bool operator()(const T* const a, const T* const b, const T* const c, const T* const k, const T* const m, T* residual) const {
@@ -26,7 +26,7 @@ public:
         cam->spaceToPlane(pCam, pImg);
 
         T lineNorm = ceres::sqrt(T(line.first * line.first) + T(1.0));
-        residual[0] = ceres::abs(line.first * pImg(0) - pImg(1) + T(line.second)) / lineNorm;
+        residual[0] = T(sqrt_info) * ceres::abs(line.first * pImg(0) - pImg(1) + T(line.second)) / lineNorm;
         return true;
     }
 
@@ -40,6 +40,7 @@ private:
     double x;
     Trans Tcl;
     std::shared_ptr<Camera> cam;
+    double sqrt_info;
 };
 
 #endif
