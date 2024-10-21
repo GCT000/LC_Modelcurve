@@ -46,6 +46,7 @@ int main(int argc, char **argv)
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     input_pcd(FLAGS_input_pcd, cloud);
     curve_modeling.loadLidarPoints(input_pcd);
+    // curve_modeling.optimizationEx();
     
     curve_modeling.curveLidarFitting();
     curve_modeling.optimization();

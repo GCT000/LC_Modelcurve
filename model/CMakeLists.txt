@@ -9,6 +9,7 @@ add_library(curveModel_lib SHARED
     src/curve_modeling.cpp
     src/ex_optimization.cpp
     src/matcher.cpp
+    src/kdtree.cpp
 )
 target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp)
 

@@ -40,7 +40,7 @@ std::vector<PointType> calculateBSpline(const std::vector<PointType>& controlPoi
 
     std::vector<PointType> splinePoints;
     // for (int j = numPoints / 10; j < numPoints; ++j) {
-    for (int j = 10; j < numPoints; ++j) {
+    for (int j = numPoints / 15; j < numPoints; ++j) {
         double t = j / (double)(numPoints - 1);
         double x = 0.0, y = 0.0;
         for (int i = 0; i <= n; ++i) {

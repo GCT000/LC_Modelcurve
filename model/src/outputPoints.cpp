@@ -3,6 +3,7 @@
 #include <fstream>
 #include <random>
 #include <gflags/gflags.h>
+#include <glog/logging.h>
 
 DEFINE_string(lidar_points, "/home/zyp/Lidar/LC-CurveModel/build/output_lidar_points.txt", "要添加的lidar点");
 DEFINE_string(input_pcd, "/home/zyp/HD2/DATA/Transmisson/0912/test5/extracted_points.pcd", "输入的点云");
@@ -58,9 +59,16 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr generateRandomPoints(const pcl::PointCloud<p
     return random_points;
 }
 
-int main() {
+int main(int argc, char** argv) {
+    google::ParseCommandLineFlags(&argc, &argv, true);
+    google::InitGoogleLogging(argv[0]);
+    // testing::InitGoogleTest(&argc, argv);
+    // RUN_ALL_TESTS();
+    FLAGS_stderrthreshold = google::INFO;
+    FLAGS_colorlogtostderr = true;
     // 1. 读取 extracted.pcd 文件
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    std::cout << "Loading pcd file: " << FLAGS_input_pcd << std::endl;
     if (pcl::io::loadPCDFile<pcl::PointXYZ>(FLAGS_input_pcd, *cloud) == -1) {
         PCL_ERROR("Couldn't read extracted.pcd file \n");
         return (-1);

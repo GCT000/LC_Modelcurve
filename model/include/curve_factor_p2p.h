@@ -13,10 +13,21 @@
 #include <opencv2/core/types.hpp>
 #include "camera.hpp"
 
+enum class WeightType {
+    Equal = 1,
+    Distance = 2
+};
+
 class CurveP2PFactor {
 public:
-    CurveP2PFactor(const cv::Point2d& _img_p, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam) 
-        : img_p(_img_p), x(_x), Tcl(_Tcl), cam(_cam), sqrt_info(sqrt(_x)) {}
+    CurveP2PFactor(const cv::Point2d& _img_p, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam, const WeightType& _weight_type = WeightType::Equal) 
+        : img_p(_img_p), x(_x), Tcl(_Tcl), cam(_cam), weight_type(_weight_type) {
+        if (weight_type == WeightType::Distance) {
+            sqrt_info = sqrt(_x);
+        } else {
+            sqrt_info = 1.0;
+        }
+    }
 
     template <typename T>
     bool operator()(const T* const a, const T* const b, const T* const c, const T* const k, const T* const m, T* residual) const {
@@ -31,9 +42,9 @@ public:
         return true;
     }
 
-    static ceres::CostFunction* Create(const cv::Point2d& _img_p, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam) {
+    static ceres::CostFunction* Create(const cv::Point2d& _img_p, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam, const WeightType& _weight_type = WeightType::Equal) {
         return (new ceres::AutoDiffCostFunction<CurveP2PFactor, 2, 1, 1, 1, 1, 1>(
-            new CurveP2PFactor(_img_p, _x, _Tcl, _cam)));
+            new CurveP2PFactor(_img_p, _x, _Tcl, _cam, _weight_type)));
     }
 
 private:
@@ -42,6 +53,7 @@ private:
     Trans Tcl;
     std::shared_ptr<Camera> cam;
     double sqrt_info;
+    WeightType weight_type;
 };
 
 #endif

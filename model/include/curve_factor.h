@@ -15,7 +15,7 @@
 class CurveFactor {
 public:
     CurveFactor(const std::pair<double, double>& _line, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam) 
-        : line(_line), x(_x), Tcl(_Tcl), cam(_cam), sqrt_info(sqrt(_x)) {}
+        : line(_line), x(_x), Tcl(_Tcl), cam(_cam), sqrt_info(sqrt(1)) {}
 
     template <typename T>
     bool operator()(const T* const a, const T* const b, const T* const c, const T* const k, const T* const m, T* residual) const {

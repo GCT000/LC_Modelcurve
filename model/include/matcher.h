@@ -12,6 +12,7 @@
 #include <variant>
 #include <glog/logging.h>
 #include <opencv2/core/types.hpp>
+#include "kdtree.h"
 
 typedef std::vector<cv::Point2d> P2PMatchResult;
 typedef std::vector<std::pair<double, double>> P2LMatchResult;
@@ -37,14 +38,15 @@ public:
     /// @brief  point to point match
     P2PMatchResult p2pMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
 
-    /// @brief  resample input points to source points' size
-    std::vector<cv::Point2d> resample(const std::vector<cv::Point2d>& vp1, const std::vector<cv::Point2d>& vp2);
-
     /// @brief  point to line match
     P2LMatchResult p2lMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
 
+    /// @brief  update match
+    P2PMatchResult updateMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
+
 private:
     MatcherType matcher_type_;
+    std::shared_ptr<KdTree> kd_tree_;
 };
 
 

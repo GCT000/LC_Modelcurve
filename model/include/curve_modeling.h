@@ -49,36 +49,27 @@ public:
     /// @brief  fitting 3D-curve-line with input lidar points
     void curveLidarFitting();
 
-    /// @brief  residual testing
-    bool lineResidualTesting();
-
-    /// @brief  residual testing(image curve fitting)
-    bool lineResidualTesting(const std::vector<cv::Point> &points, const Eigen::VectorXd &curve_param);
-
     /// @brief  generate points based on curve parameters
     void generateCurvePoints();
 
     /// @brief  generate curve points on image
     void generateCurveImagePoints(const std::string& selected_points);
-    
-    /// @brief  image curve detection
-    void curveImageDetection(bool visualize = false);
 
-    /// @brief  fitting 2D-curve-line with image curve points
-    Eigen::VectorXd curveImageFitting(const std::vector<cv::Point> &points);
+    /// @brief  generate line points on image
+    void generateLineImagePoints(const cv::Point2d &start, const cv::Point2d &end);
 
     /// @brief  for debug visualization
     void visualization();
-
-    /// @brief  project 3D points to image
-    void project3DPointsToImage(const std::vector<Eigen::Vector3d> &points);
 
     /// @brief  optimization
     void optimization();
     
     /// @brief  optimize 3D-curve-points
-    void optimization3DPoints(const P2LMatchResult& lines);
-    void optimization3DPoints(const P2PMatchResult& points);
+    void optimization3DCurve(const P2LMatchResult& lines);
+    void optimization3DCurve(const P2PMatchResult& points, int time = 1);
+
+    /// @brief  update match and re-optimization
+    void updateMatchAndReOptimization();
 
     /// @brief  optimize ex
     void optimizationEx();
@@ -91,21 +82,19 @@ private:
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
     bool merge_;
-    Eigen::Vector3d end_point_;
+    // Eigen::Vector3d end_point_;
+    double x_interval_start_;
+    double x_interval_end_;
+    double x_interval_sample_start_;
     cv::Mat img_;
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_;
-    int degree_;
 
     double plane_param_[1][2];
     double mesh_param_[1][3];
 
-    std::vector<Eigen::Vector3d> curve_points_;
-    std::vector<std::vector<cv::Point>> curve_lines_;
     std::vector<cv::Point2d> img_points_;
     std::vector<cv::Point2d> ori_lidar2img_points_;
-    std::vector<double> x_samples_;
-    Eigen::VectorXd curve_param_;
 
     std::shared_ptr<ExOptimization> ex_optimization_;
 };
