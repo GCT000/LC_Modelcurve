@@ -9,11 +9,18 @@
 #define CURVE_MODELING_H
 
 #include "camera.hpp"
-#include "curve.hpp"
 #include "output.hpp"
 #include "loadPCD.hpp"
 #include "ex_optimization.h"
 #include "matcher.h"
+#include "parabola.h"
+#include "catenary.h"
+#include "base_type.h"
+
+#include <opencv2/core/core.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/features2d/features2d.hpp>
 
 #include <iostream>
 #include <memory>
@@ -63,13 +70,9 @@ public:
 
     /// @brief  optimization
     void optimization();
-    
-    /// @brief  optimize 3D-curve-points
-    void optimization3DCurve(const P2LMatchResult& lines);
-    void optimization3DCurve(const P2PMatchResult& points, int time = 1);
 
     /// @brief  update match and re-optimization
-    void updateMatchAndReOptimization();
+    void updateMatchAndReOptimization(const OptimizationInput& input);
 
     /// @brief  optimize ex
     void optimizationEx();
@@ -90,29 +93,12 @@ private:
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_;
 
-    double plane_param_[1][2];
-    double mesh_param_[1][3];
-
     std::vector<cv::Point2d> img_points_;
     std::vector<cv::Point2d> ori_lidar2img_points_;
 
     std::shared_ptr<ExOptimization> ex_optimization_;
-};
 
-/// @brief  transformation struct
-struct Trans{
-    Eigen::Matrix3d R;
-    Eigen::Vector3d t;
-
-    Trans() = default;
-
-    Trans(const Eigen::Matrix3d& _R, const Eigen::Vector3d& _t) 
-        : R(_R), t(_t) {}
-
-    void inverse() {
-        R.transposeInPlace();
-        t = -R * t;
-    }
+    std::shared_ptr<TransmissionModel> transmission_model_;
 };
 
 #endif

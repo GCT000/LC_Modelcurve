@@ -36,6 +36,9 @@ matcher_type: 1
 b_spline_num: 400
 sample: 0.2
 
+# transmission model
+transmission_model: 0
+
 # lidar-camera extrinsic
 T_cam_lidar:
   rows: 4

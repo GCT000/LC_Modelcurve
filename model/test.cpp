@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     curve_modeling.loadLidarPoints(input_pcd);
     // curve_modeling.optimizationEx();
     
-    curve_modeling.curveLidarFitting();
+    curve_modeling.lidarPreprocessing();
     curve_modeling.optimization();
     if (FLAGS_visualize) {
         curve_modeling.visualization();

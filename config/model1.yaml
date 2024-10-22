@@ -26,10 +26,13 @@ ex_optimization: 0
 ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/tools/lidar_ref.txt"
 ref_image_points: "/home/zyp/Lidar/LC-CurveModel/tools/points_ref.txt"
 
-# matcher config
-matcher_type: 2
+# matcher config(1: p2l  2: p2p)
+matcher_type: 1
 b_spline_num: 800
 sample: 0.2
+
+# transmission model(0: parabola  1: catenary)
+transmission_model: 1
 
 # lidar-camera extrinsic
 T_cam_lidar:
