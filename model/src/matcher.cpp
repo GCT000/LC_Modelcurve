@@ -24,7 +24,7 @@ Matcher::Matcher(const MatcherConfig& config) {
 }
 
 Matcher::MatchResult Matcher::match(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source) {
-    kd_tree_ = std::make_shared<KdTree>();
+    kd_tree_ = std::make_unique<KdTree>();
     kd_tree_->build(source);
     switch (matcher_type_) {
         case MatcherType::P2P:
@@ -38,6 +38,7 @@ Matcher::MatchResult Matcher::match(const std::vector<cv::Point2d>& input, const
 
 P2PMatchResult Matcher::p2pMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source) {
     P2PMatchResult result;
+    result.reserve(input.size());
     // Ensure that points in the source are not matched repeatedly
     std::vector<int> visited(source.size(), 0);
     std::fstream output_points("match.txt", std::ios::out);
@@ -59,6 +60,7 @@ P2PMatchResult Matcher::p2pMatch(const std::vector<cv::Point2d>& input, const st
 
 P2LMatchResult Matcher::p2lMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source) {
     P2LMatchResult result;
+    result.reserve(input.size());
 
     for (const cv::Point2d& ip : input) {
         std::vector<int> closest_idx;

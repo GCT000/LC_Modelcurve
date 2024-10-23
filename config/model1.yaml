@@ -19,6 +19,7 @@ x_interval:
 image_path: "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_13.png"
 
 # points selected
+# Note: please choose points from far away to near
 selected_points: "/home/zyp/Lidar/LC-CurveModel/tools/points.txt"
 
 # ex optimization

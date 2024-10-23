@@ -51,7 +51,7 @@ public:
 
 private:
     MatcherType matcher_type_;
-    std::shared_ptr<KdTree> kd_tree_;
+    std::unique_ptr<KdTree> kd_tree_;
 };
 
 

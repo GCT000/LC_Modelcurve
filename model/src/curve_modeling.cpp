@@ -128,7 +128,7 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_file)
         std::istringstream iss(line);
         Eigen::Vector3d point;
         iss >> point(0) >> point(1) >> point(2);
-        lidar_points_.push_back(point);
+        lidar_points_.emplace_back(point);
     }
 }
 
@@ -281,13 +281,12 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
     LOG(INFO) << "bSplineNum here: " << bSplineNum << "\n";
     temp_points = calculateBSpline(img_points, bSplineNum);
     // cam_->undistortPoints(temp_points, temp_un_points);
-    img_points_.insert(img_points_.end(), temp_points.begin(), temp_points.end());
 
     // re-interpolate points
     std::vector<cv::Point2d> interpolated_points;
-    for (size_t i = 0; i < img_points_.size() - 1; ++i) {
-        const cv::Point2d& p1 = img_points_[i];
-        const cv::Point2d& p2 = img_points_[i + 1];
+    for (size_t i = 0; i < temp_points.size() - 1; ++i) {
+        const cv::Point2d& p1 = temp_points[i];
+        const cv::Point2d& p2 = temp_points[i + 1];
         
         double distance = cv::norm(p2 - p1);
         int num_points = std::ceil(distance / 0.5);
@@ -299,7 +298,7 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
         }
     }
     // add the last point
-    interpolated_points.push_back(img_points_.back());
+    interpolated_points.push_back(temp_points.back());
     
     img_points_.clear();
     img_points_ = std::move(interpolated_points);
