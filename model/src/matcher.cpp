@@ -1,7 +1,7 @@
 #include "matcher.h"
 #include <unordered_map>
 #include <Eigen/Dense>
-
+#include <fstream>
 [[maybe_unused]] std::vector<cv::Point2d> interpolate(const cv::Point2d& p1, const cv::Point2d& p2, int num) {
     // Edge case: if num == 0, return an empty vector
     if (num <= 0) {
@@ -38,10 +38,20 @@ Matcher::MatchResult Matcher::match(const std::vector<cv::Point2d>& input, const
 
 P2PMatchResult Matcher::p2pMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source) {
     P2PMatchResult result;
+    // Ensure that points in the source are not matched repeatedly
+    std::vector<int> visited(source.size(), 0);
+    std::fstream output_points("match.txt", std::ios::out);
     for (const cv::Point2d& ip : input) {
         std::vector<int> closest_idx;
-        kd_tree_->getClosestPoint(ip, closest_idx, 1);
-        result.emplace_back(source[closest_idx[0]].x, source[closest_idx[0]].y);
+        kd_tree_->getClosestPoint(ip, closest_idx, 10);
+        for (int idx : closest_idx) {
+            if (visited[idx] == 0) {
+                visited[idx] = 1;
+                result.emplace_back(source[idx].x, source[idx].y);
+                output_points << "Match result: " << ip.x << " " << ip.y << " -- " << source[idx].x << " " << source[idx].y << "\n";
+                break;
+            }
+        }
     }
 
     return result;

@@ -44,6 +44,11 @@ public:
     /// @brief  update match
     P2PMatchResult updateMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
 
+    /// @brief  get match type
+    MatcherType matcher_type() const {
+        return matcher_type_;
+    }
+
 private:
     MatcherType matcher_type_;
     std::shared_ptr<KdTree> kd_tree_;

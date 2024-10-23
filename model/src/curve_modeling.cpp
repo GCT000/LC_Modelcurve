@@ -105,6 +105,13 @@ CurveModeling::~CurveModeling()
     cam_.reset();
 }
 
+Eigen::Vector2d CurveModeling::lidar2pixel(const Eigen::Vector3d& p_l) {
+    Eigen::Vector3d p_c = R_c_l_ * p_l + t_c_l_;
+    Eigen::Vector2d p_img;
+    cam_->spaceToPlane(p_c, p_img);
+    return p_img;
+}
+
 void CurveModeling::loadLidarPoints(const std::string &lidar_points_file)
 {
 
@@ -235,15 +242,11 @@ void CurveModeling::generateCurvePoints()
     for (double start = x_interval_start_; start <= x_interval_end_; start += sample) {
         xSamples.push_back(start);
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(start);
-
-        Eigen::Vector3d p_c = R_c_l_ * p + t_c_l_;
-        Eigen::Vector2d p_img, undistorted_p_img;
-        cam_->spaceToPlane(p_c, p_img);
-        cam_->undistortPoints(cv::Point2d(p_img(0), p_img(1)), undistorted_p_img);
-        ori_lidar2img_points_.push_back(cv::Point2d(undistorted_p_img(0), undistorted_p_img(1)));
-        cv::circle(img, cv::Point(undistorted_p_img(0), undistorted_p_img(1)), 1, cv::Scalar(0, 0, 255), -1);
+        Eigen::Vector2d p_img = lidar2pixel(p);
+        // cam_->undistortPoints(cv::Point2d(p_img(0), p_img(1)), undistorted_p_img);
+        ori_lidar2img_points_.push_back(cv::Point2d(p_img(0), p_img(1)));
+        cv::circle(img, cv::Point(p_img(0), p_img(1)), 1, cv::Scalar(0, 0, 255), -1);
     }
-
     cv::imwrite("curve_fitting_points.jpg", img);
 }
 
@@ -277,19 +280,38 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
     std::vector<cv::Point2d> temp_points;
     LOG(INFO) << "bSplineNum here: " << bSplineNum << "\n";
     temp_points = calculateBSpline(img_points, bSplineNum);
-    cam_->undistortPoints(temp_points, img_points_);
+    // cam_->undistortPoints(temp_points, temp_un_points);
     img_points_.insert(img_points_.end(), temp_points.begin(), temp_points.end());
+
+    // re-interpolate points
+    std::vector<cv::Point2d> interpolated_points;
+    for (size_t i = 0; i < img_points_.size() - 1; ++i) {
+        const cv::Point2d& p1 = img_points_[i];
+        const cv::Point2d& p2 = img_points_[i + 1];
+        
+        double distance = cv::norm(p2 - p1);
+        int num_points = std::ceil(distance / 0.5);
+        
+        for (int j = 0; j < num_points; ++j) {
+            double t = static_cast<double>(j) / num_points;
+            cv::Point2d new_point = p1 + t * (p2 - p1);
+            interpolated_points.push_back(new_point);
+        }
+    }
+    // add the last point
+    interpolated_points.push_back(img_points_.back());
+    
+    img_points_.clear();
+    img_points_ = std::move(interpolated_points);
 
 # if 1
     cv::Mat img = img_.clone();
-    std::fstream output_points("curve_points.txt", std::ios::out);
+    LOG(INFO) << "img_points_.size(): " << img_points_.size() << "\n";
     for (const cv::Point2d &p : img_points_)
     {
-        cv::circle(img, p, 3, cv::Scalar(0, 0, 255), -1);
-        output_points << p.x << " " << p.y << "\n";
+        cv::circle(img, p, 1, cv::Scalar(0, 0, 255), -1);
     }
     cv::imwrite("curve_points.jpg", img);
-    output_points.close();
 #endif
 }
 
@@ -325,10 +347,8 @@ void CurveModeling::visualization()
     for (double ix = x_interval_sample_start_; ix <= x_interval_end_; ix += sample) {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(ix);
         output_points << p(0) << " " << p(1) << " " << p(2) << "\n";
-        Eigen::Vector3d p_c = R_c_l_ * p + t_c_l_;
-        Eigen::Vector2d p_img;
-        cam_->spaceToPlane(p_c, p_img);
-        cam_->undistortPoints(cv::Point2d(p_img(0), p_img(1)), p_img);
+        Eigen::Vector2d p_img = lidar2pixel(p);
+        // cam_->undistortPoints(cv::Point2d(p_img(0), p_img(1)), p_img);
         cv::circle(projection2, cv::Point(p_img(0), p_img(1)), 1, cv::Scalar(0, 0, 255), -1);
     }
     cv::imwrite("projection_1.jpg", projection2);
@@ -345,7 +365,7 @@ void CurveModeling::optimization() {
     }, result);
 
     // update match and re-optimization
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 12; i++) {
         updateMatchAndReOptimization(input);
     }
 }
@@ -356,9 +376,7 @@ void CurveModeling::updateMatchAndReOptimization(const OptimizationInput& input)
     // generate curve points using new mesh_param_ and plane_param_
     for (const double& ix : xSamples) {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(ix);
-        Eigen::Vector3d p_c = R_c_l_ * p + t_c_l_;
-        Eigen::Vector2d p_img;
-        cam_->spaceToPlane(p_c, p_img);
+        Eigen::Vector2d p_img = lidar2pixel(p);
         ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
     }
 
@@ -374,9 +392,7 @@ void CurveModeling::optimizationEx()
     cv::Mat img_1 = img_.clone();
     // projection before optimization
     for (const Eigen::Vector3d& lp : ex_optimization_->lidar_points_) {
-        Eigen::Vector3d p_c = R_c_l_ * lp + t_c_l_;
-        Eigen::Vector2d p_img;
-        cam_->spaceToPlane(p_c, p_img);
+        Eigen::Vector2d p_img = lidar2pixel(lp);
         cv::circle(img_1, cv::Point(p_img(0), p_img(1)), 10, cv::Scalar(0, 0, 255), -1);
     }
     ex_optimization_->optimization();
@@ -387,9 +403,7 @@ void CurveModeling::optimizationEx()
 
     // projection after optimization
     for (const Eigen::Vector3d& lp : ex_optimization_->lidar_points_) {
-        Eigen::Vector3d p_c = R_c_l_ * lp + t_c_l_;
-        Eigen::Vector2d p_img;
-        cam_->spaceToPlane(p_c, p_img);
+        Eigen::Vector2d p_img = lidar2pixel(lp);
         cv::circle(img_1, cv::Point(p_img(0), p_img(1)), 10, cv::Scalar(255, 0, 0), -1);
     }
 
@@ -399,9 +413,7 @@ void CurveModeling::optimizationEx()
 void CurveModeling::lidarP2img() {
     cv::Mat img = img_.clone();
     for (const Eigen::Vector3d& lp : lidar_points_) {
-        Eigen::Vector3d p_c = R_c_l_ * lp + t_c_l_;
-        Eigen::Vector2d p_img;
-        cam_->spaceToPlane(p_c, p_img);
+        Eigen::Vector2d p_img = lidar2pixel(lp);
         cv::circle(img, cv::Point(p_img(0), p_img(1)), 3, cv::Scalar(0, 0, 255), -1);
     }
     cv::imwrite("lidarP2img.jpg", img);

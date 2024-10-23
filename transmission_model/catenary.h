@@ -22,7 +22,7 @@ public:
 
     void optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input) override;
 
-    void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int time = 2) override;
+    void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int time = 1) override;
 
 private:
     double c_, c1_, c2_;

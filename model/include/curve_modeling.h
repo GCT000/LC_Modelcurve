@@ -40,6 +40,22 @@ public:
     /// @brief  load lidar points from file
     void loadLidarPoints(const std::string &lidar_points_file);
     void loadLidarPoints(const LoadPCD &load_pcd);
+    
+    /// @brief  lidar preprocessing
+    void lidarPreprocessing();
+
+    /// @brief  for debug visualization
+    void visualization();
+
+    /// @brief  optimization
+    void optimization();
+
+    /// @brief  optimize ex
+    void optimizationEx();
+
+private:
+    /// @brief  lidar 2 pixel
+    Eigen::Vector2d lidar2pixel(const Eigen::Vector3d& p_l);
 
     /// @brief  merge lidar points when line number bigger than 1
     void mergeLidarPoints(const std::vector<Eigen::Vector3d>& lidar_points);
@@ -49,10 +65,7 @@ public:
 
     /// @brief  load lidar2camera extrinsic Parameters
     void loadLidar2CameraExtrinsic(const YAML::Node &yaml);
-    
-    /// @brief  lidar preprocessing
-    void lidarPreprocessing();
-    
+
     /// @brief  fitting 3D-curve-line with input lidar points
     void curveLidarFitting();
 
@@ -65,17 +78,8 @@ public:
     /// @brief  generate line points on image
     void generateLineImagePoints(const cv::Point2d &start, const cv::Point2d &end);
 
-    /// @brief  for debug visualization
-    void visualization();
-
-    /// @brief  optimization
-    void optimization();
-
     /// @brief  update match and re-optimization
     void updateMatchAndReOptimization(const OptimizationInput& input);
-
-    /// @brief  optimize ex
-    void optimizationEx();
 
     /// @brief  debug
     void lidarP2img();

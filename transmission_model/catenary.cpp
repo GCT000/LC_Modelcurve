@@ -58,7 +58,7 @@ void Catenary::optimizeTransmissionModel(const P2LMatchResult& lines, const Opti
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     // options.num_threads = 8;
     
-    for (size_t i = 0; i < lines.size(); i++) {
+    for (size_t i = 0; i < lines.size(); i += 5) {
         ceres::CostFunction* cost_function = CatenaryP2LFactor::Create(lines[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
         problem.AddResidualBlock(cost_function, nullptr, &c_, &c1_, &c2_, &k_, &m_);
     }
@@ -90,7 +90,7 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult& points, const Opt
     //     problem.SetParameterBlockConstant(&m_);
     // }
 
-    for (size_t i = 0; i < points.size(); i++) {
+    for (size_t i = 0; i < points.size(); i ++) {
         ceres::CostFunction* cost_function = CatenaryP2PFactor::Create(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
         problem.AddResidualBlock(cost_function, loss_function, &c_, &c1_, &c2_, &k_, &m_);
     }

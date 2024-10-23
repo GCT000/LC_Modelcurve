@@ -3,7 +3,7 @@ import sys
 
 # 初始化变量
 points = []
-file_name = 'points1.txt'
+file_name = 'points_1.txt'
 
 def on_mouse(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
