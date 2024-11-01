@@ -44,9 +44,12 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 
+find_package(TBB REQUIRED)
+include_directories(${TBB_INCLUDE_DIRS})
 include_directories(camera)
 include_directories(fileio)
 include_directories(line)
 
 add_subdirectory(model)
 add_subdirectory(simulation)
+add_subdirectory(lidar_preprocess)
