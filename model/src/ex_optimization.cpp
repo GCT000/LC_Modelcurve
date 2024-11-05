@@ -34,7 +34,7 @@ void ExOptimization::loadImgPoints(const std::string& img_ref_points_file)
     std::fstream file(img_ref_points_file, std::ios::in);
     if (!file.is_open())
     {
-        std::cerr << "Open input points file failed!" << std::endl;
+        LOG(ERROR) << "Open input points file failed!";
         return;
     }
     std::string line;

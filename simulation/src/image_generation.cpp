@@ -37,7 +37,7 @@ int main(int argc, char **argv)
     std::shared_ptr<Camera> camera = std::make_shared<Camera>();
     if (!camera->readIntrinsicParameters(camera_yaml_file))
     {
-        std::cerr << "Read camera intrinsic parameters failed!" << std::endl;
+        LOG(ERROR) << "Read camera intrinsic parameters failed!";
         return -1;
     }
 
@@ -51,7 +51,7 @@ int main(int argc, char **argv)
     std::fstream file(input_points_file, std::ios::in);
     if (!file.is_open())
     {
-        std::cerr << "Open input points file failed!" << std::endl;
+        LOG(ERROR) << "Open input points file failed!";
         return -1;
     }
 

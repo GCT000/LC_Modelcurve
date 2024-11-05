@@ -13,6 +13,7 @@
 #include <vector>
 #include <memory>
 #include <Eigen/Dense>
+#include <glog/logging.h>
 #include <gflags/gflags.h>
 #include <yaml-cpp/yaml.h>
 #include <boost/random.hpp>
@@ -32,7 +33,7 @@ void loadYaml(const std::string &file_name, int &points_num, double &y_base, Eig
     }
     else
     {
-        std::cerr << "No points_num in yaml file!" << std::endl;
+        LOG(ERROR) << "No points_num in yaml file!";
     }
 
     if (config["y_base"])
@@ -41,7 +42,7 @@ void loadYaml(const std::string &file_name, int &points_num, double &y_base, Eig
     }
     else
     {
-        std::cerr << "No y_base in yaml file!" << std::endl;
+        LOG(ERROR) << "No y_base in yaml file!";
     }
 
     if (config["start_point"])
@@ -50,7 +51,7 @@ void loadYaml(const std::string &file_name, int &points_num, double &y_base, Eig
     }
     else
     {
-        std::cerr << "No start_point in yaml file!" << std::endl;
+        LOG(ERROR) << "No start_point in yaml file!";
     }
 
     if (config["end_point"])
@@ -59,7 +60,7 @@ void loadYaml(const std::string &file_name, int &points_num, double &y_base, Eig
     }
     else
     {
-        std::cerr << "No end_point in yaml file!" << std::endl;
+        LOG(ERROR) << "No end_point in yaml file!";
     }
 
     if (config["mid_point"])
@@ -68,13 +69,16 @@ void loadYaml(const std::string &file_name, int &points_num, double &y_base, Eig
     }
     else
     {
-        std::cerr << "No mid_point in yaml file!" << std::endl;
+        LOG(ERROR) << "No mid_point in yaml file!";
     }
 }
 
 int main(int argc, char **argv)
 {
     google::ParseCommandLineFlags(&argc, &argv, true);
+    google::InitGoogleLogging(argv[0]);
+    FLAGS_colorlogtostdout = true;
+    FLAGS_stderrthreshold = google::INFO;
     
     // load variables from yaml file
     int points_num;

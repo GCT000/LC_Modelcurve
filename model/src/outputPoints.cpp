@@ -14,7 +14,7 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr loadTxtFile(const std::string& filename) {
     
     std::ifstream inputFile(filename);
     if (!inputFile.is_open()) {
-        std::cerr << "Could not open file: " << filename << std::endl;
+        LOG(ERROR) << "Could not open file: " << filename;
         return cloud;
     }
 
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
     FLAGS_colorlogtostderr = true;
     // 1. 读取 extracted.pcd 文件
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    std::cout << "Loading pcd file: " << FLAGS_input_pcd << std::endl;
+    LOG(INFO) << "Loading pcd file: " << FLAGS_input_pcd;
     if (pcl::io::loadPCDFile<pcl::PointXYZ>(FLAGS_input_pcd, *cloud) == -1) {
         PCL_ERROR("Couldn't read extracted.pcd file \n");
         return (-1);
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 
     // 5. 保存合并后的点云
     pcl::io::savePCDFileASCII("merged_cloud.pcd", *cloud);
-    std::cout << "Saved merged point cloud to merged_cloud.pcd" << std::endl;
+    LOG(INFO) << "Saved merged point cloud to merged_cloud.pcd";
 
     return 0;
 }

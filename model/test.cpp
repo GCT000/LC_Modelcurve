@@ -28,7 +28,7 @@ TEST(loadPcdFile, loadPcd)
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     LoadPCD input_pcd;
     input_pcd(pcd_file, cloud);
-    std::cout << "input points num: " << input_pcd.getPoints().size() << std::endl;
+    LOG(INFO) << "input points num: " << input_pcd.getPoints().size();
     EXPECT_EQ(input_pcd.getPoints().empty(), false);
 }
 

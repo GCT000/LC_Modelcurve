@@ -255,7 +255,7 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
     std::fstream file(selected_points, std::ios::in);
     if (!file.is_open())
     {
-        std::cerr << "Open input points file failed!" << std::endl;
+        LOG(ERROR) << "Open input points file failed!";
         return;
     }
     std::vector<cv::Point2d> img_points;
@@ -311,6 +311,7 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
         cv::circle(img, p, 1, cv::Scalar(0, 0, 255), -1);
     }
     cv::imwrite("curve_points.jpg", img);
+    outputPoints("curve_points.txt", img_points_);
 #endif
 }
 

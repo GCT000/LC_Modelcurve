@@ -13,6 +13,7 @@
 #include <vector>
 #include <Eigen/Dense>
 #include <opencv2/core/core.hpp>
+#include <glog/logging.h>
 
 /// @brief  output points to file
 template <typename T>
@@ -21,7 +22,7 @@ void outputPoints(const std::string &file_name, const std::vector<cv::Point_<T>>
     std::ofstream out_file(file_name, std::ios::out);
     if (!out_file.is_open())
     {
-        std::cerr << "Can't open file: " << file_name << std::endl;
+        LOG(ERROR) << "Can't open file: " << file_name;
         return;
     }
 
@@ -41,7 +42,7 @@ void outputPointsAndGrad(const std::string &file_name,
     std::ofstream out_file(file_name, std::ios::out);
     if (!out_file.is_open())
     {
-        std::cerr << "Can't open file: " << file_name << std::endl;
+        LOG(ERROR) << "Can't open file: " << file_name;
         return;
     }
 
@@ -60,13 +61,30 @@ void outputPoints(const std::string &file_name, const std::vector<Eigen::Vector3
     std::ofstream out_file(file_name, std::ios::out);
     if (!out_file.is_open())
     {
-        std::cerr << "Can't open file: " << file_name << std::endl;
+        LOG(ERROR) << "Can't open file: " << file_name;
         return;
     }
 
     for (const auto &point : points)
     {
         out_file << point.x() << " " << point.y() << " " << point.z() << std::endl;
+    }
+
+    out_file.close();
+}
+
+void outputPoints(const std::string &file_name, const std::vector<cv::Point2d> &points)
+{
+    std::ofstream out_file(file_name, std::ios::out);
+    if (!out_file.is_open())
+    {
+        LOG(ERROR) << "Can't open file: " << file_name;
+        return;
+    }
+
+    for (const auto &point : points)
+    {
+        out_file << point.x << " " << point.y << std::endl;
     }
 
     out_file.close();
