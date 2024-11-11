@@ -2,9 +2,9 @@ build/
 bin/
 .vscode/
 lib/
-simulation/data/1.png
-simulation/data/2.png
-simulation/data/3.png
-simulation/data/4.png
-tools/test1/
-tools/test2/
+lc_simulation/data/1.png
+lc_simulation/data/2.png
+lc_simulation/data/3.png
+lc_simulation/data/4.png
+lc_tools/test1/
+lc_tools/test2/
