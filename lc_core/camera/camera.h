@@ -1,5 +1,5 @@
 /**
- * @file   camera.hpp
+ * @file   camera.h
  * @brief  This file defines camera model(pinhole).
  * @author Yipeng Zhao
  * @date   2024-07

@@ -5,8 +5,8 @@
  * @date   2024-07
  */
 
-#include "camera.hpp"
-#include "output.hpp"
+#include "camera.h"
+#include "output.h"
 
 #include <iostream>
 #include <fstream>

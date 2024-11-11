@@ -6,8 +6,8 @@
  */
 
 #include "curve_modeling.h"
-#include "loadPCD.hpp"
-#include "bSpline.hpp"
+#include "loadPCD.h"
+#include "bSpline.h"
 #include <glog/logging.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>

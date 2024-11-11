@@ -1,5 +1,5 @@
 /**
- * @file   bSpline.hpp
+ * @file   bSpline.h
  * @brief  B-spline function.
  * @author Yipeng Zhao
  * @date   2024-08

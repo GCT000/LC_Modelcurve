@@ -1,12 +1,12 @@
 /**
- * @file   gradient.hpp
+ * @file   gradient.h
  * @brief  calculate line points' gradient.
  * @author Yipeng Zhao
  * @date   2024-09
  */
 
-#ifndef GRADIENT_HPP
-#define GRADIENT_HPP
+#ifndef GRADIENT_H
+#define GRADIENT_H
 
 #include <utility>
 #include <vector>

@@ -1,5 +1,5 @@
 /**
- * @file   camera.hpp
+ * @file   curve.h
  * @brief  This file defines curve model.
  * @todo   Processing for realistic images can be more complex.
  * @author Yipeng Zhao

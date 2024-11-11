@@ -1,5 +1,5 @@
 /**
- * @file   points_simulation.hpp
+ * @file   points_simulation.h
  * @brief  This file is used to generate random points according to curve equation.
  * @author Yipeng Zhao
  * @date   2024-07
@@ -8,7 +8,7 @@
 #ifndef POINTS_SIMULATION_H
 #define POINTS_SIMULATION_H
 
-#include "curve_simulation.hpp"
+#include "curve_simulation.h"
 
 #include <Eigen/Dense>
 #include <vector>

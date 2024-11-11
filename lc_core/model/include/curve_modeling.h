@@ -8,9 +8,9 @@
 #ifndef CURVE_MODELING_H
 #define CURVE_MODELING_H
 
-#include "camera.hpp"
-#include "output.hpp"
-#include "loadPCD.hpp"
+#include "camera.h"
+#include "output.h"
+#include "loadPCD.h"
 #include "ex_optimization.h"
 #include "matcher.h"
 #include "parabola.h"

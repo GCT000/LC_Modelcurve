@@ -2,7 +2,7 @@
 #include "curve_modeling.h"
 #include "curve_factor.h"
 #include "curve_factor_p2p.h"
-#include "bSpline.hpp"
+#include "bSpline.h"
 
 #include <fstream>
 #include <glog/logging.h>

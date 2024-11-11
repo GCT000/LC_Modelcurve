@@ -10,7 +10,7 @@
 
 #include <Eigen/Dense>
 #include <vector>
-#include "camera.hpp"
+#include "camera.h"
 
 namespace lc_core
 {

@@ -13,7 +13,7 @@
 #include <vector>
 #include <fstream>
 #include <Eigen/Dense>
-#include "camera.hpp"
+#include "camera.h"
 
 namespace lc_core
 {

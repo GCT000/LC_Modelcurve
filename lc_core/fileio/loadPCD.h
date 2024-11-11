@@ -1,5 +1,5 @@
 /**
- * @file   loadPCD.hpp
+ * @file   loadPCD.h
  * @brief  This file defines the class for loading PCD file.
  * @author Yipeng Zhao
  * @date   2024-08

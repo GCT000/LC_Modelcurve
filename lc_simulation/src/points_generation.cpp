@@ -5,8 +5,8 @@
  * @date   2024-07
  */
 
-#include "points_simulation.hpp"
-#include "output.hpp"
+#include "points_simulation.h"
+#include "output.h"
 
 #include <iostream>
 #include <fstream>

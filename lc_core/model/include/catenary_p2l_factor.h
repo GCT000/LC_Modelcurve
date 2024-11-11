@@ -10,7 +10,7 @@
 
 #include <iostream>
 #include <ceres/ceres.h>
-#include "camera.hpp"
+#include "camera.h"
 #include "base_type.h"
 
 namespace lc_core

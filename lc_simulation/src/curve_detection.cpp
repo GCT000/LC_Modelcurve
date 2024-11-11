@@ -5,8 +5,8 @@
  * @date   2024-07
  */
 
-#include "curve.hpp"
-#include "output.hpp"
+#include "curve.h"
+#include "output.h"
 
 #include <gflags/gflags.h>
 #include <memory>

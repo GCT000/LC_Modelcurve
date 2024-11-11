@@ -1,5 +1,5 @@
 /**
- * @file   curve_simulation.hpp
+ * @file   curve_simulation.h
  * @brief  This file is used to generate 3D curves.
  * @author Yipeng Zhao
  * @date   2024-07

@@ -11,7 +11,7 @@
 #include <iostream>
 #include <ceres/ceres.h>
 #include <opencv2/core/types.hpp>
-#include "camera.hpp"
+#include "camera.h"
 #include "base_type.h"
 
 namespace lc_core
