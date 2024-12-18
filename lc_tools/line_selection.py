@@ -1,24 +1,31 @@
 import cv2
 import sys
+import os
 
-# 初始化变量
+# get args
+if len(sys.argv) != 2:
+    print("Usage: python line_selection.py <image_path> <points_file>")
+    sys.exit(1)
+
+points_file = sys.argv[2]
+
+# init variables
 points = []
-file_name = 'points_1.txt'
 
 def on_mouse(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
-        # 添加选定的点并显示
+        # add selected point and show
         points.append((x, y))
         cv2.circle(image, (x, y), 3, (0, 0, 255), -1)
         cv2.imshow('image', image)
 
 def save_points_to_file():
-    with open(file_name, 'w') as f:
+    with open(points_file, 'w') as f:
         for point in points:
             f.write(f"{point[0]}, {point[1]}\n")
-    print(f"Points saved to {file_name}")
+    print(f"Points saved to {points_file}")
 
-# 载入图像并缩小尺寸
+# load image and resize
 image_path = sys.argv[1]
 image = cv2.imread(image_path)
 image = cv2.resize(image, (image.shape[1], image.shape[0]))
@@ -28,10 +35,10 @@ cv2.setMouseCallback('image', on_mouse)
 
 while True:
     key = cv2.waitKey(1) & 0xFF
-    if key == ord('s'):  # 按下 's' 键保存点
+    if key == ord('s'):  # press 's' to save points
         save_points_to_file()
         break
-    elif key == 27:  # 按下 'ESC' 键退出
+    elif key == 27:  # press 'ESC' to exit
         break
 
 cv2.destroyAllWindows()
