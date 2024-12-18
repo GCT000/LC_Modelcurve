@@ -1,10 +1,17 @@
 # LC-CurveModel: Joint camera-lidar spatial curve modeling
 <!-- markdownlint-disable MD047 -->
-This is a simulation library for Lidar point cloud and image curve fitting, the code realizes the simulation of laser point cloud, the simulation of corresponding projected image and the curve fitting process in Lidar coordinate system and image coordinate system.  
+The purpose of this repository is to reconstruct complete spatial models of power lines using LiDAR and cameras. We treat power lines as spatial curves and reconstruct them using both parabolic equations and catenary equations. Using simulation results as an example, the reconstruction results can be seen in the following two images.
 
 ![9-degree](/image/9-degree.jpg)
 
 ![curve-fitting](/image/curve-fitting.png)
+
+## Structure  
+
+lc_core       -- core algorithm module  
+lc_preprocess -- pre-process module  
+lc_simulation -- simple simulation module  
+lc_tools      -- auxiliary python scripts
 
 ## Dependencies
 
