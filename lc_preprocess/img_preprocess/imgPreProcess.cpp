@@ -27,19 +27,22 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
     // convert Point2d to Point2f
     std::vector<cv::Point2f> pre_points_f(pre_img_points_.begin(), pre_img_points_.end());
     std::vector<cv::Point2f> cur_points_f;
+    cur_points_f.reserve(pre_points_f.size());
+
+    // set optical flow parameters
+    const auto window_size = cv::Size(7, 7);
+    const auto criteria = cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
     
     // forward tracking
     std::vector<uchar> forward_status;
     std::vector<float> forward_err;
-    cv::calcOpticalFlowPyrLK(pre_img, cur_img, pre_points_f, cur_points_f, forward_status, forward_err, cv::Size(7, 7), 0, 
-                             cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01));
+    cv::calcOpticalFlowPyrLK(pre_img, cur_img, pre_points_f, cur_points_f, forward_status, forward_err, window_size, 0, criteria);
 
     // backward tracking
     std::vector<cv::Point2f> reverse_points;
     std::vector<uchar> backward_status;
     std::vector<float> backward_err;
-    cv::calcOpticalFlowPyrLK(cur_img, pre_img, cur_points_f, reverse_points, backward_status, backward_err, cv::Size(7, 7), 0, 
-                             cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01));
+    cv::calcOpticalFlowPyrLK(cur_img, pre_img, cur_points_f, reverse_points, backward_status, backward_err, window_size, 0, criteria);
 
     // calculate bidirectional tracking error and filter points
     std::vector<cv::Point2d> filtered_pre_points, filtered_cur_points;
@@ -67,6 +70,8 @@ void ImgPreProcess::reInterpolate()
     std::vector<cv::Point2d> temp_points(cur_img_points_.begin(), cur_img_points_.end());
     // re-interpolate points
     std::vector<cv::Point2d> interpolated_points;
+    interpolated_points.reserve(temp_points.size() * 2);
+
     for (size_t i = 0; i < temp_points.size() - 1; ++i) {
         const cv::Point2d& p1 = temp_points[i];
         const cv::Point2d& p2 = temp_points[i + 1];
@@ -76,14 +81,12 @@ void ImgPreProcess::reInterpolate()
         
         for (int j = 0; j < num_points; ++j) {
             double t = static_cast<double>(j) / num_points;
-            cv::Point2d new_point = p1 + t * (p2 - p1);
-            interpolated_points.push_back(new_point);
+            interpolated_points.emplace_back(p1 + t * (p2 - p1));
         }
     }
     // add the last point
     interpolated_points.push_back(temp_points.back());
 
-    cur_img_points_.clear();
     cur_img_points_ = std::move(interpolated_points);
 }
 

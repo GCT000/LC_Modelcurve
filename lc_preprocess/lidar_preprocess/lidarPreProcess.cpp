@@ -310,7 +310,7 @@ std::vector<double> LidarPreProcess::kMeansCluster(const std::vector<double>& da
 
 void LidarPreProcess::visualizeSeparatedLines(const std::vector<std::vector<Eigen::Vector3d>> &separated_lines)
 {
-    pcl::visualization::PCLVisualizer::Ptr viewer(new pcl::visualization::PCLVisualizer("Power Lines Viewer"));
+    auto viewer = std::make_unique<pcl::visualization::PCLVisualizer>("Power Lines Viewer");
     viewer->setBackgroundColor(0, 0, 0);
 
     std::random_device rd;
