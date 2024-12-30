@@ -8,8 +8,8 @@
 DEFINE_double(radius_threshold, 0.10, "radius threshold");
 DEFINE_double(linear_threshold, 2.50, "linear threshold");
 DEFINE_double(x_threshold, 90.0, "x threshold");
-DEFINE_double(z_threshold, 0.0, "z threshold");
-DEFINE_string(pcd_path, "/home/zyp/HD2/DATA/Transmisson/0912/test5/extracted_points.pcd", "pcd file path");
+DEFINE_double(z_threshold, -1.5, "z threshold");
+DEFINE_string(pcd_path, "/home/zyp/HD2/DATA/Transmisson/PJ/data/20241226_0340/extracted/extracted_points.pcd", "pcd file path");
 
 cv::Mat GenerateBEVImage(pcl::PointCloud<pcl::PointXYZ>::Ptr cloud) {
     // compute the min and max x and y
