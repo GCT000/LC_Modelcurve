@@ -284,6 +284,11 @@ void LidarPreProcess::separatePowerLines()
         if (line2.size() > 200) fine_separated_lines.push_back(line2);
     }
 
+    // remove noise points
+    for (auto& line : fine_separated_lines) {
+        //
+    }
+
     // output result
     LOG(INFO) << "separated " << fine_separated_lines.size() << " power lines";
     for (size_t i = 0; i < fine_separated_lines.size(); ++i) {
