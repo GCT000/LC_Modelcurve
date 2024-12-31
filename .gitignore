@@ -8,3 +8,8 @@ lc_simulation/data/3.png
 lc_simulation/data/4.png
 lc_tools/test1/
 lc_tools/test2/
+thirdparty/CannyLines-v3.rar
+temp/
+# lc_tools/lidar_ref.txt
+# lc_tools/points_ref.txt
+# lc_tools/points.txt

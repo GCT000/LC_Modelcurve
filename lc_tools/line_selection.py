@@ -16,7 +16,7 @@ def save_points_to_file(points, points_file):
     print(f"Points saved to {points_file}")
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) != 3:
         print("Usage: python line_selection.py <image_path> <points_file>")
         sys.exit(1)
 

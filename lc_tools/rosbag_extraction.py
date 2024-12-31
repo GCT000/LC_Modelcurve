@@ -11,7 +11,7 @@ import sensor_msgs.point_cloud2 as pc2
 def main():
     # get args
     if len(sys.argv) != 4:
-        print("Usage: python rosbag_filter.py <bag_path> <image_topic> <lidar_topic>")
+        print("Usage: python rosbag_extraction.py <bag_path> <image_topic> <lidar_topic>")
         sys.exit(1)
 
     bag_path = sys.argv[1]
