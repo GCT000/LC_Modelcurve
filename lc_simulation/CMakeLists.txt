@@ -6,5 +6,5 @@ target_link_libraries(points_generation ${yaml-cpp_LIBRARIES} yaml-cpp glog::glo
 add_executable(image_generation src/image_generation.cpp)
 target_link_libraries(image_generation ${yaml-cpp_LIBRARIES} yaml-cpp glog::glog ${gflags_LIBRARIES} ${OpenCV_LIBS})
 
-add_executable(curve_detection src/curve_detection.cpp)
+add_executable(curve_detection src/curve_detection.cpp ../lc_core/line/curve.cpp)
 target_link_libraries(curve_detection glog::glog ${gflags_LIBRARIES} ${OpenCV_LIBS})
