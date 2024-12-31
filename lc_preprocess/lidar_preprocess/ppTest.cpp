@@ -77,11 +77,15 @@ int main(int argc, char **argv)
     lc_preprocess::LidarPreProcess pp(lc_preprocess::LidarPPConfig(FLAGS_radius_threshold, FLAGS_linear_threshold, FLAGS_x_threshold, FLAGS_z_threshold));
     pp(FLAGS_pcd_path);
 
+    // process output path
+    std::string output_path = FLAGS_pcd_path.substr(0, FLAGS_pcd_path.find_last_of('/')) + "/";
+
     // make pcl point cloud
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZRGB>);
     cloud->points.reserve(pp.points().size());
 
     // transform Eigen::Vector3d points to PCL points
+    int i = 0;
     for (const auto& line : pp.points()) {
         // assign a random color to each line
         static std::random_device rd;
@@ -91,6 +95,8 @@ int main(int argc, char **argv)
         uint8_t g = dis(gen);
         uint8_t b = dis(gen);
 
+        pcl::PointCloud<pcl::PointXYZRGB>::Ptr single_line(new pcl::PointCloud<pcl::PointXYZRGB>);
+        single_line->points.reserve(line.size());
         for (const auto& point : line) {
             pcl::PointXYZRGB colored_point;
             colored_point.x = point.x();
@@ -101,8 +107,16 @@ int main(int argc, char **argv)
             colored_point.g = g;
             colored_point.b = b;
             
+            single_line->points.push_back(colored_point);
             cloud->points.push_back(colored_point);
         }
+        single_line->width = single_line->points.size();
+        single_line->height = 1;
+
+        i++;
+        std::string line_file = output_path + "line_" + std::to_string(i) + ".pcd";
+        pcl::io::savePCDFileBinary(line_file, *single_line);
+        LOG(INFO) << "save line " << i << " to " << line_file;
     }
 
     // set point cloud width and height
@@ -115,8 +129,7 @@ int main(int argc, char **argv)
     // detectLine(bev_image);
     // cv::imwrite("./bev_with_lines.png", bev_image);
 
-    // save as pcd file
-    std::string output_file = "output_cloud.pcd";
+    std::string output_file = output_path + "output_cloud.pcd";
     pcl::io::savePCDFileBinary(output_file, *cloud);
     LOG(INFO) << "Saved processed point cloud to file: " << output_file;
 

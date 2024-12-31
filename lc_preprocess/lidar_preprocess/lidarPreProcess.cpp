@@ -26,11 +26,12 @@ void LidarPreProcess::operator()(const std::string &file_name)
     {
         input_points_.emplace_back(point.x, point.y, point.z);
     }
+    LOG(INFO) << "input points size: " << input_points_.size();
     // filter ground points and far away points
     filterPoints();
 
     // filter linear points
-    filterLinearPoints();
+    // filterLinearPoints();
 
     // separate power lines
     separatePowerLines();
@@ -204,52 +205,92 @@ std::vector<std::vector<Eigen::Vector3d>> LidarPreProcess::performCustomClusteri
 
 void LidarPreProcess::separatePowerLines()
 {
-    // Use custom clustering method
-    std::vector<std::vector<Eigen::Vector3d>> rough_separated_lines = performCustomClustering(input_points_, 0.5, 2.0, 100, 25000);
-
-    // Further separate each group of lines based on Y values
+    // divide into rough lines
+    std::vector<std::vector<Eigen::Vector3d>> rough_separated_lines = performCustomClustering(input_points_, 0.5, 2.0, 100, 50000);
     std::vector<std::vector<Eigen::Vector3d>> fine_separated_lines;
+    if (rough_separated_lines.size() == 0) {
+        rough_separated_lines.push_back(input_points_);
+    }
+
+    // process each line
     for (const auto& line : rough_separated_lines)
     {
+        // 1. calculate main direction and build plane
+        Eigen::Vector3d centroid = Eigen::Vector3d::Zero();
+        for (const auto& point : line) {
+            centroid += point;
+        }
+        centroid /= line.size();
+
+        // calculate main direction using PCA
+        Eigen::Matrix3d covariance = Eigen::Matrix3d::Zero();
+        for (const auto& point : line) {
+            Eigen::Vector3d centered = point - centroid;
+            covariance += centered * centered.transpose();
+        }
+        covariance /= line.size();
+
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> solver(covariance);
+        Eigen::Vector3d main_direction = solver.eigenvectors().col(2);
+
+        // 2. build rotation matrix
+        // rotate main direction to align with x axis
+        Eigen::Vector3d x_axis(1, 0, 0);
+        Eigen::Vector3d rotation_axis = main_direction.cross(x_axis);
+        double angle = std::acos(main_direction.dot(x_axis));
+        
+        Eigen::Matrix3d rotation;
+        if (rotation_axis.norm() > 1e-6) {
+            rotation = Eigen::AngleAxisd(angle, rotation_axis.normalized()).matrix();
+        } else {
+            rotation = Eigen::Matrix3d::Identity();
+        }
+
+        // 3. rotate points
+        std::vector<Eigen::Vector3d> rotated_points;
+        rotated_points.reserve(line.size());
+        for (const auto& point : line) {
+            rotated_points.push_back(rotation * (point - centroid));
+        }
+
+        // 4. cluster points based on rotated y value
         std::vector<double> y_values;
-        y_values.reserve(line.size());
-        for (const auto& point : line)
-        {
+        y_values.reserve(rotated_points.size());
+        for (const auto& point : rotated_points) {
             y_values.push_back(point.y());
         }
 
-        // Use K-means clustering to separate Y values
-        std::vector<double> centroids = kMeansCluster(y_values, 2);
+        // use K-means to cluster
+        // std::vector<double> centroids = kMeansCluster(y_values, 2);
 
+        // 5. separate points and rotate back to original coordinate system
         std::vector<Eigen::Vector3d> line1, line2;
-        for (const auto& point : line)
-        {
-            if (std::abs(point.y() - centroids[0]) < std::abs(point.y() - centroids[1]))
-            {
-                line1.push_back(point);
-            }
-            else
-            {
-                line2.push_back(point);
+        for (size_t i = 0; i < rotated_points.size(); ++i) {
+            const auto& rotated_point = rotated_points[i];
+            const auto& original_point = line[i];
+            
+            // if (std::abs(rotated_point.y() - centroids[0]) < std::abs(rotated_point.y() - centroids[1])) {
+            if (rotated_point.y() < 0) {
+                // LOG(INFO) << "y: " << rotated_point.y() << ", centroid: " << centroids[0];
+                line1.push_back(original_point);
+            } else {
+                // LOG(INFO) << "y: " << rotated_point.y() << ", centroid: " << centroids[1];
+                line2.push_back(original_point);
             }
         }
 
-        // Only add lines if they have enough points
+        // add line if it has enough points
         if (line1.size() > 200) fine_separated_lines.push_back(line1);
         if (line2.size() > 200) fine_separated_lines.push_back(line2);
     }
 
-    // Output results
-    LOG(INFO) << "Separated " << fine_separated_lines.size() << " power lines";
-    for (size_t i = 0; i < fine_separated_lines.size(); ++i)
-    {
-        LOG(INFO) << "Power line " << i + 1 << " contains " << fine_separated_lines[i].size() << " points";
+    // output result
+    LOG(INFO) << "separated " << fine_separated_lines.size() << " power lines";
+    for (size_t i = 0; i < fine_separated_lines.size(); ++i) {
+        LOG(INFO) << "line " << i << " has " << fine_separated_lines[i].size() << " points";
     }
 
     separated_lines_ = std::move(fine_separated_lines);
-
-    // Visualize results
-    // visualizeSeparatedLines(fine_separated_lines);
 }
 
 std::vector<double> LidarPreProcess::kMeansCluster(const std::vector<double>& data, int k, int max_iterations)
