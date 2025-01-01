@@ -3,9 +3,6 @@ YAML: 1.0
 # line number
 line_num: 1
 
-# input lidar points file
-lidar_points_file: "/home/zyp/Lidar/LC-CurveModel/simulation/data/lidar_points.txt"
-
 # camera yaml
 cam_calib: "cam0.yaml"
 
@@ -20,12 +17,12 @@ image_path: "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_13.png"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/tools/points.txt"
+selected_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/points.txt"
 
 # ex optimization
 ex_optimization: 0
-ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/tools/lidar_ref.txt"
-ref_image_points: "/home/zyp/Lidar/LC-CurveModel/tools/points_ref.txt"
+ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/lidar_ref.txt"
+ref_image_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/points_ref.txt"
 
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1

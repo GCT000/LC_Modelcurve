@@ -19,7 +19,7 @@ public:
     Catenary() : c_(1.0), c1_(0.0), c2_(0.0) {}
     ~Catenary() = default;
 
-    void fitTransmissionModel(const std::vector<Eigen::Vector3d> &points) override;
+    void fitTransmissionModel(std::vector<Eigen::Vector3d> &points) override;
 
     Eigen::Vector3d generateSinglePoint(const double &x) override;
 

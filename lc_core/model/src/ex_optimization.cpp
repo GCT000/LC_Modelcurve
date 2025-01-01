@@ -3,6 +3,17 @@
 
 using namespace lc_core;
 
+ExOptimization::ExOptimization(const ExOptimization& other)
+        : R_c_l_(other.R_c_l_),
+          t_c_l_(other.t_c_l_),
+          lidar_points_(other.lidar_points_),
+          img_ref_points_(other.img_ref_points_)
+{
+    if (other.cam_) {
+        cam_ = std::make_shared<Camera>(*other.cam_);
+    }
+}
+
 void ExOptimization::loadLidarPoints(const std::string& lidar_points_file)
 {
     std::fstream input(lidar_points_file, std::ios::in);
@@ -89,8 +100,8 @@ void ExOptimization::optimization() {
     double q[4] = {q_c_l.x(), q_c_l.y(), q_c_l.z(), q_c_l.w()};
     double t[3] = {t_c_l_(0), t_c_l_(1), t_c_l_(2)};
 
-    LOG(INFO) << "Before optimization: \n";
-    LOG(INFO) << "q: " << q_c_l.coeffs().transpose() << " t: " << t_c_l_.transpose() << "\n";
+    // LOG(INFO) << "Before optimization: \n";
+    // LOG(INFO) << "q: " << q_c_l.coeffs().transpose() << " t: " << t_c_l_.transpose() << "\n";
 
     ceres::Problem problem;
     ceres::Solver::Options options;
@@ -115,6 +126,6 @@ void ExOptimization::optimization() {
     R_c_l_ = q_c_l.toRotationMatrix();
     t_c_l_ << t[0], t[1], t[2];
 
-    LOG(INFO) << "After optimization: \n";
-    LOG(INFO) << "q: " << q_c_l.coeffs().transpose() << " t: " << t_c_l_.transpose() << "\n";
+    // LOG(INFO) << "After optimization: \n";
+    // LOG(INFO) << "q: " << q_c_l.coeffs().transpose() << " t: " << t_c_l_.transpose() << "\n";
 }

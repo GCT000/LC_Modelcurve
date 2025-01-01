@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.5)
 project(curve_model)
 
+# export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 set(DEFAULT_BUILD_TYPE "Release")
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "-w")
@@ -50,6 +52,9 @@ include_directories(${TBB_INCLUDE_DIRS})
 include_directories(${PROJECT_SOURCE_DIR}/lc_core/camera)
 include_directories(${PROJECT_SOURCE_DIR}/lc_core/fileio)
 include_directories(${PROJECT_SOURCE_DIR}/lc_core/line)
+# include_directories(${PROJECT_SOURCE_DIR}/thirdparty/CannyLines/src)
 
+# add_subdirectory(thirdparty/CannyLines)
 add_subdirectory(lc_simulation)
 add_subdirectory(lc_core)
+add_subdirectory(lc_preprocess)

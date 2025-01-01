@@ -1,3 +1,1 @@
 add_subdirectory(model)
-add_subdirectory(img_preprocess)
-add_subdirectory(lidar_preprocess)

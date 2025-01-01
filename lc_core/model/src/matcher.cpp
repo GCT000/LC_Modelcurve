@@ -3,6 +3,8 @@
 #include <Eigen/Dense>
 #include <fstream>
 
+static std::string temp_path = "/home/zyp/Lidar/LC-CurveModel/temp/";
+
 using namespace lc_core;
 [[maybe_unused]] std::vector<cv::Point2d> interpolate(const cv::Point2d& p1, const cv::Point2d& p2, int num) {
     // Edge case: if num == 0, return an empty vector
@@ -42,21 +44,14 @@ P2PMatchResult Matcher::p2pMatch(const std::vector<cv::Point2d>& input, const st
     P2PMatchResult result;
     result.reserve(input.size());
     // Ensure that points in the source are not matched repeatedly
-    std::vector<int> visited(source.size(), 0);
-    std::fstream output_points("match.txt", std::ios::out);
+    std::fstream output_points(temp_path + "match.txt", std::ios::out);
     for (const cv::Point2d& ip : input) {
         std::vector<int> closest_idx;
-        kd_tree_->getClosestPoint(ip, closest_idx, 10);
-        for (int idx : closest_idx) {
-            if (visited[idx] == 0) {
-                visited[idx] = 1;
-                result.emplace_back(source[idx].x, source[idx].y);
-                output_points << "Match result: " << ip.x << " " << ip.y << " -- " << source[idx].x << " " << source[idx].y << "\n";
-                break;
-            }
-        }
+        kd_tree_->getClosestPoint(ip, closest_idx, 1);
+        result.emplace_back(source[closest_idx[0]].x, source[closest_idx[0]].y);
+        output_points << "Match result: " << ip.x << " " << ip.y << " -- " << source[closest_idx[0]].x << " " << source[closest_idx[0]].y << "\n";
     }
-
+    output_points.close();
     return result;
 }
 
@@ -79,19 +74,6 @@ P2LMatchResult Matcher::p2lMatch(const std::vector<cv::Point2d>& input, const st
         Eigen::VectorXd x2 = A2.colPivHouseholderQr().solve(b2);
         result.push_back(std::make_pair(x2(0), x2(1)));
     }
-
-    return result;
-}
-
-P2PMatchResult Matcher::updateMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source) {
-    // the same as p2pMatch
-    P2PMatchResult result;
-    for (const cv::Point2d& ip : input) {
-        std::vector<int> closest_idx;
-        kd_tree_->getClosestPoint(ip, closest_idx, 1);
-        result.emplace_back(source[closest_idx[0]].x, source[closest_idx[0]].y);
-    }
-    // TODO update source points
 
     return result;
 }

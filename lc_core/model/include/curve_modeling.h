@@ -41,7 +41,6 @@ public:
     ~CurveModeling();
 
     /// @brief  load lidar points from file
-    void loadLidarPoints(const std::string &lidar_points_file);
     void loadLidarPoints(const LoadPCD &load_pcd);
     
     /// @brief  lidar preprocessing
@@ -59,9 +58,6 @@ public:
 private:
     /// @brief  lidar 2 pixel
     Eigen::Vector2d lidar2pixel(const Eigen::Vector3d& p_l);
-
-    /// @brief  merge lidar points when line number bigger than 1
-    void mergeLidarPoints(const std::vector<Eigen::Vector3d>& lidar_points);
 
     /// @brief  load camera from file
     void loadCamera(const YAML::Node &yaml, const std::string &yaml_file);
@@ -91,11 +87,9 @@ private:
     std::vector<Eigen::Vector3d> lidar_points_;
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
-    bool merge_;
     // Eigen::Vector3d end_point_;
     double x_interval_start_;
     double x_interval_end_;
-    double x_interval_sample_start_;
     cv::Mat img_;
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_;

@@ -44,9 +44,6 @@ public:
     /// @brief  point to line match
     P2LMatchResult p2lMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
 
-    /// @brief  update match
-    P2PMatchResult updateMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
-
     /// @brief  get match type
     MatcherType matcher_type() const {
         return matcher_type_;

@@ -20,7 +20,7 @@ public:
     Parabola() = default;
     ~Parabola() = default;
 
-    void fitTransmissionModel(const std::vector<Eigen::Vector3d> &points) override;
+    void fitTransmissionModel(std::vector<Eigen::Vector3d> &points) override;
 
     Eigen::Vector3d generateSinglePoint(const double &x) override;
 

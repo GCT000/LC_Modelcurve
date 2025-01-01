@@ -9,6 +9,7 @@
 #define TRANSMISSION_MODEL_H
 
 #include <vector>
+#include <random>
 #include <Eigen/Dense>
 #include "glog/logging.h"
 #include "matcher.h"
@@ -17,38 +18,45 @@
 namespace lc_core
 {
 
-class TransmissionModel
-{
-public:
-    /// @brief  Constructor  
-    TransmissionModel() = default;
+    class TransmissionModel
+    {
+    public:
+        /// @brief  Constructor
+        TransmissionModel() = default;
 
-    /// @brief  Destructor
-    virtual ~TransmissionModel() = default;
+        /// @brief  Destructor
+        virtual ~TransmissionModel() = default;
 
-    /// @brief  Fit the transmission model based on the given points
-    virtual void fitTransmissionModel(const std::vector<Eigen::Vector3d> &points) {
-        LOG(INFO) << "Choose one transmission model";
-    }
+        /// @brief  Fit the transmission model based on the given points
+        virtual void fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
+        {
+            LOG(INFO) << "Choose one transmission model";
+        }
 
-    // /// @brief  Generate the points based on the transmission model
-    // virtual std::vector<Eigen::Vector3d> generatePoints(const double &x_start, const double &x_end, const double &x_step);
+        // /// @brief  Generate the points based on the transmission model
+        // virtual std::vector<Eigen::Vector3d> generatePoints(const double &x_start, const double &x_end, const double &x_step);
 
-    /// @brief  Generate single point based on the transmission model
-    virtual Eigen::Vector3d generateSinglePoint(const double &x) {
-        LOG(INFO) << "Choose one transmission model";
-        return Eigen::Vector3d(0, 0, 0);
-    }
+        /// @brief  Generate single point based on the transmission model
+        virtual Eigen::Vector3d generateSinglePoint(const double &x)
+        {
+            LOG(INFO) << "Choose one transmission model";
+            return Eigen::Vector3d(0, 0, 0);
+        }
 
-    /// @brief  Optimizate transmission model
-    virtual void optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input) {
-        LOG(INFO) << "Choose one transmission model";
-    }
+        /// @brief  Optimizate transmission model
+        virtual void optimizeTransmissionModel(const P2LMatchResult &lines, const OptimizationInput &input)
+        {
+            LOG(INFO) << "Choose one transmission model";
+        }
 
-    virtual void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int time = 1) {
-        LOG(INFO) << "Choose one transmission model";
-    }
-};
+        virtual void optimizeTransmissionModel(const P2PMatchResult &points, const OptimizationInput &input, int time = 1)
+        {
+            LOG(INFO) << "Choose one transmission model";
+        }
+
+        /// @brief  RANSAC fit x-y line
+        virtual std::pair<double, double> ransacFitLine(std::vector<Eigen::Vector3d> &points);
+    };
 
 } // namespace lc_core
 

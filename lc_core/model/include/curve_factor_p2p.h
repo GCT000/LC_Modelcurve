@@ -41,13 +41,14 @@ public:
         Eigen::Matrix<T, 2, 1> pImg;
         cam->spaceToPlane(pCam, pImg);
 
-        residual[0] = T(sqrt_info) * (pImg(0) - T(img_p.x));
-        residual[1] = T(sqrt_info) * (pImg(1) - T(img_p.y));
+        T dist = ceres::sqrt(T(pImg(0) - T(img_p.x)) * T(pImg(0) - T(img_p.x)) + T(pImg(1) - T(img_p.y)) * T(pImg(1) - T(img_p.y)));
+        residual[0] = T(sqrt_info) * dist;
+
         return true;
     }
 
     static ceres::CostFunction* Create(const cv::Point2d& _img_p, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam, const WeightType& _weight_type = WeightType::Equal) {
-        return (new ceres::AutoDiffCostFunction<CurveP2PFactor, 2, 1, 1, 1, 1, 1>(
+        return (new ceres::AutoDiffCostFunction<CurveP2PFactor, 1, 1, 1, 1, 1, 1>(
             new CurveP2PFactor(_img_p, _x, _Tcl, _cam, _weight_type)));
     }
 

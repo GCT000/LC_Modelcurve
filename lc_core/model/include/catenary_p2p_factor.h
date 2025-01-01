@@ -26,7 +26,7 @@ class CatenaryP2PFactor {
 public:
     CatenaryP2PFactor(const cv::Point2d& _img_p, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam, const WeightType& _weight_type = WeightType::Equal) 
         : img_p(_img_p), x(_x), Tcl(_Tcl), cam(_cam), weight_type(_weight_type) {
-        if (weight_type == WeightType::Distance) {
+        if (weight_type != WeightType::Distance) {
             sqrt_info = sqrt(_x);
         } else {
             sqrt_info = 1.0;
@@ -41,13 +41,14 @@ public:
         Eigen::Matrix<T, 2, 1> pImg;
         cam->spaceToPlane(pCam, pImg);
 
-        residual[0] = T(sqrt_info) * (pImg(0) - T(img_p.x));
-        residual[1] = T(sqrt_info) * (pImg(1) - T(img_p.y));
+        T dist = ceres::sqrt(T(pImg(0) - T(img_p.x)) * T(pImg(0) - T(img_p.x)) + T(pImg(1) - T(img_p.y)) * T(pImg(1) - T(img_p.y)));
+        residual[0] = T(sqrt_info) * dist;
+
         return true;
     }
 
     static ceres::CostFunction* Create(const cv::Point2d& _img_p, const double& _x, const Trans& _Tcl, std::shared_ptr<Camera> _cam, const WeightType& _weight_type = WeightType::Equal) {
-        return (new ceres::AutoDiffCostFunction<CatenaryP2PFactor, 2, 1, 1, 1, 1, 1>(
+        return (new ceres::AutoDiffCostFunction<CatenaryP2PFactor, 1, 1, 1, 1, 1, 1>(
             new CatenaryP2PFactor(_img_p, _x, _Tcl, _cam, _weight_type)));
     }
 

@@ -6,8 +6,12 @@
 
 using namespace lc_core;
 
-void Parabola::fitTransmissionModel(const std::vector<Eigen::Vector3d> &points)
+void Parabola::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
 {
+    auto [k, m] = ransacFitLine(points);
+    k_ = k;
+    m_ = m;
+
     Eigen::MatrixXd A(points.size(), 3);
     Eigen::VectorXd b(points.size());
     for (int i = 0; i < points.size(); ++i) {
@@ -21,17 +25,6 @@ void Parabola::fitTransmissionModel(const std::vector<Eigen::Vector3d> &points)
     a_ = x(0);
     b_ = x(1);
     c_ = x(2);
-
-    Eigen::MatrixXd A2(points.size(), 2);
-    Eigen::VectorXd b2(points.size());
-    for (int i = 0; i < points.size(); ++i) {
-        A2(i, 0) = points[i](0);
-        A2(i, 1) = 1.0;
-        b2(i) = points[i](1);
-    }
-    Eigen::VectorXd x2 = A2.colPivHouseholderQr().solve(b2);
-    k_ = x2(0);
-    m_ = x2(1);
 
     LOG(INFO) << "a: " << a_ << " b: " << b_ << " c: " << c_;
     LOG(INFO) << "k: " << k_ << " m: " << m_;
@@ -53,7 +46,7 @@ void Parabola::optimizeTransmissionModel(const P2LMatchResult& lines, const Opti
     options.max_num_iterations = 10;
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     // options.num_threads = 8;
-    
+
     for (size_t i = 0; i < lines.size(); i++) {
         ceres::CostFunction* cost_function = CurveFactor::Create(lines[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
         problem.AddResidualBlock(cost_function, nullptr, &a_, &b_, &c_, &k_, &m_);
@@ -81,10 +74,10 @@ void Parabola::optimizeTransmissionModel(const P2PMatchResult& points, const Opt
     problem.AddParameterBlock(&k_, 1);
     problem.AddParameterBlock(&m_, 1);
 
-    // if (time > 1) {
-    //     problem.SetParameterBlockConstant(&k_);
-    //     problem.SetParameterBlockConstant(&m_);
-    // }
+    if (time > 1) {
+        problem.SetParameterBlockConstant(&k_);
+        problem.SetParameterBlockConstant(&m_);
+    }
 
     for (size_t i = 0; i < points.size(); i++) {
         ceres::CostFunction* cost_function = CurveP2PFactor::Create(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));

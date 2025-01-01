@@ -7,8 +7,13 @@
 
 using namespace lc_core;
 
-void Catenary::fitTransmissionModel(const std::vector<Eigen::Vector3d> &points)
+void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
 {
+    // ransac fit line
+    auto [k, m] = ransacFitLine(points);
+    k_ = k;
+    m_ = m;
+
     // 2-degree tylor
     ceres::Problem problem;
     ceres::Solver::Options options;
@@ -26,18 +31,6 @@ void Catenary::fitTransmissionModel(const std::vector<Eigen::Vector3d> &points)
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
-
-    // calculate k and m
-    Eigen::MatrixXd A2(points.size(), 2);
-    Eigen::VectorXd b2(points.size());
-    for (int i = 0; i < points.size(); ++i) {
-        A2(i, 0) = points[i](0);
-        A2(i, 1) = 1.0;
-        b2(i) = points[i](1);
-    }
-    Eigen::VectorXd x2 = A2.colPivHouseholderQr().solve(b2);
-    k_ = x2(0);
-    m_ = x2(1);
 
     LOG(INFO) << "c: " << c_ << " c1: " << c1_ << " c2: " << c2_;
     LOG(INFO) << "k: " << k_ << " m: " << m_;
@@ -60,7 +53,7 @@ void Catenary::optimizeTransmissionModel(const P2LMatchResult& lines, const Opti
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     // options.num_threads = 8;
     
-    for (size_t i = 0; i < lines.size(); i += 5) {
+    for (size_t i = 0; i < lines.size(); i++) {
         ceres::CostFunction* cost_function = CatenaryP2LFactor::Create(lines[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
         problem.AddResidualBlock(cost_function, nullptr, &c_, &c1_, &c2_, &k_, &m_);
     }
@@ -76,8 +69,8 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult& points, const Opt
 {
     ceres::Problem problem;
     ceres::Solver::Options options;
-    // ceres::LossFunction *loss_function = new ceres::HuberLoss(5.0);
-    ceres::LossFunction *loss_function = nullptr;
+    ceres::LossFunction *loss_function = new ceres::HuberLoss(5.0);
+    // ceres::LossFunction *loss_function = nullptr;
     options.linear_solver_type = ceres::DENSE_QR;
     options.minimizer_progress_to_stdout = true;
     options.max_num_iterations = 8;
@@ -87,10 +80,10 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult& points, const Opt
     problem.AddParameterBlock(&k_, 1);
     problem.AddParameterBlock(&m_, 1);
 
-    // if (time > 1) {
-    //     problem.SetParameterBlockConstant(&k_);
-    //     problem.SetParameterBlockConstant(&m_);
-    // }
+    if (time > 1) {
+        problem.SetParameterBlockConstant(&k_);
+        problem.SetParameterBlockConstant(&m_);
+    }
 
     for (size_t i = 0; i < points.size(); i ++) {
         ceres::CostFunction* cost_function = CatenaryP2PFactor::Create(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));

@@ -1,5 +1,5 @@
 /**
- * @file   points_simulation.hpp
+ * @file   output.h
  * @brief  This file is used to output results to files.
  * @author Yipeng Zhao
  * @date   2024-07

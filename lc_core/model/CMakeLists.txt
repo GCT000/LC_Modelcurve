@@ -13,6 +13,7 @@ add_library(curveModel_lib SHARED
     src/kdtree.cpp
     ../transmission_model/parabola.cpp
     ../transmission_model/catenary.cpp
+    ../transmission_model/transmissionModel.cpp
 )
 target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp)
 

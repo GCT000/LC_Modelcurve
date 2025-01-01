@@ -26,6 +26,8 @@ public:
     {
     }
 
+    ExOptimization(const ExOptimization &other);
+
     void loadLidarPoints(const std::string& lidar_points_file);
 
     void loadImgPoints(const std::string& img_ref_points_file);
