@@ -41,7 +41,7 @@ public:
     ~CurveModeling();
 
     /// @brief  load lidar points from file
-    void loadLidarPoints(const LoadPCD &load_pcd);
+    void loadLidarPoints(const std::string &lidar_points_path);
     
     /// @brief  lidar preprocessing
     void lidarPreprocessing();
@@ -68,9 +68,6 @@ private:
     /// @brief  fitting 3D-curve-line with input lidar points
     void curveLidarFitting();
 
-    /// @brief  generate points based on curve parameters
-    void generateCurvePoints();
-
     /// @brief  generate curve points on image
     void generateCurveImagePoints(const std::string& selected_points);
 
@@ -80,6 +77,18 @@ private:
     /// @brief  update match and re-optimization
     void updateMatchAndReOptimization(const OptimizationInput& input);
 
+    /// @brief  update lidar project to pixel points
+    void updateLidar2PixelPoints();
+
+    /// @brief  draw points on image
+    void drawPointsOnImage(const std::vector<cv::Point2d>& points, const std::string& filename);
+
+    /// @brief  draw match result on image
+    void drawMatchResultOnImage(const std::string& filename);
+
+    /// @brief  output 3D points to txt file
+    void output3DPointsToTxt(const std::string& filename);
+
     /// @brief  debug
     void lidarP2img();
 
@@ -87,7 +96,6 @@ private:
     std::vector<Eigen::Vector3d> lidar_points_;
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
-    // Eigen::Vector3d end_point_;
     double x_interval_start_;
     double x_interval_end_;
     cv::Mat img_;

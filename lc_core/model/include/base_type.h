@@ -12,6 +12,8 @@
 #include <vector>
 #include "camera.h"
 
+#define MY_DEBUG
+
 namespace lc_core
 {
 
