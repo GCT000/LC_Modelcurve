@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 #include "transmissionModel.h"
 #include "catenary.h"
+#include "parabola.h"
 #include "output.h"
 #include "matcher.h"
 #include "evaluation.h"
@@ -176,14 +177,15 @@ TEST(lidar_test, test_lidar)
     vector<Vector3d> tele_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/extracted_line.txt");
 
     Catenary ref_catenary, tele_catenary;
-    // I20250107 09:53:11.504978 1687810 catenary.cpp:35] c: 483.101 c1: -58.7414 c2: -486.267
-    // I20250107 09:53:11.505050 1687810 catenary.cpp:36] k: -0.047513 m: -0.324627
+    // Parabola ref_catenary, tele_catenary;
+    // I20250108 16:59:29.773806 2292966 catenary.cpp:35] c: 483.112 c1: -59.0344 c2: -486.303
+    // I20250108 16:59:29.773883 2292966 catenary.cpp:36] k: -0.0472548 m: -0.327019
     // ref_catenary.fitTransmissionModel(ref_points);
-    ref_catenary.setParams(483.101, -58.7414, -486.267, -0.047513, -0.324627);
-    // I20250107 09:53:16.687072 1687810 catenary.cpp:35] c: 483.574 c1: -59.3597 c2: -486.796
-    // I20250107 09:53:16.687093 1687810 catenary.cpp:36] k: -0.0477684 m: -0.305987   
+    ref_catenary.setParams(483.112, -59.0344, -486.303, -0.0472548, -0.327019);
+    // I20250108 16:59:35.428499 2292966 catenary.cpp:35] c: 483.487 c1: -59.3533 c2: -486.709
+    // I20250108 16:59:35.428520 2292966 catenary.cpp:36] k: -0.0475502 m: -0.31409  
     // tele_catenary.fitTransmissionModel(tele_points);
-    tele_catenary.setParams(483.574, -59.3597, -486.796, -0.0477684, -0.305987);
+    tele_catenary.setParams(483.487, -59.3533, -486.709, -0.0475502, -0.31409);
     vector<Vector3d> ref_points_new, tele_points_new;
     for (double x = 0.2; x < 96.4; x += 0.2)
     {
