@@ -26,9 +26,8 @@ DEFINE_bool(visualize, true, "是否可视化");
 TEST(loadPcdFile, loadPcd)
 {
     std::string pcd_file = "test_pcd_file.pcd";
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     lc_core::LoadPCD input_pcd;
-    input_pcd(pcd_file, cloud);
+    input_pcd(pcd_file);
     LOG(INFO) << "input points num: " << input_pcd.getPoints().size();
     EXPECT_EQ(input_pcd.getPoints().empty(), false);
 }

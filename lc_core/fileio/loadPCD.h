@@ -23,8 +23,9 @@ namespace lc_core
         ~LoadPCD() = default;
 
         /// @brief  Load PCD file
-        void operator()(const std::string &file_name, pcl::PointCloud<pcl::PointXYZ>::Ptr cloud)
+        void operator()(const std::string &file_name)
         {
+            pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
             if (pcl::io::loadPCDFile<pcl::PointXYZ>(file_name, *cloud) == -1)
             {
                 PCL_ERROR("Couldn't read file %s\n", file_name.c_str());

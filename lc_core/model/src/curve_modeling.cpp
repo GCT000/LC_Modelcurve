@@ -123,9 +123,8 @@ Eigen::Vector2d CurveModeling::lidar2pixel(const Eigen::Vector3d& p_l) {
 
 void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
 {
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     lc_core::LoadPCD input_pcd;
-    input_pcd(lidar_points_path, cloud);
+    input_pcd(lidar_points_path);
     std::vector<Eigen::Vector3d> lidar_points;
     lidar_points = input_pcd.getPoints();
     std::sort(lidar_points.begin(), lidar_points.end(), [](const Eigen::Vector3d& a, const Eigen::Vector3d& b) {
