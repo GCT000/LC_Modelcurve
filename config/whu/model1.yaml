@@ -1,0 +1,51 @@
+YAML: 1.0
+
+# line number
+line_num: 1
+
+# camera yaml
+cam_calib: "cam0.yaml"
+
+# the known end point
+x_interval:
+  start: 0.0
+  end: 96.0
+  sample_start: 0.0
+
+# image path
+image_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/image_1.png"
+# lidar points path
+lidar_points_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd"
+
+# points selected
+# Note: please choose points from far away to near
+selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/image_points_0103.txt"
+
+# ex optimization
+ex_optimization: 0
+ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/temp/lidar_ref_0103.txt"
+ref_image_points: "/home/zyp/Lidar/LC-CurveModel/temp/image_ref_0103.txt"
+
+# matcher config(1: p2p  2: p2l)
+matcher_type: 1
+b_spline_num: 1000
+sample: 0.2
+
+# transmission model(0: parabola  1: catenary)
+transmission_model: 0
+y_optimize: 1           # 0: no optimize, 1: optimize
+
+# lidar-camera extrinsic
+T_cam_lidar:
+  rows: 4
+  cols: 4
+  dt: d
+  # ex for test_0912
+  data: [-0.00656762,   -0.999291,   -0.037034, -0.0425305,
+         0.0055339,   0.0369993,   -0.999299, 0.0922477,
+          0.999962, -0.00676934,  0.00528832, -0.117265,
+         0.0, 0.0, 0.0, 1.0]
+  # data: [-0.00464681,   -0.999987,  0.00181947, -0.0425305,
+  #        0.00371301, -0.00183667, -0.999991, 0.0922477,
+  #        0.999982, -0.00464008, 0.00372157, -0.117265,
+  #        0.0, 0.0, 0.0, 1.0]

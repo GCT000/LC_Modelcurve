@@ -44,18 +44,20 @@ namespace lc_core
         }
 
         /// @brief  Optimizate transmission model
-        virtual void optimizeTransmissionModel(const P2LMatchResult &lines, const OptimizationInput &input)
+        virtual void optimizeTransmissionModel(const P2LMatchResult &lines, const OptimizationInput &input, int y_optimize = 0)
         {
             LOG(INFO) << "Choose one transmission model";
         }
 
-        virtual void optimizeTransmissionModel(const P2PMatchResult &points, const OptimizationInput &input, int time = 1)
+        virtual void optimizeTransmissionModel(const P2PMatchResult &points, const OptimizationInput &input, int y_optimize = 0, int time = 1)
         {
             LOG(INFO) << "Choose one transmission model";
         }
 
         /// @brief  RANSAC fit x-y line
         virtual std::pair<double, double> ransacFitLine(std::vector<Eigen::Vector3d> &points);
+
+
     };
 
 } // namespace lc_core

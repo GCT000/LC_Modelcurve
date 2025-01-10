@@ -24,9 +24,9 @@ public:
 
     Eigen::Vector3d generateSinglePoint(const double &x) override;
 
-    void optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input) override;
+    void optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input, int y_optimize = 0) override;
 
-    void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int time = 2) override;
+    void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int y_optimize = 0, int time = 1) override;
 
 private:
     double a_, b_, c_;

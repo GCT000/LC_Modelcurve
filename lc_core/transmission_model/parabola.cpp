@@ -37,7 +37,7 @@ Eigen::Vector3d Parabola::generateSinglePoint(const double &x)
     return Eigen::Vector3d(x, y, z);
 }
 
-void Parabola::optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input)
+void Parabola::optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input, int y_optimize)
 {
     ceres::Problem problem;
     ceres::Solver::Options options;
@@ -47,6 +47,14 @@ void Parabola::optimizeTransmissionModel(const P2LMatchResult& lines, const Opti
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
     // options.num_threads = 8;
 
+    problem.AddParameterBlock(&k_, 1);
+    problem.AddParameterBlock(&m_, 1);
+
+    if (!y_optimize) {
+        problem.SetParameterBlockConstant(&k_);
+        problem.SetParameterBlockConstant(&m_);
+    }
+    
     for (size_t i = 0; i < lines.size(); i++) {
         ceres::CostFunction* cost_function = CurveFactor::Create(lines[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
         problem.AddResidualBlock(cost_function, nullptr, &a_, &b_, &c_, &k_, &m_);
@@ -59,7 +67,7 @@ void Parabola::optimizeTransmissionModel(const P2LMatchResult& lines, const Opti
     LOG(INFO) << "k: " << k_ << " m: " << m_;
 }
 
-void Parabola::optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int time)
+void Parabola::optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int y_optimize, int time)
 {
     ceres::Problem problem;
     ceres::Solver::Options options;
@@ -74,7 +82,7 @@ void Parabola::optimizeTransmissionModel(const P2PMatchResult& points, const Opt
     problem.AddParameterBlock(&k_, 1);
     problem.AddParameterBlock(&m_, 1);
 
-    if (time > 1) {
+    if (!y_optimize || time == 2) {
         problem.SetParameterBlockConstant(&k_);
         problem.SetParameterBlockConstant(&m_);
     }

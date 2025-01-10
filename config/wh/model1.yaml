@@ -7,17 +7,20 @@ line_num: 1
 cam_calib: "cam0.yaml"
 
 # the known end point
+# x sample
 x_interval:
-  start: 20.0
-  end: 162.375
-  sample_start: 20.0
+  start: 5.0
+  end: 162
+  sample_start: 5.0
 
 # image path
 image_path: "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_13.png"
+# lidar points path
+lidar_points_path: "/ssd/DATA/Transmisson/0912/test5/line_10.pcd"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/points.txt"
+selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0912_line10.txt"
 
 # ex optimization
 ex_optimization: 0
@@ -26,11 +29,12 @@ ref_image_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/points_ref.txt"
 
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1
-b_spline_num: 800
+b_spline_num: 1000
 sample: 0.2
 
 # transmission model(0: parabola  1: catenary)
-transmission_model: 1
+transmission_model: 0
+y_optimize: 1           # 0: no optimize, 1: optimize
 
 # lidar-camera extrinsic
 T_cam_lidar:

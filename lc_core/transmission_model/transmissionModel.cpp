@@ -4,7 +4,7 @@ using namespace lc_core;
 
 std::pair<double, double> TransmissionModel::ransacFitLine(std::vector<Eigen::Vector3d> &points)
 {
-    const int iterations = 100;   // RANSAC
+    const int iterations = 1000;   // RANSAC
     const double threshold = 0.03; // inlier threshold
     double best_k = 0, best_m = 0;
     int max_inliers = 0;
@@ -65,6 +65,7 @@ std::pair<double, double> TransmissionModel::ransacFitLine(std::vector<Eigen::Ve
 
     points = std::move(inlier_points);
 
+#if 0
     Eigen::MatrixXd A2(points.size(), 2);
     Eigen::VectorXd b2(points.size());
     for (int i = 0; i < points.size(); ++i)
@@ -76,5 +77,6 @@ std::pair<double, double> TransmissionModel::ransacFitLine(std::vector<Eigen::Ve
     Eigen::VectorXd x2 = A2.colPivHouseholderQr().solve(b2);
     double k = x2(0);
     double m = x2(1);
-    return std::make_pair(k, m);
+#endif
+    return std::make_pair(best_k, best_m);
 }

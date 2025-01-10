@@ -9,17 +9,19 @@ cam_calib: "cam_pj.yaml"
 # the known end point
 x_interval:
   start: 9
-  end: 196.0
+  end: 194.0
   sample_start: 9
 
 # image path
-# image_path: "/home/zyp/HD2/DATA/Transmisson/PJ/data/20241226_0340/extracted/image_1.png"
-image_path: "/home/zyp/HD2/DATA/Transmisson/PJ/data/20241226_0830/extracted/image_1.png"
+image_path: "/home/zyp/HD2/DATA/Transmisson/PJ/data/20241226_0340/extracted/image_1.png"
+# image_path: "/home/zyp/HD2/DATA/Transmisson/PJ/data/20241226_0830/extracted/image_1.png"
+# lidar points path
+lidar_points_path: "/ssd/DATA/Transmisson/PJ/data/20241226_0340/extracted/line_6.pcd"
 
 # points selected
 # Note: please choose points from far away to near
-# selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0340_line6.txt"
-selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0830_line2.txt"
+selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0340_line6.txt"
+# selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0830_line2.txt"
 
 # ex optimization
 ex_optimization: 0
