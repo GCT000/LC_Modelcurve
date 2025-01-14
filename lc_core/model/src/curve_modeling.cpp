@@ -24,6 +24,9 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
 
     // load camera
     loadCamera(yaml, yaml_file);
+
+    // load lidar-camera extrinsic
+    loadLidar2CameraExtrinsic(yaml);
     
     // x sample
     if (yaml["x_interval"])
@@ -73,9 +76,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         // generate line points
         generateLineImagePoints(start, end);
     }
-
-    // load lidar-camera extrinsic
-    loadLidar2CameraExtrinsic(yaml);
 
     if (yaml["ex_optimization"].as<int>()) {
         ex_optimization_ = std::make_shared<ExOptimization>(R_c_l_, t_c_l_, cam_);
@@ -354,7 +354,9 @@ void CurveModeling::lidarP2img() {
     cv::Mat img = img_.clone();
     for (const Eigen::Vector3d& lp : lidar_points_) {
         Eigen::Vector2d p_img = lidar2pixel(lp);
-        cv::circle(img, cv::Point(p_img(0), p_img(1)), 3, cv::Scalar(0, 0, 255), -1);
+        if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows) {
+            cv::circle(img, cv::Point(p_img(0), p_img(1)), 3, cv::Scalar(0, 0, 255), -1);
+        }
     }
     cv::imwrite(temp_path + "lidarP2img.jpg", img);
 }

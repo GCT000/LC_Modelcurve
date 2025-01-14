@@ -9,17 +9,18 @@ cam_calib: "cam0.yaml"
 # the known end point
 x_interval:
   start: 0.0
-  end: 96.0
+  end: 96.8
   sample_start: 0.0
 
 # image path
-image_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/image_1.png"
+# image_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/image_1.png"
+image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_1.png"
 # lidar points path
-lidar_points_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd"
+lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/line_1.pcd"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/image_points_0103.txt"
+selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line1.txt"
 
 # ex optimization
 ex_optimization: 0
@@ -41,11 +42,12 @@ T_cam_lidar:
   cols: 4
   dt: d
   # ex for test_0912
-  data: [-0.00656762,   -0.999291,   -0.037034, -0.0425305,
-         0.0055339,   0.0369993,   -0.999299, 0.0922477,
-          0.999962, -0.00676934,  0.00528832, -0.117265,
-         0.0, 0.0, 0.0, 1.0]
-  # data: [-0.00464681,   -0.999987,  0.00181947, -0.0425305,
-  #        0.00371301, -0.00183667, -0.999991, 0.0922477,
-  #        0.999982, -0.00464008, 0.00372157, -0.117265,
+  # data: [-0.00656762,   -0.999291,   -0.037034, -0.0425305,
+  #        0.0055339,   0.0369993,   -0.999299, 0.0922477,
+  #         0.999962, -0.00676934,  0.00528832, -0.117265,
   #        0.0, 0.0, 0.0, 1.0]
+  # 0109
+  data: [-0.00615688,   -0.999978,  0.00191724, -0.0425305,
+          0.0079831,   -0.001965,   -0.999965, 0.0922477,
+         0.999948, -0.00614274,  0.00799642, -0.117265,
+         0.0, 0.0, 0.0, 1.0]
