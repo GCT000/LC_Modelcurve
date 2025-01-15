@@ -2,25 +2,30 @@ YAML: 1.0
 
 # line number
 line_num: 1
+# environment
+dark: 1
 
 # camera yaml
 cam_calib: "cam0.yaml"
 
 # the known end point
+end_point: [96.8, 1.60774, -1.5662]
 x_interval:
   start: 0.0
   end: 96.8
-  sample_start: 0.0
 
 # image path
 # image_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/image_1.png"
-image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_1.png"
+# image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_1.png"
+image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/image_1.png"
 # lidar points path
-lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/line_1.pcd"
+# lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/line_1.pcd"
+lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/line_1.pcd"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line1.txt"
+# selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line1.txt"
+selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line_dark.txt"
 
 # ex optimization
 ex_optimization: 0
