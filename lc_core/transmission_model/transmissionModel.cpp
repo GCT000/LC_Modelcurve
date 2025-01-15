@@ -4,8 +4,8 @@ using namespace lc_core;
 
 std::pair<double, double> TransmissionModel::ransacFitLine(std::vector<Eigen::Vector3d> &points)
 {
-    const int iterations = 1000;   // RANSAC
-    const double threshold = 0.03; // inlier threshold
+    const int iterations = 500;   // RANSAC
+    const double threshold = 0.02; // inlier threshold
     double best_k = 0, best_m = 0;
     int max_inliers = 0;
     std::vector<bool> best_inliers;

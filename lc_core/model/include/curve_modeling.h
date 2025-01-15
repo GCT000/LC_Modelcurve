@@ -52,6 +52,9 @@ public:
     /// @brief  optimization
     void optimization();
 
+    /// @brief  optimize dark
+    void optimizationDark();
+
     /// @brief  optimize ex
     void optimizationEx();
 
@@ -72,7 +75,7 @@ private:
     void generateCurveImagePoints(const std::string& selected_points);
 
     /// @brief  generate line points on image
-    void generateLineImagePoints(const cv::Point2d &start, const cv::Point2d &end);
+    void generateLineImagePoints(const std::string& selected_points);
 
     /// @brief  update match and re-optimization
     void updateMatchAndReOptimization(const OptimizationInput& input);

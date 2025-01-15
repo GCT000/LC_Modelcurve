@@ -28,6 +28,18 @@ public:
 
     void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int y_optimize = 0, int time = 1) override;
 
+    void optimizeTransmissionModelDark(const P2LMatchResult& lines, const OptimizationInput& input) override;
+
+    void optimizeTransmissionModelDark(const P2PMatchResult& points, const OptimizationInput& input) override;
+
+    void setParams(const double &a, const double &b, const double &c, const double &k, const double &m) {
+        a_ = a;
+        b_ = b;
+        c_ = c;
+        k_ = k;
+        m_ = m;
+    }
+
 private:
     double a_, b_, c_;
     double k_, m_;
