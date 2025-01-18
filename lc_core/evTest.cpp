@@ -32,9 +32,9 @@ struct Error {
 static std::string temp_path = "/home/zyp/Lidar/LC-CurveModel/temp/";
 
 Matrix3d Rcl = (Matrix3d() <<
-    -0.00739234,   -0.999086,   -0.042098,
-    0.0060822,    0.042054,   -0.999096,
-    0.999954, -0.00764232,  0.00576635).finished();
+    -0.00615688,   -0.999978,  0.00191724,
+    0.0079831,   -0.001965,   -0.999965,
+    0.999948, -0.00614274,  0.00799642).finished();
 ;
 Vector3d tcl = (Vector3d() <<
     -0.0425305,
@@ -55,11 +55,11 @@ vector<Vector3d> loadPoints(const string& file_path)
     return points;
 }
 
-cv::Mat image = cv::imread("/ssd/DATA/Transmisson/whu/0103/extracted03/image_1.png");
+cv::Mat image = cv::imread("/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_6.png");
 
 Camera cam{
-    .img_h_ = 1080,
-    .img_w_ = 1920,
+    .img_h_ = 2048,
+    .img_w_ = 2448,
     .fx_ = 3491.86371770473,
     .fy_ = 3483.50379241159,
     .cx_ = 1231.01807787934,
@@ -173,21 +173,23 @@ struct ExFactor {
 
 TEST(lidar_test, test_lidar)
 {
-    vector<Vector3d> ref_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/0103_line_extracted.txt");
-    vector<Vector3d> tele_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/extracted_line.txt");
+    vector<Vector3d> ref_points = loadPoints("/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/0109_line_extracted.txt");
+    vector<Vector3d> tele_points = loadPoints("/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/tele_line.txt");
 
     Catenary ref_catenary, tele_catenary;
     // Parabola ref_catenary, tele_catenary;
     // I20250108 16:59:29.773806 2292966 catenary.cpp:35] c: 483.112 c1: -59.0344 c2: -486.303
     // I20250108 16:59:29.773883 2292966 catenary.cpp:36] k: -0.0472548 m: -0.327019
     // ref_catenary.fitTransmissionModel(ref_points);
-    ref_catenary.setParams(483.112, -59.0344, -486.303, -0.0472548, -0.327019);
+    // ref_catenary.setParams(483.112, -59.0344, -486.303, -0.0472548, -0.327019);
+    ref_catenary.setParams(402.899, -56.6338, -406.469, 0.0207661, -0.402419);
     // I20250108 16:59:35.428499 2292966 catenary.cpp:35] c: 483.487 c1: -59.3533 c2: -486.709
     // I20250108 16:59:35.428520 2292966 catenary.cpp:36] k: -0.0475502 m: -0.31409  
     // tele_catenary.fitTransmissionModel(tele_points);
-    tele_catenary.setParams(483.487, -59.3533, -486.709, -0.0475502, -0.31409);
+    // tele_catenary.setParams(483.487, -59.3533, -486.709, -0.0475502, -0.31409);
+    tele_catenary.setParams(402.21, -56.3662, -405.766, 0.0219873, -0.422807);
     vector<Vector3d> ref_points_new, tele_points_new;
-    for (double x = 0.2; x < 96.4; x += 0.2)
+    for (double x = 0.2; x < 97; x += 0.2)
     {
         Vector3d ref_point = ref_catenary.generateSinglePoint(x);
         Vector3d tele_point = tele_catenary.generateSinglePoint(x);
@@ -197,8 +199,10 @@ TEST(lidar_test, test_lidar)
     outputPoints("/home/zyp/Lidar/LC-CurveModel/temp/ref_lidar_points.txt", ref_points_new);
     outputPoints("/home/zyp/Lidar/LC-CurveModel/temp/tele_lidar_points.txt", tele_points_new);
     vector<Vector3d> first_points, middle_points, last_points;
+    // first_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/original_output_lidar_points.txt");
+    // middle_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/middle_output_lidar_points.txt");
     first_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/original_output_lidar_points.txt");
-    middle_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/middle_output_lidar_points.txt");
+    middle_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/dark_middle_lidar_points.txt");
     last_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/final_output_lidar_points.txt");
 
     Error tele_error = calculateError(ref_points_new, tele_points_new);
@@ -276,7 +280,7 @@ TEST(image_test, test_image)
     }
     // first
     vector<Vector3d> first_points;
-    first_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/first_output_lidar_points.txt");
+    first_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/original_output_lidar_points.txt");
     vector<cv::Point2d> first_points_image;
     for (auto& point : first_points)
     {
@@ -343,19 +347,34 @@ TEST(exOptimization, test_exOptimization)
 {
     // curve points
     vector<cv::Point2d> curve_points = loadPoints2d("/home/zyp/Lidar/LC-CurveModel/temp/curve_points.txt");
-    // ref
-    vector<Vector3d> ref_points;
-    ref_points = loadPoints("/home/zyp/Lidar/LC-CurveModel/temp/ref_lidar_points.txt");
-    vector<cv::Point2d> ref_points_image;
-    vector<int> x;
-    for (size_t i = 0; i < ref_points.size(); ++i)
+    vector<Vector3d> ref_points = loadPoints("/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/tele_line.txt");
+
+    Parabola ref_catenary;
+    // Parabola ref_catenary, tele_catenary;
+    // I20250108 16:59:29.773806 2292966 catenary.cpp:35] c: 483.112 c1: -59.0344 c2: -486.303
+    // I20250108 16:59:29.773883 2292966 catenary.cpp:36] k: -0.0472548 m: -0.327019
+    ref_catenary.fitTransmissionModel(ref_points);
+    // ref_catenary.setParams(483.112, -59.0344, -486.303, -0.0472548, -0.327019);
+    vector<Vector3d> ref_points_new, tele_points_new;
+    for (double x = 0.2; x < 96.8; x += 0.2)
     {
-        Vector2d p_img = lidar2pixel(ref_points[i], cam);
+        Vector3d ref_point = ref_catenary.generateSinglePoint(x);
+        ref_points_new.push_back(ref_point);
+    }
+    // ref
+    vector<cv::Point2d> ref_points_image;
+    cv::Mat image_copy = image.clone();
+    vector<int> x;
+    for (size_t i = 0; i < ref_points_new.size(); ++i)
+    {
+        Vector2d p_img = lidar2pixel(ref_points_new[i], cam);
         if (p_img[0] > 0 && p_img[0] < image.cols && p_img[1] > 0 && p_img[1] < image.rows) {
             ref_points_image.push_back(cv::Point2d(p_img[0], p_img[1]));
+            cv::circle(image_copy, cv::Point(p_img[0], p_img[1]), 3, cv::Scalar(0, 0, 255), -1);
             x.push_back(i);
         }
     }
+    cv::imwrite("/home/zyp/Lidar/LC-CurveModel/temp/ref_points_image.png", image_copy);
     MatcherConfig matcher_config {
         .type = 1
     };
@@ -384,7 +403,7 @@ TEST(exOptimization, test_exOptimization)
 
     shared_ptr<Camera> camPtr = std::make_shared<Camera>(cam);
     for (size_t i = 0; i < x.size(); ++i) {
-        ceres::CostFunction* cost_function = ExFactor::Create(ref_points[x[i]], p2p_match_result[i], camPtr);
+        ceres::CostFunction* cost_function = ExFactor::Create(ref_points_new[x[i]], p2p_match_result[i], camPtr);
         problem.AddResidualBlock(cost_function, nullptr, q, t);
     }
 
@@ -399,9 +418,9 @@ TEST(exOptimization, test_exOptimization)
     cout << "tcl: \n" << tcl << "\n";
 
     ref_points_image.clear();
-    for (size_t i = 0; i < ref_points.size(); ++i)
+    for (size_t i = 0; i < x.size(); ++i)
     {
-        Vector2d p_img = lidar2pixel(ref_points[i], cam);
+        Vector2d p_img = lidar2pixel(ref_points_new[x[i]], cam);
         ref_points_image.push_back(cv::Point2d(p_img[0], p_img[1]));
     }
     matcher.match(ref_points_image, curve_points);

@@ -18,6 +18,8 @@ x_interval:
 image_path: "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_13.png"
 # lidar points path
 lidar_points_path: "/ssd/DATA/Transmisson/0912/test5/line_1.pcd"
+# res path
+res_path: "/home/zyp/Lidar/LC-CurveModel/res/wh/"
 
 # points selected
 # Note: please choose points from far away to near

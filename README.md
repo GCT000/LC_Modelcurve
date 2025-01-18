@@ -2,9 +2,13 @@
 <!-- markdownlint-disable MD047 -->
 The purpose of this repository is to reconstruct complete spatial models of power lines using LiDAR and cameras. We treat power lines as spatial curves and reconstruct them using both parabolic equations and catenary equations. Using simulation results as an example, the reconstruction results can be seen in the following two images.
 
-![9-degree](/image/9-degree.jpg)
+Demo: Curve selection on image  
 
-![curve-fitting](/image/curve-fitting.png)
+![curve-demo](./image/curve_points.jpg)  
+
+Demo: Curve restruction in 3D space  
+
+![3d-demo](./image/overview.png)  
 
 ## Structure  
 

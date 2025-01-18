@@ -1,14 +1,10 @@
+#include "output.h"
 #include <pcl/io/pcd_io.h>
 #include <pcl/point_types.h>
-#include <fstream>
 #include <random>
-#include <gflags/gflags.h>
-#include <glog/logging.h>
 
-DEFINE_string(lidar_points, "/home/zyp/Lidar/LC-CurveModel/temp/final_output_lidar_points.txt", "要添加的lidar点");
-// DEFINE_string(input_pcd, "/home/zyp/HD2/DATA/Transmisson/0912/test5/extracted_points.pcd", "输入的点云");
-DEFINE_string(pcd_path, "/ssd/DATA/Transmisson/PJ/data/20241226_0340/extracted/", "输入的点云");
-DEFINE_string(output_pcd, "line_1.pcd", "输出的点云");
+namespace lc_core
+{
 
 // load txt file
 pcl::PointCloud<pcl::PointXYZ>::Ptr loadTxtFile(const std::string& filename) {
@@ -61,17 +57,46 @@ pcl::PointCloud<pcl::PointXYZ>::Ptr generateRandomPoints(const pcl::PointCloud<p
     return random_points;
 }
 
-int main(int argc, char** argv) {
-    google::ParseCommandLineFlags(&argc, &argv, true);
-    google::InitGoogleLogging(argv[0]);
-    // testing::InitGoogleTest(&argc, argv);
-    // RUN_ALL_TESTS();
-    FLAGS_stderrthreshold = google::INFO;
-    FLAGS_colorlogtostderr = true;
+void outputPoints(const std::string &file_name, const std::vector<Eigen::Vector3d> &points)
+{
+    std::ofstream out_file(file_name, std::ios::out);
+    if (!out_file.is_open())
+    {
+        LOG(ERROR) << "Can't open file: " << file_name;
+        return;
+    }
+
+    for (const auto &point : points)
+    {
+        out_file << point.x() << " " << point.y() << " " << point.z() << std::endl;
+    }
+
+    out_file.close();
+}
+
+void outputPoints(const std::string &file_name, const std::vector<cv::Point2d> &points)
+{
+    std::ofstream out_file(file_name, std::ios::out);
+    if (!out_file.is_open())
+    {
+        LOG(ERROR) << "Can't open file: " << file_name;
+        return;
+    }
+
+    for (const auto &point : points)
+    {
+        out_file << point.x << " " << point.y << std::endl;
+    }
+
+    out_file.close();
+}
+
+void outputPCD(const std::string &input_file, const std::string &output_file)
+{
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
 
     // 1. load txt file
-    pcl::PointCloud<pcl::PointXYZ>::Ptr txt_cloud = loadTxtFile(FLAGS_lidar_points);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr txt_cloud = loadTxtFile(input_file);
     
     // 2. generate random points in a radius
     pcl::PointCloud<pcl::PointXYZ>::Ptr random_points = generateRandomPoints(txt_cloud, 0.03, 20);
@@ -80,9 +105,8 @@ int main(int argc, char** argv) {
     *cloud = *txt_cloud;        // original txt file points
     *cloud += *random_points;   // add generated random points
     // 4. save merged point cloud
-    std::string output_file = FLAGS_pcd_path + FLAGS_output_pcd;
     pcl::io::savePCDFileASCII(output_file, *cloud);
     LOG(INFO) << "Saved merged point cloud to " << output_file;
+}
 
-    return 0;
 }

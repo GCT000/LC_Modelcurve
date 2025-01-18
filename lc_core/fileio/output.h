@@ -18,6 +18,15 @@
 namespace lc_core
 {
 
+/// @brief  output lidar points to file
+void outputPoints(const std::string &file_name, const std::vector<Eigen::Vector3d> &points);
+
+/// @brief  output image points to file
+void outputPoints(const std::string &file_name, const std::vector<cv::Point2d> &points);
+
+/// @brief  output pcd file
+void outputPCD(const std::string &input_file, const std::string &output_file);
+
 /// @brief  output points to file
 template <typename T>
 void outputPoints(const std::string &file_name, const std::vector<cv::Point_<T>> &points)
@@ -53,41 +62,6 @@ void outputPointsAndGrad(const std::string &file_name,
     {
         out_file << point.first.x << " " << point.first.y << " "
                  << point.second.first << " " << point.second.second << std::endl;
-    }
-
-    out_file.close();
-}
-
-/// @brief  output points to file
-void outputPoints(const std::string &file_name, const std::vector<Eigen::Vector3d> &points)
-{
-    std::ofstream out_file(file_name, std::ios::out);
-    if (!out_file.is_open())
-    {
-        LOG(ERROR) << "Can't open file: " << file_name;
-        return;
-    }
-
-    for (const auto &point : points)
-    {
-        out_file << point.x() << " " << point.y() << " " << point.z() << std::endl;
-    }
-
-    out_file.close();
-}
-
-void outputPoints(const std::string &file_name, const std::vector<cv::Point2d> &points)
-{
-    std::ofstream out_file(file_name, std::ios::out);
-    if (!out_file.is_open())
-    {
-        LOG(ERROR) << "Can't open file: " << file_name;
-        return;
-    }
-
-    for (const auto &point : points)
-    {
-        out_file << point.x << " " << point.y << std::endl;
     }
 
     out_file.close();

@@ -4,6 +4,7 @@
 #include "curve_factor_p2p.h"
 #include "bSpline.h"
 #include "evaluation.h"
+#include "visualization.h"
 #include <fstream>
 #include <glog/logging.h>
 #include <ceres/ceres.h>
@@ -16,7 +17,10 @@ static int bSplineNum;
 static double sample;
 static std::vector<double> xSamples, xSamplesUsed;
 static int y_optimize = 0;
+#ifdef MY_DEBUG
 static std::string temp_path = "/home/zyp/Lidar/LC-CurveModel/temp/";
+#endif
+static std::string res_path;
 static bool dark = false;
 Eigen::Vector3d end_point;
 
@@ -60,6 +64,10 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     if (yaml["lidar_points_path"]) {
         std::string lidar_points_path = yaml["lidar_points_path"].as<std::string>();
         loadLidarPoints(lidar_points_path);
+    }
+
+    if (yaml["res_path"]) {
+        res_path = yaml["res_path"].as<std::string>();
     }
 
     if (yaml["b_spline_num"]) {
@@ -190,12 +198,12 @@ void CurveModeling::lidarPreprocessing()
     
     // generate curve points
     updateLidar2PixelPoints();
-
     // output 3D points to txt file
-    output3DPointsToTxt(temp_path + "original_output_lidar_points.txt");
+    output3DPointsToTxt(res_path + "original_output_lidar_points.txt");
+    outputPCD(res_path + "original_output_lidar_points.txt", res_path + "ori_line_points.pcd");
 
 #ifdef MY_DEBUG
-    drawPointsOnImage(ori_lidar2img_points_, temp_path + "curve_fitting_points.jpg");
+    drawPointsOnImage(img_, ori_lidar2img_points_, temp_path + "curve_fitting_points.jpg");
 #endif
 }
 
@@ -244,7 +252,7 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
 
 #ifdef MY_DEBUG
     LOG(INFO) << "Generate " << img_points_.size() << " curve points on image.\n";
-    drawPointsOnImage(img_points_, temp_path + "curve_points.jpg");
+    drawPointsOnImage(img_, img_points_, temp_path + "curve_points.jpg");
     outputPoints(temp_path + "curve_points.txt", img_points_);
 #endif
 }
@@ -306,7 +314,7 @@ void CurveModeling::generateLineImagePoints(const std::string &selected_points)
 
 #ifdef MY_DEBUG
     LOG(INFO) << "Generate " << img_points_.size() << " line points on image.\n";
-    drawPointsOnImage(img_points_, temp_path + "line_points.jpg");
+    drawPointsOnImage(img_, img_points_, temp_path + "line_points.jpg");
     outputPoints(temp_path + "line_points.txt", img_points_);
 #endif
 }
@@ -314,7 +322,7 @@ void CurveModeling::generateLineImagePoints(const std::string &selected_points)
 void CurveModeling::visualization()
 {
     updateLidar2PixelPoints();
-    drawPointsOnImage(ori_lidar2img_points_, temp_path + "projection_1.jpg");
+    drawPointsOnImage(img_, ori_lidar2img_points_, res_path + "projection_1.jpg");
 }
 
 void CurveModeling::optimization() {
@@ -329,7 +337,7 @@ void CurveModeling::optimization() {
     LOG(INFO) << "Original match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
 
 #ifdef MY_DEBUG
-    drawMatchResultOnImage(temp_path + "match_visualization.jpg");
+    drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "match_visualization.jpg");
 #endif
 
     OptimizationInput input(xSamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
@@ -339,13 +347,15 @@ void CurveModeling::optimization() {
     }, result);
 
     // output 3D points to txt file
-    output3DPointsToTxt(temp_path + "middle_output_lidar_points.txt");
+    output3DPointsToTxt(res_path + "middle_output_lidar_points.txt");
+    outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "middle_line_points.pcd");
 
     // update match and re-optimization
     updateMatchAndReOptimization(input);
 
     // output 3D points to txt file
-    output3DPointsToTxt(temp_path + "final_output_lidar_points.txt");
+    output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
+    outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
 
     updateLidar2PixelPoints();
     result = matcher_->match(ori_lidar2img_points_, img_points_);
@@ -353,7 +363,7 @@ void CurveModeling::optimization() {
     LOG(INFO) << "Final match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
 
 #ifdef MY_DEBUG
-    drawMatchResultOnImage(temp_path + "update_match_visualization.jpg");
+    drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "update_match_visualization.jpg");
 #endif
 }
 
@@ -389,7 +399,8 @@ void CurveModeling::optimizationDark() {
     }, result);
 
     // output 3D points to txt file
-    output3DPointsToTxt(temp_path + "dark_middle_lidar_points.txt");
+    output3DPointsToTxt(res_path + "dark_middle_lidar_points.txt");
+    outputPCD(res_path + "dark_middle_lidar_points.txt", res_path + "dark_middle_line_points.pcd");
     ori_lidar2img_points_.clear();
     for (const double& x : xSamplesUsed) {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(x);
@@ -410,7 +421,7 @@ void CurveModeling::updateMatchAndReOptimization(const OptimizationInput& input)
     LOG(INFO) << "Update match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
 
 #ifdef MY_DEBUG
-    drawMatchResultOnImage(temp_path + "update_match_visualization.jpg");
+    drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "update_match_visualization.jpg");
 #endif
     // re-optimization
     if (avg_err > 3.0) {
@@ -437,8 +448,9 @@ void CurveModeling::optimizationEx()
         Eigen::Vector2d p_img = lidar2pixel(lp);
         cv::circle(img_1, cv::Point(p_img(0), p_img(1)), 10, cv::Scalar(255, 0, 0), -1);
     }
-
+#ifdef MY_DEBUG
     cv::imwrite(temp_path + "ex_optimization.jpg", img_1);
+#endif
 }
 
 void CurveModeling::lidarP2img() {
@@ -469,33 +481,6 @@ void CurveModeling::updateLidar2PixelPoints()
             if (is_first_time) xSamplesUsed.push_back(ix);
         }
     }
-}
-
-void CurveModeling::drawPointsOnImage(const std::vector<cv::Point2d>& points, const std::string& filename)
-{
-    cv::Mat img = img_.clone();
-    for (const auto& point : points) {
-        cv::circle(img, point, 1, cv::Scalar(0, 255, 0), -1);
-    }
-    cv::imwrite(filename, img);
-}
-
-void CurveModeling::drawMatchResultOnImage(const std::string& filename) {
-    std::fstream output_points(temp_path + "match.txt", std::ios::in);
-    cv::Mat match_img = img_.clone();
-    std::string line;
-    while (std::getline(output_points, line)) {
-        double x1, y1, x2, y2;
-        if (sscanf(line.c_str(), "Match result: %lf %lf -- %lf %lf", &x1, &y1, &x2, &y2) == 4) {
-            // draw points
-            cv::circle(match_img, cv::Point(x1, y1), 3, cv::Scalar(0, 0, 255), -1);  // red
-            cv::circle(match_img, cv::Point(x2, y2), 3, cv::Scalar(0, 255, 0), -1);  // green
-            // draw line
-            cv::line(match_img, cv::Point(x1, y1), cv::Point(x2, y2), cv::Scalar(255, 0, 0), 1);
-        }
-    }
-    cv::imwrite(filename, match_img);
-    output_points.close();
 }
 
 void CurveModeling::output3DPointsToTxt(const std::string& filename) {

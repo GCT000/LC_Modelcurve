@@ -83,12 +83,6 @@ private:
     /// @brief  update lidar project to pixel points
     void updateLidar2PixelPoints();
 
-    /// @brief  draw points on image
-    void drawPointsOnImage(const std::vector<cv::Point2d>& points, const std::string& filename);
-
-    /// @brief  draw match result on image
-    void drawMatchResultOnImage(const std::string& filename);
-
     /// @brief  output 3D points to txt file
     void output3DPointsToTxt(const std::string& filename);
 

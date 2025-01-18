@@ -20,7 +20,7 @@ public:
 
     template <typename T>
     bool operator()(const T* const c, const T* const c1, const T* const c2, const T* const k, const T* const m, T* residual) const {
-        residual[0] = T(1e3) * ceres::abs(ez_ - c[0] * ceres::cosh((T(ex_) + c1[0]) / c[0]) + c2[0]);
+        residual[0] = T(1e3) * ceres::abs(ez_ - c[0] * ceres::cosh((T(ex_) + c1[0]) / c[0]) - c2[0]);
         residual[1] = T(1e3) * ceres::abs(ey_ - k[0] * T(ex_) - m[0]);
         return true;
     }
