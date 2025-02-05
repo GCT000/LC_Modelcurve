@@ -43,6 +43,32 @@ lc_tools      -- auxiliary python scripts
     make -j8
     ```
 
+## Example  
+
+1. Extract image and pcd file from rosbag
+
+    ```bash
+    python lc_tools/rosbag_extraction.py <bag_path> <image_topic> <lidar_topic>
+    ```
+
+2. Transmission line point cloud extraction  
+
+    ```bash
+    bin/ppTest -x_threshold <x_threshold> -z_threshold <z_threshold> -pcd_path <pcd_path>
+    ```
+
+3. Select curve on image  
+    
+    ```bash
+    python lc_tools/line_selection.py <image_path> <points_file>
+    ```
+
+4. Run lc_core
+
+    ```bash
+    bin/test -yaml <yaml_file> -visualize <true/false>
+    ```
+
 ## License
 
 This project is licensed under the [GNU General Public License v3.0](LICENSE).
