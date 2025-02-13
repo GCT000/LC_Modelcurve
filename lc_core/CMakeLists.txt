@@ -27,7 +27,7 @@ target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::g
 enable_testing()
 
 add_executable(test test.cpp)
-target_link_libraries(test curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} pthread)
+target_link_libraries(test curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread)
 
 add_executable(outputPoints outputPoints.cpp)
 target_link_libraries(outputPoints curveModel_lib ${PCL_LIBRARIES} glog::glog)

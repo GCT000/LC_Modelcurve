@@ -9,6 +9,8 @@ lc_simulation/data/4.png
 lc_tools/test1/
 lc_tools/test2/
 thirdparty/CannyLines-v3.rar
+thirdparty/CannyLines
+lc_preprocess/img_curve_detection/
 temp/
 res/
 # lc_tools/lidar_ref.txt

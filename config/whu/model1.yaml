@@ -15,19 +15,23 @@ x_interval:
   end: 96.2
 
 # image path
-image_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/image_1.png"
+image_path: "/app/data/input/image_1.png"
+# image_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/image_1.png"
 # image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_1.png"
 # image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/image_1.png"
 # lidar points path
-lidar_points_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd"
+lidar_points_path: "/app/data/input/filtered.pcd"
+# lidar_points_path: "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd"
 # lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/line_1.pcd"
 # lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/line_1.pcd"
 # res path
-res_path: "/home/zyp/Lidar/LC-CurveModel/res/whu/"
+res_path: "/app/data/output/"
+# res_path: "/home/zyp/Lidar/LC-CurveModel/res/whu/"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/image_points_0103.txt"
+selected_points: "/app/data/input/image_points_0103.txt"
+# selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/image_points_0103.txt"
 # selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line1.txt"
 # selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line_dark.txt"
 

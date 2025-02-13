@@ -18,7 +18,7 @@ find_package(yaml-cpp REQUIRED)
 include_directories(${yaml-cpp_INCLUDE_DIRS})
 
 # Ceres
-set(Ceres_DIR /home/zyp/bin/Ceres-2.1.0/lib/cmake/Ceres)
+# set(Ceres_DIR /home/zyp/bin/Ceres-2.1.0/lib/cmake/Ceres)
 find_package(Ceres REQUIRED)
 include_directories(${CERES_INCLUDE_DIRS})
 
@@ -46,7 +46,10 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 
-find_package(TBB REQUIRED)
+# find_package(TBB REQUIRED)
+# set(TBB_INCLUDE_DIRS "/usr/local/include")
+set(TBB_LIBRARIES "/usr/local/lib/libtbb.so")
+message(STATUS "TBB_LIBRARIES: ${TBB_LIBRARIES}")
 include_directories(${TBB_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/lc_core/camera)

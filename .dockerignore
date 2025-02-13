@@ -1,0 +1,9 @@
+build/
+lib/
+bin/
+res/
+temp/
+.vscode/
+.git/
+.gitignore
+thirdparty/CannyLines/
