@@ -34,3 +34,6 @@ target_link_libraries(outputPoints curveModel_lib ${PCL_LIBRARIES} glog::glog)
 
 add_executable(evTest evTest.cpp)
 target_link_libraries(evTest curveModel_lib ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${GTEST_LIBRARIES} pthread)
+
+add_executable(wh_ev wh_ev.cpp)
+target_link_libraries(wh_ev curveModel_lib ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${GTEST_LIBRARIES} pthread)

@@ -18,7 +18,7 @@ find_package(yaml-cpp REQUIRED)
 include_directories(${yaml-cpp_INCLUDE_DIRS})
 
 # Ceres
-# set(Ceres_DIR /home/zyp/bin/Ceres-2.1.0/lib/cmake/Ceres)
+set(Ceres_DIR /home/zyp/bin/Ceres-2.1.0/lib/cmake/Ceres)
 find_package(Ceres REQUIRED)
 include_directories(${CERES_INCLUDE_DIRS})
 

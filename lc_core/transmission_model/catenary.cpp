@@ -81,11 +81,11 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult& points, const Opt
 {
     ceres::Problem problem;
     ceres::Solver::Options options;
-    ceres::LossFunction *loss_function = new ceres::HuberLoss(5.0);
-    // ceres::LossFunction *loss_function = nullptr;
+    // ceres::LossFunction *loss_function = new ceres::HuberLoss(5.0);
+    ceres::LossFunction *loss_function = nullptr;
     options.linear_solver_type = ceres::DENSE_QR;
     options.minimizer_progress_to_stdout = true;
-    options.max_num_iterations = 8;
+    options.max_num_iterations = time == 1 ? 8 : 5;
     options.trust_region_strategy_type = ceres::DOGLEG;
     // options.num_threads = 8;
 

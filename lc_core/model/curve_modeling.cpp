@@ -363,7 +363,7 @@ void CurveModeling::optimization() {
     LOG(INFO) << "Final match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
 
 #ifdef MY_DEBUG
-    drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "update_match_visualization.jpg");
+    drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "final_match_visualization.jpg");
 #endif
 }
 
@@ -424,7 +424,7 @@ void CurveModeling::updateMatchAndReOptimization(const OptimizationInput& input)
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "update_match_visualization.jpg");
 #endif
     // re-optimization
-    if (avg_err > 3.0) {
+    if (avg_err > 4.0) {
         transmission_model_->optimizeTransmissionModel(points, input, y_optimize, 2);
     }
 }

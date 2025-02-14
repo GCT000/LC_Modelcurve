@@ -8,27 +8,30 @@ dark: 0
 cam_calib: "cam0.yaml"
 
 # the known end point
-end_point: [162.17, 4.90, 9.65]
+# end_point: [162.45, 4.72, 9.51] #line1
+# end_point: [162.41, 5.06, 9.44] #line2
+end_point: [162.65, -7.12, 9.66] #line10
+# end_point: [162.44, -7.45, 9.60] #line9
 # x sample
 x_interval:
   start: 5.0
-  end: 162
+  end: 162.4
 
 # image path
 image_path: "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_13.png"
 # lidar points path
-lidar_points_path: "/ssd/DATA/Transmisson/0912/test5/line_1.pcd"
+lidar_points_path: "/ssd/DATA/Transmisson/0912/test5/line_10.pcd"
 # res path
 res_path: "/home/zyp/Lidar/LC-CurveModel/res/wh/"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0912_line1.txt"
+selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0912_line10.txt"
 
 # ex optimization
 ex_optimization: 0
-ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/lidar_ref.txt"
-ref_image_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/points_ref.txt"
+ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/temp/wh_lidar.txt"
+ref_image_points: "/home/zyp/Lidar/LC-CurveModel/temp/wh_ex.txt"
 
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1
@@ -45,11 +48,11 @@ T_cam_lidar:
   cols: 4
   dt: d
   # ex for test_0912
-  data: [0.0208246,  -0.999692,   0.013506, -0.0425305,
-         0.00474393, -0.0134098,  -0.999899, 0.0922477,
-         0.999772,  0.0208864, 0.00446337, -0.117265,
+  data: [0.0217611, -0.999579, -0.0191775, -0.0425305,
+         0.00376432,  0.0192639,  -0.999807, 0.0922477,
+          0.999756,  0.0216846, 0.00418204, -0.117265,
          0.0, 0.0, 0.0, 1.0]
-#   data: [-0.00539706, -0.999968, -0.0058822, -0.0425305,
-#          0.00511023, 0.00585463, -0.99997, 0.0922477,
-#          0.999972, -0.00542695, 0.00507847, -0.117265,
-#          0.0, 0.0, 0.0, 1.0]
+  # data: [0.0208246,  -0.999692,   0.013506, -0.0425305,
+  #        0.00474393, -0.0134098,  -0.999899, 0.0922477,
+  #        0.999772,  0.0208864, 0.00446337, -0.117265,
+  #        0.0, 0.0, 0.0, 1.0]
