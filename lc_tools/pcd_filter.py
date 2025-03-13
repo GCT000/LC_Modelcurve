@@ -5,6 +5,7 @@ import argparse
 def main():
     # Set up argument parsing
     parser = argparse.ArgumentParser(description='Process some point clouds.')
+    # 这里的参数主要设置下输入的点云文件input_file，然后x的范围x_min和x_max就行，z那两个先不用管
     parser.add_argument('--input_file', type=str, default='', help='Input pointcloud directory')
     parser.add_argument('--x_min', type=float, default=20.0, help='x min')
     parser.add_argument('--x_max', type=float, default=90.0, help='x max')
@@ -17,6 +18,13 @@ def main():
 
     # Load the point cloud
     cloud = o3d.io.read_point_cloud(input_file)
+
+    # save original cloud points to txt
+    output_file = input_file.rsplit('/', 1)[0] + '/original_points.txt'
+    with open(output_file, 'w') as f:
+        for point in cloud.points:
+            if point[0] < 120:
+                f.write(f"{point[0]} {point[1]} {point[2]}\n")
 
     # Apply PassThrough filter on the x-axis
     cloud_filtered = cloud.select_by_index(
@@ -42,6 +50,7 @@ def main():
         print("Filtered point cloud is empty, cannot save.")
     else:
         o3d.io.write_point_cloud(output_file, cloud_filtered)
+
 
 if __name__ == "__main__":
     main()

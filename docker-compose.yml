@@ -1,7 +1,7 @@
 version: '3'
 services:
   curve_model:
-    image: lc_test:v1.0.1
+    image: lc_test:v1.0.2
     volumes:
       - ./config:/app/config
       - ../example:/app/data

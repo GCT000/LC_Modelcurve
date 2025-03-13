@@ -24,6 +24,15 @@ static std::string res_path;
 static bool dark = false;
 Eigen::Vector3d end_point;
 
+void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file) {
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud);
+    std::ofstream out_file(txt_file, std::ios::out);
+    for (const auto &point : cloud->points) {
+        out_file << point.x << " " << point.y << " " << point.z << "\n";
+    }
+}
+
 CurveModeling::CurveModeling(const std::string &yaml_file)
 {
     YAML::Node yaml = YAML::LoadFile(yaml_file);
@@ -198,11 +207,10 @@ void CurveModeling::lidarPreprocessing()
     
     // generate curve points
     updateLidar2PixelPoints();
+#ifdef MY_DEBUG
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "original_output_lidar_points.txt");
     outputPCD(res_path + "original_output_lidar_points.txt", res_path + "ori_line_points.pcd");
-
-#ifdef MY_DEBUG
     drawPointsOnImage(img_, ori_lidar2img_points_, temp_path + "curve_fitting_points.jpg");
 #endif
 }
@@ -346,9 +354,11 @@ void CurveModeling::optimization() {
         transmission_model_->optimizeTransmissionModel(matchResult, input, y_optimize);
     }, result);
 
+#ifdef MY_DEBUG
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "middle_output_lidar_points.txt");
     outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "middle_line_points.pcd");
+#endif
 
     // update match and re-optimization
     updateMatchAndReOptimization(input);
@@ -356,6 +366,9 @@ void CurveModeling::optimization() {
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
     outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
+
+    // save final 3D points to txt file
+    savePcd2Txt(res_path + "final_line_points.pcd", res_path + "final_line_points.txt");
 
     updateLidar2PixelPoints();
     result = matcher_->match(ori_lidar2img_points_, img_points_);
@@ -392,6 +405,10 @@ void CurveModeling::optimizationDark() {
     Matcher::MatchResult result = matcher_->match(ori_lidar2img_points_, img_points_);
     auto [avg_err, max_err] = calculateReprojectError(result, ori_lidar2img_points_);
     LOG(INFO) << "Original match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
+
+#ifdef MY_DEBUG
+    drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "match_visualization.jpg");
+#endif
 
     OptimizationInput input(xSamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
     std::visit([this, &input](auto&& matchResult) {
