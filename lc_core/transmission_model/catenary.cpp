@@ -161,7 +161,7 @@ void Catenary::optimizeTransmissionModelDark(const P2LMatchResult &lines, const 
     problem.AddParameterBlock(&m_, 1);
 
     problem.SetParameterBlockConstant(&c_);
-
+#if 0
     for (size_t i = 0; i < lines.size(); i++)
     {
         ceres::CostFunction *cost_function = CatenaryP2LFactor::Create(lines[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
@@ -170,6 +170,16 @@ void Catenary::optimizeTransmissionModelDark(const P2LMatchResult &lines, const 
 
     ceres::CostFunction *cost_function = CatenaryEpFactor::Create(input.end_point(0), input.end_point(1), input.end_point(2));
     problem.AddResidualBlock(cost_function, nullptr, &c_, &c1_, &c2_, &k_, &m_);
+#else
+    for (size_t i = 0; i < lines.size(); i++)
+    {
+        ceres::CostFunction *cost_function = new CatenaryP2LFactorA(lines[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
+        problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &c_, &c1_, &c2_);
+    }
+
+    ceres::CostFunction *cost_function = new CatenaryEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
+    problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &c_, &c1_, &c2_);
+#endif
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
@@ -195,7 +205,7 @@ void Catenary::optimizeTransmissionModelDark(const P2PMatchResult &points, const
     problem.AddParameterBlock(&m_, 1);
 
     problem.SetParameterBlockConstant(&c_);
-
+#if 0
     for (size_t i = 0; i < points.size(); i++)
     {
         ceres::CostFunction *cost_function = CatenaryP2PFactor::Create(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
@@ -204,7 +214,16 @@ void Catenary::optimizeTransmissionModelDark(const P2PMatchResult &points, const
 
     ceres::CostFunction *cost_function = CatenaryEpFactor::Create(input.end_point(0), input.end_point(1), input.end_point(2));
     problem.AddResidualBlock(cost_function, nullptr, &c_, &c1_, &c2_, &k_, &m_);
+#else
+    for (size_t i = 0; i < points.size(); i++)
+    {
+        ceres::CostFunction *cost_function = new CatenaryP2PFactorA(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
+        problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &c_, &c1_, &c2_);
+    }
 
+    ceres::CostFunction *cost_function = new CatenaryEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
+    problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &c_, &c1_, &c2_);
+#endif
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     LOG(INFO) << "After optimization: ";
