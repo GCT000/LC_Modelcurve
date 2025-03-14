@@ -33,4 +33,50 @@ private:
     const double z_obs_;
 };
 
+
+class CatenaryInitFactorA : public ceres::SizedCostFunction<1,1,1,1>{
+public:
+    CatenaryInitFactorA(double x, double z_obs) : x_(x), z_obs_(z_obs) {}
+
+    virtual bool Evaluate(double const *const *parameters, double *residual, double **jacobians) const
+    {
+        const double c = parameters[0][0];
+        const double c1 = parameters[1][0];
+        const double c2 = parameters[2][0];
+        double inex = (x_ + c1)/c;
+
+        residual[0] = c * ceres::cosh(inex) +c2 - z_obs_;
+
+        if (jacobians)
+        {
+            if (jacobians[0])
+            {
+                Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_c(jacobians[0]);
+                Eigen::Matrix<double, 1, 1> c;
+                c << ceres::cosh(inex) - inex * ceres::sinh(inex);
+                jacobian_c = c ;
+            }
+            if (jacobians[1])
+            {
+                Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_c1(jacobians[1]);
+                Eigen::Matrix<double, 1, 1> c1;
+                c1 << ceres::sinh(inex);
+                jacobian_c1 = c1;
+            }
+            if (jacobians[2])
+            {
+                Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_c2(jacobians[2]);
+                Eigen::Matrix<double, 1, 1> c2;
+                c2 << 1;
+                jacobian_c2 = c2 ;
+            }
+        }
+        return true;
+    }
+
+private:
+    const double x_;
+    const double z_obs_;
+};
+
 } // namespace lc_core
