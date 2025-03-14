@@ -16,7 +16,7 @@ namespace lc_core
 class Catenary : public TransmissionModel
 {
 public:
-    Catenary() : c_(1.0), c1_(0.0), c2_(0.0) {}
+    Catenary() : c_(100.0), c1_(0.0), c2_(0.0) {}
     ~Catenary() = default;
 
     void fitTransmissionModel(std::vector<Eigen::Vector3d> &points) override;
@@ -42,6 +42,7 @@ public:
 private:
     double c_, c1_, c2_;
     double k_, m_;
+    bool is_manual;
 };
 
 } // namespace lc_core
