@@ -57,7 +57,6 @@ void Parabola::optimizeTransmissionModel(const P2LMatchResult &lines, const Opti
         problem.SetParameterBlockConstant(&k_);
         problem.SetParameterBlockConstant(&m_);
     }
-    std::cout << "p2l ------------------------------------------------" << std::endl;
 #if 0
     for (size_t i = 0; i < lines.size(); i++)
     {
@@ -103,7 +102,6 @@ void Parabola::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
         problem.SetParameterBlockConstant(&k_);
         problem.SetParameterBlockConstant(&m_);
     }
-    std::cout << "p2p ------------------------------------------------" << std::endl;
 #if 0
 
     for (size_t i = 0; i < points.size(); i++)
