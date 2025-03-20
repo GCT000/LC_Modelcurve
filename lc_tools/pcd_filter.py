@@ -51,6 +51,27 @@ def main():
     else:
         o3d.io.write_point_cloud(output_file, cloud_filtered)
 
+    output_txt = input_file.rsplit('/', 1)[0] + '/remained_points.txt'
+    
+    points_array = np.asarray(cloud.points)
+    mask = (points_array[:, 0] < 120) & \
+           ~((points_array[:, 0] == 0) & (points_array[:, 1] == 0) & (points_array[:, 2] == 0))
+    filtered_points = points_array[mask]
+
+    # voxel down sample
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(filtered_points)
+    
+    voxel_size = 0.2  # voxel size, can be adjusted
+    downsampled_pcd = pcd.voxel_down_sample(voxel_size)
+    
+    # convert to numpy array
+    down_points = np.asarray(downsampled_pcd.points)
+    
+    np.savetxt(output_txt, down_points, fmt='%.6f', delimiter=',', 
+               header='x,y,z', comments='')
+    
+    print(f"Points saved to: {output_txt}")
 
 if __name__ == "__main__":
     main()
