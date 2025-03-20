@@ -61,75 +61,41 @@ namespace lc_core
                 {
                     Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2k(jacobians[0]);
                     Eigen::Matrix<double, 2, 1> v2k;
-                    if (dy > 0)
-                    {
-                        v2k << 0, -ex_;
-                    }
-                    else
-                    {
-                        v2k << 0, ex_;
-                    }
-                    jacobians_v2k = v2k;
+                    v2k = dy > 0 ? Eigen::Vector2d(0, -ex_) : Eigen::Vector2d(0, ex_);
+                    jacobians_v2k = 1e3 * v2k;
                 }
 
                 if (jacobians[1])
                 {
                     Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2m(jacobians[1]);
                     Eigen::Matrix<double, 2, 1> v2m;
-                    if (dy > 0)
-                    {
-                        v2m << 0, -1;
-                    }
-                    else
-                    {
-                        v2m << 0, 1;
-                    }
-                    jacobians_v2m = v2m;
+                    v2m = dy > 0 ? Eigen::Vector2d(0, -1) : Eigen::Vector2d(0, 1);
+                    jacobians_v2m = 1e3 * v2m;
                 }
 
                 if (jacobians[2])
                 {
                     Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c(jacobians[2]);
                     Eigen::Matrix<double, 2, 1> v2c;
-                    if (dz > 0)
-                    {
-                        v2c << -ceres::cosh(inex) + inex * ceres::sinh(inex), 0;
-                    }
-                    else
-                    {
-                        v2c << ceres::cosh(inex) - inex * ceres::sinh(inex), 0;
-                    }
-                    jacobians_v2c = v2c;
+                    v2c = dz > 0 ? Eigen::Vector2d(-ceres::cosh(inex) + inex * ceres::sinh(inex), 0) : 
+                                Eigen::Vector2d(ceres::cosh(inex) - inex * ceres::sinh(inex), 0);
+                    jacobians_v2c = 1e3 * v2c;
                 }
 
                 if (jacobians[3])
                 {
                     Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c1(jacobians[3]);
                     Eigen::Matrix<double, 2, 1> v2c1;
-                    if (dz > 0)
-                    {
-                        v2c1 << -ceres::sinh(inex), 0;
-                    }
-                    else
-                    {
-                        v2c1 << ceres::sinh(inex), 0;
-                    }
-                    jacobians_v2c1 = v2c1;
+                    v2c1 = dz > 0 ? Eigen::Vector2d(-ceres::sinh(inex), 0) : Eigen::Vector2d(ceres::sinh(inex), 0);
+                    jacobians_v2c1 = 1e3 * v2c1;
                 }
 
                 if (jacobians[4])
                 {
                     Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c2(jacobians[4]);
                     Eigen::Matrix<double, 2, 1> v2c2;
-                    if (dz > 0)
-                    {
-                        v2c2 << -1, 0;
-                    }
-                    else
-                    {
-                        v2c2 << 1, 0;
-                    }
-                    jacobians_v2c2 = v2c2;
+                    v2c2 = dz > 0 ? Eigen::Vector2d(-1, 0) : Eigen::Vector2d(1, 0);
+                    jacobians_v2c2 = 1e3 * v2c2;
                 }
             }
 

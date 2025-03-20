@@ -115,7 +115,7 @@ void Parabola::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
 #else
     for (size_t i = 0; i < points.size(); i++)
     {
-        ceres::CostFunction *cost_function = new CurveP2PFactorA(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
+        ceres::CostFunction *cost_function = new CurveP2PFactorA(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
         problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &a_, &b_, &c_);
     }
             ceres::CostFunction *cost_function = new ParabolaEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
