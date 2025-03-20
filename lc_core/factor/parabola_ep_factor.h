@@ -93,11 +93,11 @@ namespace lc_core
                     Eigen::Matrix<double, 2, 1> v2c;
                     if (dz > 0)
                     {
-                        v2c << -2 * c * ex_, 0;
+                        v2c << -ex_ * ex_, 0;
                     }
                     else
                     {
-                        v2c << 2 * c * ex_, 0;
+                        v2c << ex_ * ex_, 0;
                     }
                     jacobians_v2c = v2c;
                 }
@@ -108,11 +108,11 @@ namespace lc_core
                     Eigen::Matrix<double, 2, 1> v2c1;
                     if (dz > 0)
                     {
-                        v2c1 << -c1, 0;
+                        v2c1 << -ex_, 0;
                     }
                     else
                     {
-                        v2c1 << c1, 0;
+                        v2c1 << ex_, 0;
                     }
                     jacobians_v2c1 = v2c1;
                 }

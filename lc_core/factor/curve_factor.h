@@ -103,7 +103,7 @@ namespace lc_core
                 {
                     Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2c(jacobians[2]);
                     Eigen::Matrix<double, 3, 1> p2c;
-                    p2c << 0, 0, 2 * c * x;
+                    p2c << 0, 0, x * x;
                     jacobians_p2c = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2c * sqrt_info;
                 }
 
@@ -111,7 +111,7 @@ namespace lc_core
                 {
                     Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2c1(jacobians[3]);
                     Eigen::Matrix<double, 3, 1> p2c1;
-                    p2c1 << 0, 0, c1;
+                    p2c1 << 0, 0, x;
                     jacobians_p2c1 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2c1 * sqrt_info;
                 }
 
