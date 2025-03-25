@@ -62,7 +62,7 @@ def main():
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(filtered_points)
     
-    voxel_size = 0.2  # voxel size, can be adjusted
+    voxel_size = 0.5  # voxel size, can be adjusted
     downsampled_pcd = pcd.voxel_down_sample(voxel_size)
     
     # convert to numpy array
