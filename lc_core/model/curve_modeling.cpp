@@ -100,8 +100,18 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
 
     if (yaml["ex_optimization"].as<int>()) {
         ex_optimization_ = std::make_shared<ExOptimization>(R_c_l_, t_c_l_, cam_);
-        ex_optimization_->loadLidarPoints(yaml["ref_lidar_points"].as<std::string>());
-        ex_optimization_->loadImgPoints(yaml["ref_image_points"].as<std::string>());
+        ex_optimization_->setLidarPoints(lidar_points_);
+        std::vector<cv::Point2d> img_points;
+        for (const Eigen::Vector3d& lp : ex_optimization_->lidar_points_) {
+            Eigen::Vector2d p_img = lidar2pixel(lp);
+            if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows) {
+                img_points.emplace_back(p_img(0), p_img(1));
+            }
+        }
+        ex_optimization_->setImgPoints(img_points, img_points_);
+        drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "ex_points_visualization.jpg");
+        // ex_optimization_->loadLidarPoints(yaml["ref_lidar_points"].as<std::string>());
+        // ex_optimization_->loadImgPoints(yaml["ref_image_points"].as<std::string>());
         ex_optimization_->optimization();
         optimizationEx();
     }
@@ -441,7 +451,7 @@ void CurveModeling::updateMatchAndReOptimization(const OptimizationInput& input)
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "update_match_visualization.jpg");
 #endif
     // re-optimization
-    if (avg_err > 4.0) {
+    if (avg_err > 3.0) {
         transmission_model_->optimizeTransmissionModel(points, input, y_optimize, 2);
     }
 }

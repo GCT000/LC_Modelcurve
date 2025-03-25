@@ -49,6 +49,8 @@ public:
         return matcher_type_;
     }
 
+    void buildKdTree(const std::vector<cv::Point2d>& points);
+
 private:
     MatcherType matcher_type_;
     std::unique_ptr<KdTree> kd_tree_;

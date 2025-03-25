@@ -77,3 +77,8 @@ P2LMatchResult Matcher::p2lMatch(const std::vector<cv::Point2d>& input, const st
 
     return result;
 }
+
+void Matcher::buildKdTree(const std::vector<cv::Point2d>& points) {
+    kd_tree_ = std::make_unique<KdTree>();
+    kd_tree_->build(points);
+}

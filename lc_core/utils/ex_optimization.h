@@ -14,6 +14,7 @@
 #include <fstream>
 #include <Eigen/Dense>
 #include "camera.h"
+#include "matcher.h"
 
 namespace lc_core
 {
@@ -31,6 +32,10 @@ public:
     void loadLidarPoints(const std::string& lidar_points_file);
 
     void loadImgPoints(const std::string& img_ref_points_file);
+
+    void setLidarPoints(const std::vector<Eigen::Vector3d>& ori_lidar_points);
+
+    void setImgPoints(const std::vector<cv::Point2d>& projected_points, const std::vector<cv::Point2d>& ori_img_points);
 
     void optimization();
 
