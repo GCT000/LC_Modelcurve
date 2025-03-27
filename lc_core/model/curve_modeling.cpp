@@ -451,7 +451,7 @@ void CurveModeling::updateMatchAndReOptimization(const OptimizationInput& input)
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "update_match_visualization.jpg");
 #endif
     // re-optimization
-    if (avg_err > 3.0) {
+    if (avg_err > 4.0) {
         transmission_model_->optimizeTransmissionModel(points, input, y_optimize, 2);
     }
 }
