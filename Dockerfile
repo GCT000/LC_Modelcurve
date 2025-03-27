@@ -76,6 +76,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libopencv-core4.2 \
     libopencv-imgproc4.2 \
     libopencv-calib3d4.2 \
+    libopencv-video4.2 \
     libeigen3-dev \
     libblas3 \
     liblapack3 \

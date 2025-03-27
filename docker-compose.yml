@@ -1,8 +1,8 @@
 version: '3'
 services:
   curve_model:
-    image: lc_test:v1.0.2
+    image: lc_test:v1.0.3
     volumes:
       - ./config:/app/config
       - ../example:/app/data
-    command: ["./test", "-yaml", "/app/config/whu/model1.yaml", "-visualize", "true"] 
+    command: ["./test", "-yaml", "/app/config/whu/model1.yaml", "-dir", "/app/data/output/log"] 
