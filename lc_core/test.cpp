@@ -11,15 +11,14 @@
 #include <glog/logging.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
-#include <opencv2/core/core.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
 #include <memory>
-#include <fstream>
-#include <ceres/ceres.h>
+#include <sys/stat.h>
+#include <errno.h>
 
 // DEFINE_string(input_pcd, "/home/zyp/HD2/DATA/Transmisson/0912/test5/filter.pcd", "输入的点云");
 // DEFINE_string(input_pcd, "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd", "输入的点云");
 DEFINE_string(yaml, "/home/zyp/Lidar/LC-CurveModel/config/whu/model1.yaml", "yaml文件");
+DEFINE_string(dir, "/home/zyp/Lidar/LC-CurveModel/temp/log", "日志文件夹");
 DEFINE_bool(visualize, true, "是否可视化");
 
 /// @brief 测试加载pcd文件是否正常
@@ -35,11 +34,32 @@ TEST(loadPcdFile, loadPcd)
 int main(int argc, char **argv)
 {
     google::ParseCommandLineFlags(&argc, &argv, true);
+
+    // check log dir
+    struct stat info;
+    if (stat(FLAGS_dir.c_str(), &info) != 0 || !(info.st_mode & S_IFDIR)) {
+        int status = mkdir(FLAGS_dir.c_str(), 0777);
+        if (status != 0) {
+            LOG(ERROR) << "Cannot create log directory: " << FLAGS_dir << ", error code: " << strerror(errno);
+        } else {
+            LOG(INFO) << "Successfully create log directory: " << FLAGS_dir;
+        }
+    }
+
     google::InitGoogleLogging(argv[0]);
     // testing::InitGoogleTest(&argc, argv);
     // RUN_ALL_TESTS();
-    FLAGS_stderrthreshold = google::INFO;
     FLAGS_colorlogtostderr = true;
+    FLAGS_minloglevel = google::INFO;
+    FLAGS_alsologtostderr = true;
+    FLAGS_logtostderr = false;
+
+    // set log dir
+    FLAGS_log_dir = FLAGS_dir;
+    google::SetLogFilenameExtension(".log");
+
+    google::FlushLogFiles(google::INFO);
+
     lc_core::CurveModeling curve_modeling(FLAGS_yaml);
     
     // process lidar points
