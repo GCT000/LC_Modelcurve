@@ -3,6 +3,7 @@ include_directories(factor)
 include_directories(utils)
 include_directories(matcher)
 include_directories(transmission_model)
+include_directories(../lc_preprocess/img_preprocess)
 
 # If this macro definition is turned on, 
 # the optimization elapsed time is reduced by half the time, 
@@ -21,16 +22,22 @@ add_library(curveModel_lib SHARED
     utils/ex_optimization.cpp
     utils/evaluation.cpp
     utils/visualization.cpp
+    ../lc_preprocess/img_preprocess/imgPreProcess.cpp
 )
+
+
+
+
 target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp ${OpenCV_LIBS})
 
 enable_testing()
+
 
 add_executable(test test.cpp)
 target_link_libraries(test curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread)
 
 add_executable(outputPoints outputPoints.cpp)
-target_link_libraries(outputPoints curveModel_lib ${PCL_LIBRARIES} glog::glog)
+target_link_libraries(outputPoints curveModel_lib ${PCL_LIBRARIES} ${GLOG_LIBRARY})
 
 add_executable(evTest evTest.cpp)
 target_link_libraries(evTest curveModel_lib ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${GTEST_LIBRARIES} pthread)

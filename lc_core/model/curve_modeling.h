@@ -16,6 +16,7 @@
 #include "parabola.h"
 #include "catenary.h"
 #include "base_type.h"
+#include "imgPreProcess.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -25,6 +26,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <cassert>
 #include <yaml-cpp/yaml.h>
 #include <Eigen/Dense>
 #include <execution>
@@ -89,13 +91,16 @@ private:
     /// @brief  debug
     void lidarP2img();
 
+    /// @brief  Optical flow
+    void optical_flow();
+
 private:
     std::vector<Eigen::Vector3d> lidar_points_;
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
     double x_interval_start_;
     double x_interval_end_;
-    cv::Mat img_;
+    cv::Mat img_, last_img_;
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_;
 
@@ -105,6 +110,8 @@ private:
     std::shared_ptr<ExOptimization> ex_optimization_;
 
     std::shared_ptr<TransmissionModel> transmission_model_;
+
+    std::string curve_point_file;
 };
 
 } // namespace lc_core

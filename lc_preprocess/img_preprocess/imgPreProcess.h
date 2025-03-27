@@ -8,39 +8,51 @@
 #ifndef IMG_PREPROCESS_H
 #define IMG_PREPROCESS_H
 
+#include "bSpline.h"
+
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <unordered_set>
 #include <opencv2/core/core.hpp>
 
 namespace lc_preprocess
 {
 
-class ImgPreProcess
-{
-public:
-    ImgPreProcess() = default;
-    ~ImgPreProcess() = default;
+    class ImgPreProcess
+    {
+    public:
+        ImgPreProcess() = default;
+        ~ImgPreProcess() = default;
 
-    /// @brief  set pre-curve points
-    void setPoints(const std::string &file_name);
-    
-    /// @brief  optical flow tracking
-    void track(cv::Mat &pre_img, cv::Mat &cur_img);
+        /// @brief  set pre-curve points
+        void setPoints(const std::string &file_name);
 
-    /// @brief  re-interpolate points
-    void reInterpolate();
+        /// @brief  optical flow tracking
+        void track(cv::Mat &pre_img, cv::Mat &cur_img);
 
-    /// @brief  visualization
-    void visualizeTracking(cv::Mat &cur_img);
+        /// @brief  re-interpolate points
+        void reInterpolate();
 
-    /// @brief  visualize re-interpolated points
-    void visualizeReInterpolated(cv::Mat &cur_img);
+        /// @brief  visualization
+        void visualizeTracking(cv::Mat &cur_img);
 
-private:
-    std::vector<cv::Point2d> pre_img_points_;
-    std::vector<cv::Point2d> cur_img_points_;
-};
+        /// @brief  visualize re-interpolated points
+        void visualizeReInterpolated(cv::Mat &cur_img);
+
+        /// @brief  downsample for points
+        std::vector<cv::Point2d> downsamplePoints(std::vector<cv::Point2d> &points);
+
+        std::vector<cv::Point2d> get_cur_points()
+        {
+            return cur_img_points_;
+        }
+
+    private:
+        std::vector<cv::Point2d> pre_img_points_;
+        std::vector<cv::Point2d> cur_img_points_;
+        cv::Point2d end_point;
+    };
 
 } // namespace lc_preprocess
 

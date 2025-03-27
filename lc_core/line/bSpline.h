@@ -9,6 +9,8 @@
 #define BSPLINE_H
 
 #include <vector>
+#include <cmath>
+#include <glog/logging.h>
 
 namespace lc_core
 {
@@ -152,7 +154,7 @@ std::vector<PointType> calculateCatmullRomSpline(const std::vector<PointType>& c
     extendedPoints.push_back(endPoint);
     
     // ensure the number of sampling points is enough
-    numPoints = std::max(numPoints, static_cast<int>(controlPoints.size() * 50));
+    numPoints = std::max(numPoints, static_cast<int>(controlPoints.size()));
     
     // sample each segment
     for (size_t i = 1; i < extendedPoints.size() - 2; ++i) {

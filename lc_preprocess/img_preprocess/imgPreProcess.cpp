@@ -13,12 +13,12 @@ void ImgPreProcess::setPoints(const std::string &file_name)
         LOG(ERROR) << "Can't open file: " << file_name << std::endl;
         return;
     }
-
     cv::Point2d point;
     while (in_file >> point.x >> point.y)
     {
         pre_img_points_.push_back(point);
     }
+    end_point = pre_img_points_.back();
     LOG(INFO) << "Read " << pre_img_points_.size() << " points from " << file_name;
 }
 
@@ -30,9 +30,9 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
     cur_points_f.reserve(pre_points_f.size());
 
     // set optical flow parameters
-    const auto window_size = cv::Size(7, 7);
+    const auto window_size = cv::Size(35,35);
     const auto criteria = cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
-    
+
     // forward tracking
     std::vector<uchar> forward_status;
     std::vector<float> forward_err;
@@ -46,11 +46,11 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
 
     // calculate bidirectional tracking error and filter points
     std::vector<cv::Point2d> filtered_pre_points, filtered_cur_points;
-    const double max_err = 1.0;
-    
+    const double max_err = 0.1;
+    filtered_cur_points.push_back(end_point);
     for(size_t i = 0; i < pre_points_f.size(); i++) {
         if(forward_status[i] && backward_status[i]) {
-            double tracking_err = cv::norm(cv::Point2d(pre_points_f[i].x, pre_points_f[i].y) - 
+            double tracking_err = cv::norm(cv::Point2d(pre_points_f[i].x, pre_points_f[i].y) -
                                          cv::Point2d(reverse_points[i].x, reverse_points[i].y));
             if(tracking_err < max_err) {
                 filtered_pre_points.push_back(pre_img_points_[i]);
@@ -67,26 +67,14 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
 
 void ImgPreProcess::reInterpolate()
 {
+    //cur_img_points_ = downsamplePoints(cur_img_points_);
     std::vector<cv::Point2d> temp_points(cur_img_points_.begin(), cur_img_points_.end());
     // re-interpolate points
     std::vector<cv::Point2d> interpolated_points;
     interpolated_points.reserve(temp_points.size() * 2);
-
-    for (size_t i = 0; i < temp_points.size() - 1; ++i) {
-        const cv::Point2d& p1 = temp_points[i];
-        const cv::Point2d& p2 = temp_points[i + 1];
-        
-        double distance = cv::norm(p2 - p1);
-        int num_points = std::ceil(distance);
-        
-        for (int j = 0; j < num_points; ++j) {
-            double t = static_cast<double>(j) / num_points;
-            interpolated_points.emplace_back(p1 + t * (p2 - p1));
-        }
-    }
+    interpolated_points = lc_core::calculateCatmullRomSpline(temp_points, 1000);
     // add the last point
     interpolated_points.push_back(temp_points.back());
-
     cur_img_points_ = std::move(interpolated_points);
 }
 
@@ -94,24 +82,45 @@ void ImgPreProcess::visualizeTracking(cv::Mat &cur_img)
 {
     cv::Mat vis_img = cur_img.clone();
     // draw tracking points before tracking(blue)
-    for(size_t i = 0; i < pre_img_points_.size(); i++) {
+    for (size_t i = 0; i < pre_img_points_.size(); i++)
+    {
         cv::circle(vis_img, pre_img_points_[i], 2, cv::Scalar(255, 0, 0), -1);
     }
     // draw tracking points after tracking(red) and optical flow arrows(green)
-    for(size_t i = 0; i < cur_img_points_.size(); i++) {
+    for (size_t i = 0; i < cur_img_points_.size(); i++)
+    {
         cv::circle(vis_img, cur_img_points_[i], 2, cv::Scalar(0, 0, 255), -1);
-        cv::arrowedLine(vis_img, pre_img_points_[i], cur_img_points_[i], 
-                       cv::Scalar(0, 255, 0), 1, cv::LINE_AA, 0, 0.2);
+        cv::arrowedLine(vis_img, pre_img_points_[i], cur_img_points_[i],
+                        cv::Scalar(0, 255, 0), 1, cv::LINE_AA, 0, 0.2);
     }
-    cv::imwrite("track_result.png", vis_img);
+    std::string name = "/home/gct/LC-CurveModel/data/tempp/track_result.png";
+    cv::imwrite(name, vis_img);
 }
 
 void ImgPreProcess::visualizeReInterpolated(cv::Mat &cur_img)
 {
     cv::Mat vis_img = cur_img.clone();
-    for(size_t i = 0; i < cur_img_points_.size(); i++) {
+    for (size_t i = 0; i < cur_img_points_.size(); i++)
+    {
         cv::circle(vis_img, cur_img_points_[i], 2, cv::Scalar(0, 0, 255), -1);
     }
     LOG(INFO) << "Re-interpolated points size: " << cur_img_points_.size();
-    cv::imwrite("re_interpolated_result.png", vis_img);
+    pre_img_points_ = cur_img_points_;
+    std::string name = "/home/gct/LC-CurveModel/data/tempp/re_interpolated_result.png";
+    cv::imwrite(name, vis_img);
+}
+
+std::vector<cv::Point2d> ImgPreProcess::downsamplePoints(std::vector<cv::Point2d>& points) {
+    std::vector<cv::Point2d> downsampledPoints;
+    std::unordered_set<int> usedXValues;
+
+    for (const auto& point : points) {
+        int roundedX = static_cast<int>(point.x);
+        if (usedXValues.find(roundedX) == usedXValues.end()) {
+            downsampledPoints.push_back(point);
+            usedXValues.insert(roundedX);
+        }
+    }
+
+    return downsampledPoints;
 }

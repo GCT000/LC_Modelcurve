@@ -10,6 +10,8 @@
 #include <ceres/ceres.h>
 #include <chrono>
 #include <unordered_map>
+#include <cassert>
+#include <filesystem>
 
 using namespace lc_core;
 
@@ -18,12 +20,11 @@ static double sample;
 static std::vector<double> xSamples, xSamplesUsed;
 static int y_optimize = 0;
 #ifdef MY_DEBUG
-static std::string temp_path = "/home/zyp/Lidar/LC-CurveModel/temp/";
+static std::string temp_path = "/home/gct/LC-CurveModel/data/tempp/";
 #endif
 static std::string res_path;
 static bool dark = false;
 Eigen::Vector3d end_point;
-
 void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file) {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud);
@@ -32,23 +33,23 @@ void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file) {
         out_file << point.x << " " << point.y << " " << point.z << "\n";
     }
 }
-
 CurveModeling::CurveModeling(const std::string &yaml_file)
 {
     YAML::Node yaml = YAML::LoadFile(yaml_file);
+    if (yaml["dark"])
+    {
 
-    if (yaml["dark"]) {
         dark = yaml["dark"].as<int>();
         std::vector<double> end_point_vec = yaml["end_point"].as<std::vector<double>>();
         end_point << end_point_vec[0], end_point_vec[1], end_point_vec[2];
     }
-    
+
     // load camera
     loadCamera(yaml, yaml_file);
 
     // load lidar-camera extrinsic
     loadLidar2CameraExtrinsic(yaml);
-    
+
     // x sample
     if (yaml["x_interval"])
     {
@@ -62,7 +63,10 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         std::string image_file = yaml["image_path"].as<std::string>();
         // img_ = cv::imread(image_file, cv::IMREAD_COLOR);
         cv::Mat img = cv::imread(image_file, cv::IMREAD_COLOR);
+
         cam_->undistortImg(img, img_);
+
+        // cv::imwrite("/home/gct/Curveline_ws/src/LC-CurveModel/data/raw.png",img_);
     }
     else
     {
@@ -70,35 +74,65 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         return;
     }
 
-    if (yaml["lidar_points_path"]) {
+    if (yaml["last_image_path"])
+    {
+        std::string last_image_file = yaml["last_image_path"].as<std::string>();
+        cv::Mat img = cv::imread(last_image_file, cv::IMREAD_COLOR);
+
+        cam_->undistortImg(img, last_img_);
+    }
+
+    if (yaml["lidar_points_path"])
+    {
         std::string lidar_points_path = yaml["lidar_points_path"].as<std::string>();
         loadLidarPoints(lidar_points_path);
     }
 
-    if (yaml["res_path"]) {
+    if (yaml["res_path"])
+    {
         res_path = yaml["res_path"].as<std::string>();
     }
 
-    if (yaml["b_spline_num"]) {
+    if (yaml["b_spline_num"])
+    {
         bSplineNum = yaml["b_spline_num"].as<int>();
     }
 
-    if (yaml["sample"]) {
+    if (yaml["sample"])
+    {
         sample = yaml["sample"].as<double>();
         LOG(INFO) << "sample interval: " << sample << "\n";
     }
 
-    if (yaml["selected_points"])
+    if (yaml["curve_point_file"])
+    {
+        curve_point_file = yaml["curve_point_file"].as<std::string>();
+        if (std::filesystem::exists(std::filesystem::path(curve_point_file)))
+        {
+            optical_flow();
+        }
+    }
+    
+    if (yaml["selected_points"] && !std::filesystem::exists(std::filesystem::path(curve_point_file)))
     {
         std::string selected_points = yaml["selected_points"].as<std::string>();
-        if (dark) {
+        if (!std::filesystem::exists(std::filesystem::path(selected_points)))
+        {
+            LOG(ERROR) << "no curve point file or selected point file\n";
+            return;
+        }
+        if (dark)
+        {
             generateLineImagePoints(selected_points);
-        } else {
+        }
+        else
+        {
             generateCurveImagePoints(selected_points);
         }
     }
 
-    if (yaml["ex_optimization"].as<int>()) {
+    if (yaml["ex_optimization"].as<int>())
+    {
         ex_optimization_ = std::make_shared<ExOptimization>(R_c_l_, t_c_l_, cam_);
         ex_optimization_->setLidarPoints(lidar_points_);
         std::vector<cv::Point2d> img_points;
@@ -116,23 +150,28 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         optimizationEx();
     }
 
-    if (yaml["matcher_type"]) {
+    if (yaml["matcher_type"])
+    {
         MatcherConfig config;
         config.type = yaml["matcher_type"].as<int>();
         matcher_ = std::make_shared<Matcher>(config);
     }
 
-    if (yaml["transmission_model"]) {
+    if (yaml["transmission_model"])
+    {
         int transmission_model_type = yaml["transmission_model"].as<int>();
-        if (transmission_model_type == 0) {
+        if (transmission_model_type == 0)
+        {
             transmission_model_ = std::make_shared<Parabola>();
         }
-        else {
+        else
+        {
             transmission_model_ = std::make_shared<Catenary>();
         }
     }
 
-    if (yaml["y_optimize"]) {
+    if (yaml["y_optimize"])
+    {
         y_optimize = yaml["y_optimize"].as<int>();
     }
 }
@@ -145,7 +184,8 @@ CurveModeling::~CurveModeling()
     cam_.reset();
 }
 
-Eigen::Vector2d CurveModeling::lidar2pixel(const Eigen::Vector3d& p_l) {
+Eigen::Vector2d CurveModeling::lidar2pixel(const Eigen::Vector3d &p_l)
+{
     Eigen::Vector3d p_c = R_c_l_ * p_l + t_c_l_;
     Eigen::Vector2d p_img;
     cam_->spaceToPlane(p_c, p_img);
@@ -158,10 +198,9 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
     input_pcd(lidar_points_path);
     std::vector<Eigen::Vector3d> lidar_points;
     lidar_points = input_pcd.getPoints();
-    std::sort(lidar_points.begin(), lidar_points.end(), [](const Eigen::Vector3d& a, const Eigen::Vector3d& b) {
-        return a(0) < b(0);
-    });
-    
+    std::sort(lidar_points.begin(), lidar_points.end(), [](const Eigen::Vector3d &a, const Eigen::Vector3d &b)
+              { return a(0) < b(0); });
+
     LOG(INFO) << "Load " << lidar_points.size() << " lidar points.\n";
 
     lidar_points_ = std::move(lidar_points);
@@ -213,14 +252,16 @@ void CurveModeling::lidarPreprocessing()
 
     // generate xSamples
     xSamples = std::vector<double>(static_cast<size_t>((x_interval_end_ - x_interval_start_) / sample) + 1, x_interval_start_);
-    std::generate(xSamples.begin(), xSamples.end(), [x = x_interval_start_]() mutable { return x += sample; });
-    
+    std::generate(xSamples.begin(), xSamples.end(), [x = x_interval_start_]() mutable
+                  { return x += sample; });
+
     // generate curve points
     updateLidar2PixelPoints();
-#ifdef MY_DEBUG
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "original_output_lidar_points.txt");
     outputPCD(res_path + "original_output_lidar_points.txt", res_path + "ori_line_points.pcd");
+
+#ifdef MY_DEBUG
     drawPointsOnImage(img_, ori_lidar2img_points_, temp_path + "curve_fitting_points.jpg");
 #endif
 }
@@ -247,7 +288,8 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
     {
         std::istringstream iss(line);
         std::string token;
-        while (std::getline(iss, token, ',')) {
+        while (std::getline(iss, token, ','))
+        {
             double x = std::stod(token);
             std::getline(iss, token, ',');
             double y = std::stod(token);
@@ -264,7 +306,7 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
     temp_points = calculateCatmullRomSpline(img_points, bSplineNum);
     LOG(INFO) << "temp_points size: " << temp_points.size() << "\n";
     // cam_->undistortPoints(temp_points, temp_un_points);
-    
+
     img_points_.clear();
     img_points_ = std::move(temp_points);
 
@@ -290,7 +332,8 @@ void CurveModeling::generateLineImagePoints(const std::string &selected_points)
     {
         std::istringstream iss(line);
         std::string token;
-        while (std::getline(iss, token, ',')) {
+        while (std::getline(iss, token, ','))
+        {
             double x = std::stod(token);
             std::getline(iss, token, ',');
             double y = std::stod(token);
@@ -301,27 +344,32 @@ void CurveModeling::generateLineImagePoints(const std::string &selected_points)
 
     // sample
     std::vector<cv::Point2d> sampled_points;
-    if (!img_points.empty()) {
-        std::sort(img_points.begin(), img_points.end(), 
-            [](const cv::Point2d& a, const cv::Point2d& b) { return a.x < b.x; });
+    if (!img_points.empty())
+    {
+        std::sort(img_points.begin(), img_points.end(),
+                  [](const cv::Point2d &a, const cv::Point2d &b)
+                  { return a.x < b.x; });
 
         double x_min = img_points.front().x;
         double x_max = img_points.back().x;
-        
+
         // linear interpolation
-        for (double x = x_min; x <= x_max; x += 1.0) {  // 1 pixel interval
+        for (double x = x_min; x <= x_max; x += 1.0)
+        { // 1 pixel interval
             // find the nearest two original points for interpolation
             auto it = std::lower_bound(img_points.begin(), img_points.end(), x,
-                [](const cv::Point2d& p, double val) { return p.x < val; });
-            
-            if (it != img_points.begin() && it != img_points.end()) {
+                                       [](const cv::Point2d &p, double val)
+                                       { return p.x < val; });
+
+            if (it != img_points.begin() && it != img_points.end())
+            {
                 auto p2 = *it;
                 auto p1 = *(--it);
-                
+
                 // linear interpolation
                 double ratio = (x - p1.x) / (p2.x - p1.x);
                 double y = p1.y + ratio * (p2.y - p1.y);
-                
+
                 sampled_points.emplace_back(x, y);
             }
         }
@@ -343,8 +391,10 @@ void CurveModeling::visualization()
     drawPointsOnImage(img_, ori_lidar2img_points_, res_path + "projection_1.jpg");
 }
 
-void CurveModeling::optimization() {
-    if (dark) {
+void CurveModeling::optimization()
+{
+    if (dark)
+    {
         // optimize dark
         optimizationDark();
         return;
@@ -360,15 +410,12 @@ void CurveModeling::optimization() {
 
     OptimizationInput input(xSamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
     // Perform optimization based on the matching result
-    std::visit([this, &input](auto&& matchResult) {
-        transmission_model_->optimizeTransmissionModel(matchResult, input, y_optimize);
-    }, result);
+    std::visit([this, &input](auto &&matchResult)
+               { transmission_model_->optimizeTransmissionModel(matchResult, input, y_optimize); }, result);
 
-#ifdef MY_DEBUG
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "middle_output_lidar_points.txt");
     outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "middle_line_points.pcd");
-#endif
 
     // update match and re-optimization
     updateMatchAndReOptimization(input);
@@ -376,9 +423,6 @@ void CurveModeling::optimization() {
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
     outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
-
-    // save final 3D points to txt file
-    savePcd2Txt(res_path + "final_line_points.pcd", res_path + "final_line_points.txt");
 
     updateLidar2PixelPoints();
     result = matcher_->match(ori_lidar2img_points_, img_points_);
@@ -390,22 +434,26 @@ void CurveModeling::optimization() {
 #endif
 }
 
-void CurveModeling::optimizationDark() {
+void CurveModeling::optimizationDark()
+{
     // optimize dark
     double start_x = std::min(img_points_[0].x, img_points_[img_points_.size() - 1].x);
     double end_x = std::max(img_points_[0].x, img_points_[img_points_.size() - 1].x);
-    
+
     xSamplesUsed.clear();
-    for (auto x : xSamples) {
+    for (auto x : xSamples)
+    {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(x);
         Eigen::Vector2d p_img = lidar2pixel(p);
-        if (p_img.x() > start_x && p_img.x() < end_x) {
+        if (p_img.x() > start_x && p_img.x() < end_x)
+        {
             xSamplesUsed.push_back(x);
         }
     }
 
     ori_lidar2img_points_.clear();
-    for (const double& x : xSamplesUsed) {
+    for (const double &x : xSamplesUsed)
+    {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(x);
         Eigen::Vector2d p_img = lidar2pixel(p);
         ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
@@ -416,20 +464,16 @@ void CurveModeling::optimizationDark() {
     auto [avg_err, max_err] = calculateReprojectError(result, ori_lidar2img_points_);
     LOG(INFO) << "Original match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
 
-#ifdef MY_DEBUG
-    drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "match_visualization.jpg");
-#endif
-
     OptimizationInput input(xSamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
-    std::visit([this, &input](auto&& matchResult) {
-        transmission_model_->optimizeTransmissionModelDark(matchResult, input);
-    }, result);
+    std::visit([this, &input](auto &&matchResult)
+               { transmission_model_->optimizeTransmissionModelDark(matchResult, input); }, result);
 
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "dark_middle_lidar_points.txt");
     outputPCD(res_path + "dark_middle_lidar_points.txt", res_path + "dark_middle_line_points.pcd");
     ori_lidar2img_points_.clear();
-    for (const double& x : xSamplesUsed) {
+    for (const double &x : xSamplesUsed)
+    {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(x);
         Eigen::Vector2d p_img = lidar2pixel(p);
         ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
@@ -439,7 +483,8 @@ void CurveModeling::optimizationDark() {
     LOG(INFO) << "Final match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
 }
 
-void CurveModeling::updateMatchAndReOptimization(const OptimizationInput& input) {
+void CurveModeling::updateMatchAndReOptimization(const OptimizationInput &input)
+{
     updateLidar2PixelPoints();
 
     // update match
@@ -451,7 +496,8 @@ void CurveModeling::updateMatchAndReOptimization(const OptimizationInput& input)
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "update_match_visualization.jpg");
 #endif
     // re-optimization
-    if (avg_err > 4.0) {
+    if (avg_err > 4.0)
+    {
         transmission_model_->optimizeTransmissionModel(points, input, y_optimize, 2);
     }
 }
@@ -460,18 +506,22 @@ void CurveModeling::optimizationEx()
 {
     cv::Mat img_1 = img_.clone();
     // projection before optimization
-    for (const Eigen::Vector3d& lp : ex_optimization_->lidar_points_) {
+    for (const Eigen::Vector3d &lp : ex_optimization_->lidar_points_)
+    {
         Eigen::Vector2d p_img = lidar2pixel(lp);
         cv::circle(img_1, cv::Point(p_img(0), p_img(1)), 10, cv::Scalar(0, 0, 255), -1);
     }
     ex_optimization_->optimization();
     R_c_l_ = ex_optimization_->getR();
-    LOG(INFO) << "\nR:\n" << R_c_l_ << "\n";
+    LOG(INFO) << "\nR:\n"
+              << R_c_l_ << "\n";
     t_c_l_ = ex_optimization_->getT();
-    LOG(INFO) << "\nt:\n" << t_c_l_.transpose() << "\n";
+    LOG(INFO) << "\nt:\n"
+              << t_c_l_.transpose() << "\n";
 
     // projection after optimization
-    for (const Eigen::Vector3d& lp : ex_optimization_->lidar_points_) {
+    for (const Eigen::Vector3d &lp : ex_optimization_->lidar_points_)
+    {
         Eigen::Vector2d p_img = lidar2pixel(lp);
         cv::circle(img_1, cv::Point(p_img(0), p_img(1)), 10, cv::Scalar(255, 0, 0), -1);
     }
@@ -480,11 +530,14 @@ void CurveModeling::optimizationEx()
 #endif
 }
 
-void CurveModeling::lidarP2img() {
+void CurveModeling::lidarP2img()
+{
     cv::Mat img = img_.clone();
-    for (const Eigen::Vector3d& lp : lidar_points_) {
+    for (const Eigen::Vector3d &lp : lidar_points_)
+    {
         Eigen::Vector2d p_img = lidar2pixel(lp);
-        if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows) {
+        if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows)
+        {
             cv::circle(img, cv::Point(p_img(0), p_img(1)), 3, cv::Scalar(0, 0, 255), -1);
         }
     }
@@ -495,26 +548,47 @@ void CurveModeling::updateLidar2PixelPoints()
 {
     ori_lidar2img_points_.clear();
     bool is_first_time = true;
-    if (!xSamplesUsed.empty()) {
+    if (!xSamplesUsed.empty())
+    {
         is_first_time = false;
     }
 
     // generate curve points using new mesh_param_ and plane_param_
-    for (const double& ix : xSamples) {
+    for (const double &ix : xSamples)
+    {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(ix);
         Eigen::Vector2d p_img = lidar2pixel(p);
-        if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows) {
+        if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows)
+        {
             ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
-            if (is_first_time) xSamplesUsed.push_back(ix);
+            if (is_first_time)
+                xSamplesUsed.push_back(ix);
         }
     }
 }
 
-void CurveModeling::output3DPointsToTxt(const std::string& filename) {
+void CurveModeling::output3DPointsToTxt(const std::string &filename)
+{
     std::ofstream output_points(filename, std::ios::out);
-    for (const double& x : xSamples) {
+    for (const double &x : xSamples)
+    {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(x);
         output_points << p(0) << " " << p(1) << " " << p(2) << "\n";
     }
     output_points.close();
+}
+
+void CurveModeling::optical_flow()
+{
+    lc_preprocess::ImgPreProcess pp;
+    pp.setPoints(curve_point_file);
+
+    pp.track(last_img_, img_);
+    pp.visualizeTracking(img_);
+    pp.reInterpolate();
+
+    img_points_ = pp.get_cur_points();
+    pp.visualizeReInterpolated(img_);
+
+    outputPoints(curve_point_file, img_points_);
 }
