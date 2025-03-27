@@ -25,22 +25,9 @@ add_library(curveModel_lib SHARED
     ../lc_preprocess/img_preprocess/imgPreProcess.cpp
 )
 
-
-
-
 target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp ${OpenCV_LIBS})
 
 enable_testing()
 
-
 add_executable(test test.cpp)
 target_link_libraries(test curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread)
-
-add_executable(outputPoints outputPoints.cpp)
-target_link_libraries(outputPoints curveModel_lib ${PCL_LIBRARIES} ${GLOG_LIBRARY})
-
-add_executable(evTest evTest.cpp)
-target_link_libraries(evTest curveModel_lib ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${GTEST_LIBRARIES} pthread)
-
-add_executable(wh_ev wh_ev.cpp)
-target_link_libraries(wh_ev curveModel_lib ${PCL_LIBRARIES} ${CERES_LIBRARIES} ${GTEST_LIBRARIES} pthread)

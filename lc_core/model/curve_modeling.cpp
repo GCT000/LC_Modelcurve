@@ -25,6 +25,7 @@ static std::string temp_path = "/home/gct/LC-CurveModel/data/tempp/";
 static std::string res_path;
 static bool dark = false;
 Eigen::Vector3d end_point;
+
 void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file) {
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud);
@@ -33,6 +34,7 @@ void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file) {
         out_file << point.x << " " << point.y << " " << point.z << "\n";
     }
 }
+
 CurveModeling::CurveModeling(const std::string &yaml_file)
 {
     YAML::Node yaml = YAML::LoadFile(yaml_file);
@@ -61,12 +63,9 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     if (yaml["image_path"])
     {
         std::string image_file = yaml["image_path"].as<std::string>();
-        // img_ = cv::imread(image_file, cv::IMREAD_COLOR);
         cv::Mat img = cv::imread(image_file, cv::IMREAD_COLOR);
 
         cam_->undistortImg(img, img_);
-
-        // cv::imwrite("/home/gct/Curveline_ws/src/LC-CurveModel/data/raw.png",img_);
     }
     else
     {
@@ -584,11 +583,11 @@ void CurveModeling::optical_flow()
     pp.setPoints(curve_point_file);
 
     pp.track(last_img_, img_);
-    pp.visualizeTracking(img_);
+    // pp.visualizeTracking(img_);
     pp.reInterpolate();
 
     img_points_ = pp.get_cur_points();
-    pp.visualizeReInterpolated(img_);
+    // pp.visualizeReInterpolated(img_);
 
     outputPoints(curve_point_file, img_points_);
 }
