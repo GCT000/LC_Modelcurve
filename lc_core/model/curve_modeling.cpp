@@ -75,10 +75,13 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
 
     if (yaml["last_image_path"])
     {
-        std::string last_image_file = yaml["last_image_path"].as<std::string>();
-        cv::Mat img = cv::imread(last_image_file, cv::IMREAD_COLOR);
+        if (std::filesystem::exists(std::filesystem::path(yaml["last_image_path"].as<std::string>())))
+        {
+            std::string last_image_file = yaml["last_image_path"].as<std::string>();
+            cv::Mat img = cv::imread(last_image_file, cv::IMREAD_COLOR);
 
-        cam_->undistortImg(img, last_img_);
+            cam_->undistortImg(img, last_img_);
+        }
     }
 
     if (yaml["lidar_points_path"])
@@ -312,8 +315,8 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
 #ifdef MY_DEBUG
     LOG(INFO) << "Generate " << img_points_.size() << " curve points on image.\n";
     drawPointsOnImage(img_, img_points_, temp_path + "curve_points.jpg");
-    outputPoints(temp_path + "curve_points.txt", img_points_);
 #endif
+    outputPoints(curve_point_file, img_points_);
 }
 
 void CurveModeling::generateLineImagePoints(const std::string &selected_points)
@@ -422,6 +425,9 @@ void CurveModeling::optimization()
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
     outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
+
+    // save final 3D points to txt file
+    savePcd2Txt(res_path + "final_line_points.pcd", res_path + "final_line_points.txt");
 
     updateLidar2PixelPoints();
     result = matcher_->match(ori_lidar2img_points_, img_points_);
