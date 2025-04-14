@@ -27,9 +27,7 @@ public:
 
     void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int y_optimize = 0, int time = 1) override;
 
-    void optimizeTransmissionModelDark(const P2LMatchResult& lines, const OptimizationInput& input) override;
-
-    void optimizeTransmissionModelDark(const P2PMatchResult& points, const OptimizationInput& input) override;
+    void optimizeTransmissionModelDark(const Eigen::Vector3d& end_point) override;
 
     void setParams(const double &c, const double &c1, const double &c2, const double &k, const double &m) {
         c_ = c;

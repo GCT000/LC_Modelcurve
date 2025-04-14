@@ -55,15 +55,11 @@ namespace lc_core
         }
 
         /// @brief  Dark optimize interface
-        virtual void optimizeTransmissionModelDark(const P2LMatchResult &lines, const OptimizationInput &input)
+        virtual void optimizeTransmissionModelDark(const Eigen::Vector3d& end_point)
         {
             LOG(INFO) << "Choose one transmission model";
         }
 
-        virtual void optimizeTransmissionModelDark(const P2PMatchResult &points, const OptimizationInput &input)
-        {
-            LOG(INFO) << "Choose one transmission model";
-        }
 
         /// @brief  RANSAC fit x-y line
         virtual std::pair<double, double> ransacFitLine(std::vector<Eigen::Vector3d> &points);
