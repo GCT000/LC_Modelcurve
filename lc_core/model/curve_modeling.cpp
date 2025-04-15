@@ -20,7 +20,7 @@ static double sample;
 static std::vector<double> xSamples, xSamplesUsed;
 static int y_optimize = 0;
 #ifdef MY_DEBUG
-static std::string temp_path = "/home/zyp/Lidar/LC-CurveModel/temp/";
+static std::string temp_path = "/home/gct/LC-CurveModel/data/temp/";
 #endif
 static std::string res_path;
 static bool dark = false;
@@ -428,8 +428,8 @@ void CurveModeling::optimizationDark()
     transmission_model_->optimizeTransmissionModelDark(end_point);
 
     // output 3D points to txt file
-    output3DPointsToTxt(res_path + "dark_middle_lidar_points.txt");
-    outputPCD(res_path + "dark_middle_lidar_points.txt", res_path + "dark_middle_line_points.pcd");
+    output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
+    outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "middle_line_points.pcd");
     ori_lidar2img_points_.clear();
     for (const double &x : xSamplesUsed)
     {
