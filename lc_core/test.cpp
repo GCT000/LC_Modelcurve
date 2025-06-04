@@ -17,8 +17,8 @@
 
 // DEFINE_string(input_pcd, "/home/zyp/HD2/DATA/Transmisson/0912/test5/filter.pcd", "输入的点云");
 // DEFINE_string(input_pcd, "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd", "输入的点云");
-DEFINE_string(yaml, "/home/zyp/Lidar/LC-CurveModel/config/whu/model1.yaml", "yaml文件");
-DEFINE_string(dir, "/home/zyp/Lidar/LC-CurveModel/temp/log", "日志文件夹");
+DEFINE_string(yaml, "/home/gct/LC-CurveModel/config/whu/model1.yaml", "yaml文件");
+DEFINE_string(dir, "/home/gct/LC-CurveModel/data/temp/log", "日志文件夹");
 DEFINE_bool(visualize, true, "是否可视化");
 
 /// @brief 测试加载pcd文件是否正常

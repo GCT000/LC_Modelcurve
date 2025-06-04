@@ -9,43 +9,46 @@ dark: 0
 cam_calib: "cam0.yaml"
 
 # the known end point
-end_point: [96.629997, 6.896000, 1.415000]
+#end_point: [102.847, -11.057, 3.59]     #0degree
+end_point: [70.184, -11.057, 75.216]   #45degree
+#end_point: [100.66, -11.057, 21.3897]   #10degree
+#end_point: [102.1435, -11.057, 12.5343]  #5degree
 # end_point: [96.4, 1.33, -1.526]
 x_interval:
   start: 0.0
-  end: 96.4
+  end: 68
 
 # curve point file
-curve_point_file: "/home/gct/LC-CurveModel/data/tempp/curve_points.txt"
+curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
 
 # last image_path
-last_image_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/track/png/11:00.png"
+last_image_path: ""
 
 # image path
 # image_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/image_1.png"
-image_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/track/png/11:00.png"
+image_path: "/home/gct/LC-CurveModel/data/1.png"
 # image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_1.png"
 # image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/image_1.png"
 # lidar points path
 # lidar_points_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/line_1.pcd"
-lidar_points_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/filtered.pcd"
+lidar_points_path: "/home/gct/LC-CurveModel/data/filtered.pcd"
 # lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/line_1.pcd"
 # lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/line_1.pcd"
 # res path
-res_path: "/home/gct/LC-CurveModel/data/tempp/"
+res_path: "/home/gct/LC-CurveModel/data/temp"
 # res_path: "/home/zyp/Lidar/LC-CurveModel/res/whu/"
 
 # points selected
 # Note: please choose points from far away to near
 # selected_points: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/points.txt"
-selected_points: "/home/gct/LC-CurveModel/data/tempp/1100.txt"
+selected_points: "/home/gct/LC-CurveModel/data/points.txt"
 # selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line1.txt"
 # selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line_dark.txt"
 
 # ex optimization
 ex_optimization: 0
-ref_lidar_points: "/home/gct/Curveline_ws/src/LC-CurveModel/data/lidar_ref_0103.txt"
-ref_image_points: "/home/gct/Curveline_ws/src/LC-CurveModel/data/image_ref_0103.txt"
+ref_lidar_points: "/home/gct/LC-CurveModel/data/lidar_ref_0103.txt"
+ref_image_points: "/home/gct/LC-CurveModel/data/image_ref_0103.txt"
 
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1
@@ -62,12 +65,17 @@ T_cam_lidar:
   cols: 4
   dt: d
   # ex for 0103
-  data: [-0.00656762,   -0.999291,   -0.037034, -0.0425305,
-         0.0055339,   0.0369993,   -0.999299, 0.0922477,
-          0.999962, -0.00676934,  0.00528832, -0.117265,
-         0.0, 0.0, 0.0, 1.0]
+  # data: [-0.00656762,   -0.999291,   -0.037034, -0.0425305,
+  #        0.0055339,   0.0369993,   -0.999299, 0.0922477,
+  #         0.999962, -0.00676934,  0.00528832, -0.117265,
+  #        0.0, 0.0, 0.0, 1.0]
   # 0109
   # data: [-0.00615688,   -0.999978,  0.00191724, -0.0425305,
   #         0.0079831,   -0.001965,   -0.999965, 0.0922477,
   #        0.999948, -0.00614274,  0.00799642, -0.117265,
-  #        0.0, 0.0, 0.0, 1.0]                                                                                                                                                                                                      
+  #        0.0, 0.0, 0.0, 1.0] 
+  # 0415
+  data: [-0.0167814,   -0.999916,   -0.0110512, -0.0425305,
+         -0.0114918,  0.0111279,   -0.999986, 0.0922477,
+          0.999911, -0.0165367,  -0.0117924, -0.117265,
+         0.0, 0.0, 0.0, 1.0]                                                                                                                                                                                                     

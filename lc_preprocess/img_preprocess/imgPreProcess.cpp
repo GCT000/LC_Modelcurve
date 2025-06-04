@@ -106,7 +106,7 @@ void ImgPreProcess::visualizeReInterpolated(cv::Mat &cur_img)
     }
     LOG(INFO) << "Re-interpolated points size: " << cur_img_points_.size();
     pre_img_points_ = cur_img_points_;
-    std::string name = "/home/gct/LC-CurveModel/data/tempp/re_interpolated_result.png";
+    std::string name = "/home/gct/LC-CurveModel/data/temp/re_interpolated_result.png";
     cv::imwrite(name, vis_img);
 }
 

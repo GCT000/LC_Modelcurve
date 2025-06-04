@@ -5,4 +5,4 @@
 
 add_executable(ppTest ppTest.cpp lidarPreProcess.cpp)
 # target_link_libraries(ppTest ${PCL_LIBRARIES} glog::glog TBB::tbb ${OpenCV_LIBS})
-target_link_libraries(ppTest ${PCL_LIBRARIES} glog::glog ${OpenCV_LIBS} ${TBB_LIBRARIES})
+target_link_libraries(ppTest ${PCL_LIBRARIES} glog::glog ${OpenCV_LIBS} ${TBB_LIBRARIES} ${gflags_LIBRARIES})

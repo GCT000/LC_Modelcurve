@@ -105,8 +105,38 @@ void outputPCD(const std::string &input_file, const std::string &output_file)
     *cloud = *txt_cloud;        // original txt file points
     *cloud += *random_points;   // add generated random points
     // 4. save merged point cloud
-    pcl::io::savePCDFileASCII(output_file, *cloud);
-    LOG(INFO) << "Saved merged point cloud to " << output_file;
+    // pcl::io::savePCDFileASCII(output_file, *cloud);
+    // LOG(INFO) << "Saved merged point cloud to " << output_file;
+
+    Eigen::Matrix3d rotation_matrix;
+    double angle = 315.0 * M_PI / 180.0; // 转换为弧度
+    rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+    
+    // 5. 应用变换到点云
+    pcl::PointCloud<pcl::PointXYZ>::Ptr transformed_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    transformed_cloud->resize(cloud->size()); // 调整输出点云大小
+
+for (size_t i = 0; i < cloud->size(); ++i) {
+    const auto& pt = cloud->points[i];
+    
+    // 将点转换为Eigen向量并应用旋转
+    Eigen::Vector3d point(pt.x, pt.y, pt.z);
+    Eigen::Vector3d rotated_point = rotation_matrix * point;
+    
+    // 将旋转后的点添加到transformed_cloud
+    transformed_cloud->points[i].x = static_cast<float>(rotated_point.x());
+    transformed_cloud->points[i].y = static_cast<float>(rotated_point.y());
+    transformed_cloud->points[i].z = static_cast<float>(rotated_point.z());
+}
+
+// 设置变换后的点云的元数据（宽度、高度、是否有序）
+transformed_cloud->width = cloud->width;
+transformed_cloud->height = cloud->height;
+transformed_cloud->is_dense = cloud->is_dense;
+    
+    // 6. 保存变换后的点云
+    pcl::io::savePCDFileASCII(output_file, *transformed_cloud);
+    LOG(INFO) << "Saved merged and rotated point cloud to " << output_file;
 }
 
 }

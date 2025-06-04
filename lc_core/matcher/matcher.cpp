@@ -3,7 +3,7 @@
 #include <Eigen/Dense>
 #include <fstream>
 
-static std::string temp_path = "/home/zyp/Lidar/LC-CurveModel/temp/";
+static std::string temp_path = "/home/gct/LC-CurveModel/data/temp/";
 
 using namespace lc_core;
 [[maybe_unused]] std::vector<cv::Point2d> interpolate(const cv::Point2d& p1, const cv::Point2d& p2, int num) {

@@ -7,10 +7,10 @@ def main():
     parser = argparse.ArgumentParser(description='Process some point clouds.')
     # 这里的参数主要设置下输入的点云文件input_file，然后x的范围x_min和x_max就行，z那两个先不用管
     parser.add_argument('--input_file', type=str, default='', help='Input pointcloud directory')
-    parser.add_argument('--x_min', type=float, default=20.0, help='x min')
-    parser.add_argument('--x_max', type=float, default=90.0, help='x max')
-    parser.add_argument('--z_min', type=float, default=-3.0, help='z min')
-    parser.add_argument('--z_max', type=float, default=1.0, help='z max')
+    parser.add_argument('--x_min', type=float, default=15, help='x min')
+    parser.add_argument('--x_max', type=float, default=90, help='x max')
+    parser.add_argument('--z_min', type=float, default=-1.5, help='z min')
+    parser.add_argument('--z_max', type=float, default=3.5, help='z max')
     args = parser.parse_args()
 
     input_file = args.input_file

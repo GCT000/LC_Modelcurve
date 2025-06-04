@@ -77,7 +77,7 @@ int main(int argc, char **argv)
 {
     google::ParseCommandLineFlags(&argc, &argv, true);
     google::InitGoogleLogging(argv[0]);
-    FLAGS_colorlogtostdout = true;
+    //FLAGS_colorlogtostdout = true;
     FLAGS_stderrthreshold = google::INFO;
     
     // load variables from yaml file

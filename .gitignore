@@ -12,6 +12,7 @@ lc_preprocess/img_curve_detection/
 temp/
 res/
 lc_tools/__pycache__/
+data/
 # lc_tools/lidar_ref.txt
 # lc_tools/points_ref.txt
 # lc_tools/points.txt

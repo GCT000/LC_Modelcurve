@@ -184,6 +184,16 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
     input_pcd(lidar_points_path);
     std::vector<Eigen::Vector3d> lidar_points;
     lidar_points = input_pcd.getPoints();
+
+    Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
+    double angle = M_PI / 4; 
+    rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+
+    // 对每个点应用旋转
+    for (auto& point : lidar_points) {
+        point = rotation_matrix * point;
+    }
+
     std::sort(lidar_points.begin(), lidar_points.end(), [](const Eigen::Vector3d &a, const Eigen::Vector3d &b)
               { return a(0) < b(0); });
 
@@ -229,6 +239,13 @@ void CurveModeling::loadLidar2CameraExtrinsic(const YAML::Node &yaml)
     Eigen::Matrix4d T = Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(vecT.data());
     R_c_l_ = T.block<3, 3>(0, 0);
     t_c_l_ = T.block<3, 1>(0, 3);
+
+    Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
+    double angle = M_PI / 4; 
+    rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+    Eigen::Matrix3d inverse_rotation = rotation_matrix.transpose();
+    R_c_l_ = R_c_l_ * inverse_rotation;
+
 }
 
 void CurveModeling::lidarPreprocessing()
@@ -510,16 +527,48 @@ void CurveModeling::updateLidar2PixelPoints()
     }
 
     // generate curve points using new mesh_param_ and plane_param_
+
+    Eigen::Matrix3d rotation_matrix;
+    double angle = 315.0 * M_PI / 180.0; // 转换为弧度
+    rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+
+    // 创建PCL点云对象
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
+    cloud->header.frame_id = "lidar_frame";
     for (const double &ix : xSamples)
     {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(ix);
+
+        Eigen::Vector3d rotated_p = rotation_matrix * p;
         Eigen::Vector2d p_img = lidar2pixel(p);
         if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows)
         {
             ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
+
+              pcl::PointXYZ point;
+            point.x = rotated_p(0);
+            point.y = rotated_p(1);
+            point.z = rotated_p(2);
+            cloud->points.push_back(point);
+
             if (is_first_time)
                 xSamplesUsed.push_back(ix);
         }
+    }
+
+    // 设置点云宽度和高度
+    cloud->width = cloud->points.size();
+    cloud->height = 1;
+
+    // 保存点云到PCD文件
+    std::string filename = "/home/gct/LC-CurveModel/data/45degree_points.pcd";
+    if (pcl::io::savePCDFileASCII(filename, *cloud) == 0)
+    {
+        LOG(INFO) << "成功保存点云到 " << filename << "，共 " << cloud->points.size() << " 个点";
+    }
+    else
+    {
+        LOG(ERROR) << "保存点云失败: " << filename;
     }
 }
 
@@ -544,7 +593,7 @@ void CurveModeling::optical_flow()
     pp.reInterpolate();
 
     img_points_ = pp.get_cur_points();
-    // pp.visualizeReInterpolated(img_);
+    pp.visualizeReInterpolated(img_);
 
     outputPoints(curve_point_file, img_points_);
 }
