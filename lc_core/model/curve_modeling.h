@@ -98,8 +98,8 @@ private:
     std::vector<Eigen::Vector3d> lidar_points_;
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
-    double x_interval_start_;
-    double x_interval_end_;
+    double y_interval_start_;
+    double y_interval_end_;
     cv::Mat img_, last_img_;
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_;

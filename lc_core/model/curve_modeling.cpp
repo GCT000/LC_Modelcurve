@@ -17,7 +17,7 @@ using namespace lc_core;
 
 static int bSplineNum;
 static double sample;
-static std::vector<double> xSamples, xSamplesUsed;
+static std::vector<double> ySamples, ySamplesUsed;
 static int y_optimize = 0;
 #ifdef MY_DEBUG
 static std::string temp_path = "/home/gct/LC-CurveModel/data/temp/";
@@ -52,10 +52,10 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     loadLidar2CameraExtrinsic(yaml);
 
     // x sample
-    if (yaml["x_interval"])
+    if (yaml["y_interval"])
     {
-        x_interval_start_ = yaml["x_interval"]["start"].as<double>();
-        x_interval_end_ = yaml["x_interval"]["end"].as<double>();
+        y_interval_start_ = yaml["y_interval"]["start"].as<double>();
+        y_interval_end_ = yaml["y_interval"]["end"].as<double>();
     }
 
     // load image
@@ -185,14 +185,14 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
     std::vector<Eigen::Vector3d> lidar_points;
     lidar_points = input_pcd.getPoints();
 
-    Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
-    double angle = M_PI / 4; 
-    rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
+    // double angle = M_PI / 4; 
+    // rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
 
-    // 对每个点应用旋转
-    for (auto& point : lidar_points) {
-        point = rotation_matrix * point;
-    }
+    // // 对每个点应用旋转
+    // for (auto& point : lidar_points) {
+    //     point = rotation_matrix * point;
+    // }
 
     std::sort(lidar_points.begin(), lidar_points.end(), [](const Eigen::Vector3d &a, const Eigen::Vector3d &b)
               { return a(0) < b(0); });
@@ -240,11 +240,11 @@ void CurveModeling::loadLidar2CameraExtrinsic(const YAML::Node &yaml)
     R_c_l_ = T.block<3, 3>(0, 0);
     t_c_l_ = T.block<3, 1>(0, 3);
 
-    Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
-    double angle = M_PI / 4; 
-    rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
-    Eigen::Matrix3d inverse_rotation = rotation_matrix.transpose();
-    R_c_l_ = R_c_l_ * inverse_rotation;
+    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
+    // double angle = M_PI / 4; 
+    // rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
+    // Eigen::Matrix3d inverse_rotation = rotation_matrix.transpose();
+    // R_c_l_ = R_c_l_ * inverse_rotation;
 
 }
 
@@ -253,10 +253,10 @@ void CurveModeling::lidarPreprocessing()
     // fit curve
     curveLidarFitting();
 
-    // generate xSamples
-    xSamples = std::vector<double>(static_cast<size_t>((x_interval_end_ - x_interval_start_) / sample) + 1, x_interval_start_);
-    std::generate(xSamples.begin(), xSamples.end(), [x = x_interval_start_]() mutable
-                  { return x += sample; });
+    // generate ySamples
+    ySamples = std::vector<double>(static_cast<size_t>((y_interval_end_ - y_interval_start_) / sample) + 1, y_interval_start_);
+    std::generate(ySamples.begin(), ySamples.end(), [y = y_interval_start_]() mutable
+                  { return y += sample; });
 
     // generate curve points
     updateLidar2PixelPoints();
@@ -411,7 +411,7 @@ void CurveModeling::optimization()
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "match_visualization.jpg");
 #endif
 
-    OptimizationInput input(xSamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
+    OptimizationInput input(ySamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
     // Perform optimization based on the matching result
     std::visit([this, &input](auto &&matchResult)
                { transmission_model_->optimizeTransmissionModel(matchResult, input, y_optimize); }, result);
@@ -448,9 +448,9 @@ void CurveModeling::optimizationDark()
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
     outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "middle_line_points.pcd");
     ori_lidar2img_points_.clear();
-    for (const double &x : xSamplesUsed)
+    for (const double &y : ySamplesUsed)
     {
-        Eigen::Vector3d p = transmission_model_->generateSinglePoint(x);
+        Eigen::Vector3d p = transmission_model_->generateSinglePoint(y);
         Eigen::Vector2d p_img = lidar2pixel(p);
         ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
     }
@@ -521,7 +521,7 @@ void CurveModeling::updateLidar2PixelPoints()
 {
     ori_lidar2img_points_.clear();
     bool is_first_time = true;
-    if (!xSamplesUsed.empty())
+    if (!ySamplesUsed.empty())
     {
         is_first_time = false;
     }
@@ -529,15 +529,15 @@ void CurveModeling::updateLidar2PixelPoints()
     // generate curve points using new mesh_param_ and plane_param_
 
     Eigen::Matrix3d rotation_matrix;
-    double angle = 315.0 * M_PI / 180.0; // 转换为弧度
+    double angle = 360.0 * M_PI / 180.0; // 转换为弧度
     rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
 
     // 创建PCL点云对象
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     cloud->header.frame_id = "lidar_frame";
-    for (const double &ix : xSamples)
+    for (const double &iy : ySamples)
     {
-        Eigen::Vector3d p = transmission_model_->generateSinglePoint(ix);
+        Eigen::Vector3d p = transmission_model_->generateSinglePoint(iy);
 
         Eigen::Vector3d rotated_p = rotation_matrix * p;
         Eigen::Vector2d p_img = lidar2pixel(p);
@@ -552,7 +552,7 @@ void CurveModeling::updateLidar2PixelPoints()
             cloud->points.push_back(point);
 
             if (is_first_time)
-                xSamplesUsed.push_back(ix);
+                ySamplesUsed.push_back(iy);
         }
     }
 
@@ -561,7 +561,7 @@ void CurveModeling::updateLidar2PixelPoints()
     cloud->height = 1;
 
     // 保存点云到PCD文件
-    std::string filename = "/home/gct/LC-CurveModel/data/45degree_points.pcd";
+    std::string filename = "/home/gct/LC-CurveModel/data/0degree_points.pcd";
     if (pcl::io::savePCDFileASCII(filename, *cloud) == 0)
     {
         LOG(INFO) << "成功保存点云到 " << filename << "，共 " << cloud->points.size() << " 个点";
@@ -575,9 +575,9 @@ void CurveModeling::updateLidar2PixelPoints()
 void CurveModeling::output3DPointsToTxt(const std::string &filename)
 {
     std::ofstream output_points(filename, std::ios::out);
-    for (const double &x : xSamples)
+    for (const double &y : ySamples)
     {
-        Eigen::Vector3d p = transmission_model_->generateSinglePoint(x);
+        Eigen::Vector3d p = transmission_model_->generateSinglePoint(y);
         output_points << p(0) << " " << p(1) << " " << p(2) << "\n";
     }
     output_points.close();

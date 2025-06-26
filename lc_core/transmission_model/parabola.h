@@ -22,7 +22,7 @@ public:
 
     void fitTransmissionModel(std::vector<Eigen::Vector3d> &points) override;
 
-    Eigen::Vector3d generateSinglePoint(const double &x) override;
+    Eigen::Vector3d generateSinglePoint(const double &y) override;
 
     void optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input, int y_optimize = 0) override;
 
@@ -30,17 +30,18 @@ public:
 
     void optimizeTransmissionModelDark(const Eigen::Vector3d& end_point) override;
 
-    void setParams(const double &a, const double &b, const double &c, const double &k, const double &m) {
-        a_ = a;
-        b_ = b;
-        c_ = c;
-        k_ = k;
-        m_ = m;
+    void setParams(const double &a1, const double &b1, const double &c1, const double &a2, const double &b2, const double &c2) {
+        a1_ = a1;
+        b1_ = b1;
+        c1_ = c1;
+        a2_ = a2;
+        b2_ = b2;
+        c2_ = c2;
     }
 
 private:
-    double a_, b_, c_;
-    double k_, m_;
+    double a1_, b1_, c1_;
+    double a2_, b2_, c2_;
 };
 
 } // namespace lc_core

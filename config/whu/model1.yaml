@@ -4,19 +4,17 @@
 line_num: 1
 # environment
 dark: 0
-
 # camera yaml
 cam_calib: "cam0.yaml"
-
 # the known end point
-#end_point: [102.847, -11.057, 3.59]     #0degree
-end_point: [70.184, -11.057, 75.216]   #45degree
+end_point: [205.825, -4.813, -28.245]     #0degree
+#end_point: [75.261, -11.057, -70.1846]   #45degree
 #end_point: [100.66, -11.057, 21.3897]   #10degree
-#end_point: [102.1435, -11.057, 12.5343]  #5degree
+#end_point: [102.769, -11.057, -5.38675]  #5degree
 # end_point: [96.4, 1.33, -1.526]
-x_interval:
-  start: 0.0
-  end: 68
+y_interval:
+  start: -4.9
+  end: 12
 
 # curve point file
 curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
@@ -26,12 +24,12 @@ last_image_path: ""
 
 # image path
 # image_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/image_1.png"
-image_path: "/home/gct/LC-CurveModel/data/1.png"
+image_path: "/home/gct/LC-CurveModel/data/4.png"
 # image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_1.png"
 # image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/image_1.png"
 # lidar points path
 # lidar_points_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/line_1.pcd"
-lidar_points_path: "/home/gct/LC-CurveModel/data/filtered.pcd"
+lidar_points_path: "/home/gct/LC-CurveModel/data/filtered_4.pcd"
 # lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/line_1.pcd"
 # lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/line_1.pcd"
 # res path
@@ -53,10 +51,10 @@ ref_image_points: "/home/gct/LC-CurveModel/data/image_ref_0103.txt"
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1
 b_spline_num: 1000
-sample: 0.2
+sample: 0.01
 
 # transmission model(0: parabola  1: catenary)
-transmission_model: 0
+transmission_model: 1
 y_optimize: 1           # 0: no optimize, 1: optimize
 
 # lidar-camera extrinsic
@@ -75,7 +73,11 @@ T_cam_lidar:
   #        0.999948, -0.00614274,  0.00799642, -0.117265,
   #        0.0, 0.0, 0.0, 1.0] 
   # 0415
-  data: [-0.0167814,   -0.999916,   -0.0110512, -0.0425305,
-         -0.0114918,  0.0111279,   -0.999986, 0.0922477,
-          0.999911, -0.0165367,  -0.0117924, -0.117265,
-         0.0, 0.0, 0.0, 1.0]                                                                                                                                                                                                     
+  # data: [-0.0167814,   -0.999916,   -0.0110512, -0.0425305,
+  #        -0.0114918,  0.0111279,   -0.999986, 0.0922477,
+  #         0.999911, -0.0165367,  -0.0117924, -0.117265,
+  #        0.0, 0.0, 0.0, 1.0]                           
+  data: [-0.0129485,   -1.00003,   0.000851149, -0.0425305,
+         -0.00548969,  -0.000896547,   -1.0001, 0.0922477,
+          1.00002, -0.0128372,  -0.005595, -0.117265,
+         0.0, 0.0, 0.0, 1.0]                                                                                                                                                                            
