@@ -16,12 +16,12 @@ namespace lc_core
 class Catenary : public TransmissionModel
 {
 public:
-    Catenary() : c_(100.0), c1_(0.0), c2_(0.0) {}
+    Catenary() = default;
     ~Catenary() = default;
 
     void fitTransmissionModel(std::vector<Eigen::Vector3d> &points) override;
 
-    Eigen::Vector3d generateSinglePoint(const double &x) override;
+    Eigen::Vector3d generateSinglePoint(const double &y) override;
 
     void optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input, int y_optimize = 0) override;
 
@@ -30,16 +30,11 @@ public:
     void optimizeTransmissionModelDark(const Eigen::Vector3d& end_point) override;
 
     void setParams(const double &c, const double &c1, const double &c2, const double &k, const double &m) {
-        c_ = c;
-        c1_ = c1;
-        c2_ = c2;
-        k_ = k;
-        m_ = m;
     }
 
 private:
-    double c_, c1_, c2_;
-    double k_, m_;
+    double F1, F2, F3, F4, F5, F6;
+    double T1, T2, T3;
     bool is_manual;
 };
 
