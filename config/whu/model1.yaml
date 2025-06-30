@@ -3,7 +3,7 @@
 # line number
 line_num: 1
 # environment
-dark: 0
+dark: 1
 # camera yaml
 cam_calib: "cam0.yaml"
 # the known end point

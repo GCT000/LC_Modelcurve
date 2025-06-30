@@ -57,6 +57,14 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 find_package(PCL REQUIRED)
 include_directories(${PCL_INCLUDE_DIRS})
 
+#rosbag
+find_package(catkin REQUIRED COMPONENTS
+  roscpp
+  rosbag
+  sensor_msgs
+)
+include_directories(${catkin_INCLUDE_DIRS})
+
 # find_package(TBB REQUIRED)
 set(TBB_INCLUDE_DIRS "/usr/local/include")
 set(TBB_LIBRARIES "/usr/lib/x86_64-linux-gnu/libtbb.so")

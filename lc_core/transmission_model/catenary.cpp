@@ -34,19 +34,19 @@ void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
     for (size_t i = 0; i < points.size(); ++i)
     {
         ceres::CostFunction *cost_function = new CatenaryInitFactor_xz(points[i].x(), points[i].z());
-        problem_xz.AddResidualBlock(cost_function, nullptr, &F1, &F2, &F3, &F4);
+        problem_xz.AddResidualBlock(cost_function, nullptr, &F1, &F2, &F3);
     }
     ceres::Solver::Summary summary_xz;
     ceres::Solve(options_xz, &problem_xz, &summary_xz);
 
     LOG(INFO) << "T1: " << T1 << " T2: " << T2 << "T3: " << T3;
-    LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3 << " F4: " << F4;
+    LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3;
 }
 
 Eigen::Vector3d Catenary::generateSinglePoint(const double &y)
 {
     double x = T1 + T2 * y + T3 * y * y;
-    double z = F1 * x*x + F2 + F3 *x +F4*x;
+    double z = F1 * x*x + F2 + F3 *x;
     return Eigen::Vector3d(x, y, z);
 }
 
@@ -73,7 +73,7 @@ void Catenary::optimizeTransmissionModel(const P2LMatchResult &lines, const Opti
     for (size_t i = 0; i < lines.size(); i++)
     {
         ceres::CostFunction *cost_function = new CatenaryP2LFactorA(lines[i], input.ySamples[i], Trans(input.R, input.t), input.cam);
-        problem.AddResidualBlock(cost_function, nullptr, &F1, &F2, &F3, &F4);
+        problem.AddResidualBlock(cost_function, nullptr, &F1, &F2, &F3);
     }
     ceres::CostFunction *cost_function = new CatenaryEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
     problem.AddResidualBlock(cost_function, nullptr, &T1, &T2, &T3);
@@ -82,8 +82,8 @@ void Catenary::optimizeTransmissionModel(const P2LMatchResult &lines, const Opti
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     LOG(INFO) << "After optimization: ";
-    // LOG(INFO) << "c: " << c_ << " c1: " << c1_ << " c2: " << c2_;
-    // LOG(INFO) << "k: " << k_ << " m: " << m_;
+    LOG(INFO) << "T1: " << T1 << " T2: " << T2 << "T3: " << T3;
+    LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3;
 }
 
 void Catenary::optimizeTransmissionModel(const P2PMatchResult &points, const OptimizationInput &input, int y_optimize, int time)
@@ -110,17 +110,17 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
     for (size_t i = 0; i < points.size(); i++)
     {
         ceres::CostFunction *cost_function = new CatenaryP2PFactorA(points[i], input.ySamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
-        problem.AddResidualBlock(cost_function, NULL, &F1, &F2, &F3, &F4);
+        problem.AddResidualBlock(cost_function, NULL, &T1, &T2, &T3, &F1, &F2, &F3);
     }
     ceres::CostFunction *cost_function = new CatenaryEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr, &T1, &T2, &T3);
+    problem.AddResidualBlock(cost_function, nullptr, &T1, &T2, &T3, &F1, &F2, &F3);
 #endif
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     LOG(INFO) << "After optimization: ";
-    // LOG(INFO) << "c: " <<  << " c1: " << c1_ << " c2: " << c2_;
-    // LOG(INFO) << "k: " << k_ << " m: " << m_;
+    LOG(INFO) << "T1: " << T1 << " T2: " << T2 << "T3: " << T3;
+    LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3;
 }
 
 void Catenary::optimizeTransmissionModelDark(const Eigen::Vector3d &end_point)
@@ -145,7 +145,7 @@ void Catenary::optimizeTransmissionModelDark(const Eigen::Vector3d &end_point)
     problem.AddResidualBlock(cost_function, nullptr, &c_, &c1_, &c2_, &k_, &m_);
 #else
     ceres::CostFunction *cost_function = new CatenaryEpFactorA(end_point(0), end_point(1), end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr, &F1, &F2, &F3, &F4, &F5);
+    problem.AddResidualBlock(cost_function, nullptr,&T1, &T2, &T3, &F1, &F2, &F3);
 #endif
 
     ceres::Solver::Summary summary;

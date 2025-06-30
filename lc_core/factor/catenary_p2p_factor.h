@@ -69,15 +69,15 @@ namespace lc_core
         WeightType weight_type;
     };
 
-    class CatenaryP2PFactorA : public ceres::SizedCostFunction<1, 1, 1, 1, 1, 1>
+    class CatenaryP2PFactorA : public ceres::SizedCostFunction<1, 1, 1, 1, 1, 1, 1>
     {
     public:
-        CatenaryP2PFactorA(const cv::Point2d &_img_p, const double &_x, const Trans &_Tcl, std::shared_ptr<Camera> _cam, const WeightType &_weight_type = WeightType::Equal)
-            : img_p(_img_p), x(_x), Tcl(_Tcl), cam(_cam), weight_type(_weight_type)
+        CatenaryP2PFactorA(const cv::Point2d &_img_p, const double &_y, const Trans &_Tcl, std::shared_ptr<Camera> _cam, const WeightType &_weight_type = WeightType::Equal)
+            : img_p(_img_p), y(_y), Tcl(_Tcl), cam(_cam), weight_type(_weight_type)
         {
             if (weight_type != WeightType::Distance)
             {
-                sqrt_info = sqrt(_x);
+                sqrt_info = sqrt(ceres::abs(_y));
             }
             else
             {
@@ -88,23 +88,25 @@ namespace lc_core
 
         virtual bool Evaluate(double const *const *parameters, double *residual, double **jacobians) const
         {
-            const double k = parameters[0][0];
-            const double m = parameters[1][0];
-            const double c = parameters[2][0];
-            const double c1 = parameters[3][0];
-            const double c2 = parameters[4][0];
+            const double T1 = parameters[0][0];
+            const double T2 = parameters[1][0];
+            const double T3 = parameters[2][0];
+            const double F1 = parameters[3][0];
+            const double F2 = parameters[4][0];
+            const double F3 = parameters[5][0];
 
             Eigen::Matrix<double, 3, 1> pLidar;
-            pLidar << x, k * x + m, c * ceres::cosh((x + c1) / c) + c2;
+            double x = T1 + T2 * y + T3 * y * y;
+            pLidar << x, y, F1 * x * x + F2 + F3 * x;
             Eigen::Matrix<double, 3, 1> pCam = Tcl.R.cast<double>() * pLidar + Tcl.t.cast<double>();
             Eigen::Matrix<double, 2, 1> pImg;
             cam->spaceToPlane(pCam, pImg);
 
             double dist = ceres::sqrt((pImg(0) - img_p.x) * (pImg(0) - img_p.x) + (pImg(1) - img_p.y) * (pImg(1) - img_p.y));
             residual[0] = sqrt_info * dist;
-
             Eigen::Matrix<double, 1, 2> matrix_V2Pimg;
             matrix_V2Pimg << (pImg(0) - img_p.x) / dist, (pImg(1) - img_p.y) / dist;
+            
 
             Eigen::Matrix<double, 2, 3> matrix_Pimg2Pcam;
             matrix_Pimg2Pcam << cam->fx_ / pCam(2), 0, -((cam->fx_ * pCam(0)) / (pCam(2) * pCam(2))),
@@ -112,45 +114,52 @@ namespace lc_core
 
             if (jacobians)
             {
-                double inex = (x + c1) / c;
                 if (jacobians[0])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2k(jacobians[0]);
-                    Eigen::Matrix<double, 3, 1> p2k;
-                    p2k << 0, x, 0;
-                    jacobians_p2k = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2k * sqrt_info;
+                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2t1(jacobians[0]);
+                    Eigen::Matrix<double, 3, 1> p2t1;
+                    p2t1 << 1, 0, 2 * F1 * x + F3;
+                    jacobians_p2t1 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2t1 * sqrt_info;
                 }
 
                 if (jacobians[1])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2m(jacobians[1]);
-                    Eigen::Matrix<double, 3, 1> p2m;
-                    p2m << 0, 1, 0;
-                    jacobians_p2m = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2m * sqrt_info;
+                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2t2(jacobians[1]);
+                    Eigen::Matrix<double, 3, 1> p2t2;
+                    p2t2 << y, 0, (2 * F1 * x + F3) * y;
+                    jacobians_p2t2 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2t2 * sqrt_info;
                 }
 
                 if (jacobians[2])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2c(jacobians[2]);
-                    Eigen::Matrix<double, 3, 1> p2c;
-                    p2c << 0, 0, ceres::cosh(inex) - inex * ceres::sinh(inex);
-                    jacobians_p2c = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2c * sqrt_info;
+                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2t3(jacobians[2]);
+                    Eigen::Matrix<double, 3, 1> p2t3;
+                    p2t3 << y * y, 0, (2 * F1 * x + F3) * y * y;
+                    jacobians_p2t3 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2t3 * sqrt_info;
                 }
 
                 if (jacobians[3])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2c1(jacobians[3]);
-                    Eigen::Matrix<double, 3, 1> p2c1;
-                    p2c1 << 0, 0, ceres::sinh(inex);
-                    jacobians_p2c1 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2c1 * sqrt_info;
+                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2f1(jacobians[3]);
+                    Eigen::Matrix<double, 3, 1> p2f1;
+                    p2f1 << 0, 0, x*x;
+                    jacobians_p2f1 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2f1 * sqrt_info;
                 }
 
                 if (jacobians[4])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2c2(jacobians[4]);
-                    Eigen::Matrix<double, 3, 1> p2c2;
-                    p2c2 << 0, 0, 1;
-                    jacobians_p2c2 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2c2 * sqrt_info;
+                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2f2(jacobians[4]);
+                    Eigen::Matrix<double, 3, 1> p2f2;
+                    p2f2 << 0, 0, 1;
+                    jacobians_p2f2 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2f2 * sqrt_info;
+                }
+
+                if (jacobians[5])
+                {
+                    Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobians_p2f3(jacobians[5]);
+                    Eigen::Matrix<double, 3, 1> p2f3;
+                    p2f3 << 0, 0, x;
+                    jacobians_p2f3 = matrix_V2Pimg * matrix_Pimg2Pcam * Tcl.R.cast<double>() * p2f3 * sqrt_info;
                 }
             }
             return true;
@@ -158,7 +167,7 @@ namespace lc_core
 
     private:
         cv::Point2d img_p;
-        double x;
+        double y;
         Trans Tcl;
         std::shared_ptr<Camera> cam;
         double sqrt_info;

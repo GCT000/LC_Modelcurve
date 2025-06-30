@@ -27,7 +27,10 @@ add_library(curveModel_lib SHARED
 
 target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp ${OpenCV_LIBS})
 
+add_executable(read_imu read_imu.cpp)
+target_link_libraries(read_imu curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread ${catkin_LIBRARIES})
+
 enable_testing()
 
-add_executable(test test.cpp)
-target_link_libraries(test curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread)
+add_executable(curve test.cpp)
+target_link_libraries(curve curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread)

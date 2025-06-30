@@ -120,7 +120,7 @@ private:
     const double y_obs;
 };
 
-class CatenaryInitFactor_xz : public ceres::SizedCostFunction<1,1,1,1,1>
+class CatenaryInitFactor_xz : public ceres::SizedCostFunction<1,1,1,1>
 {
 public:
     CatenaryInitFactor_xz(double x_obs, double z_obs) : x_obs(x_obs), z_obs(z_obs) {};
@@ -129,9 +129,8 @@ public:
         const double F1 = parameters[0][0];
         const double F2 = parameters[1][0];
         const double F3 = parameters[2][0];
-        const double F4 = parameters[3][0];
 
-        residual[0] = F1 * x_obs*x_obs + F2 + F3 *x_obs +F4*x_obs-z_obs;
+        residual[0] = F1 * x_obs*x_obs + F2 + F3 *x_obs-z_obs;
         if (jacobians)
         {
             if(jacobians[0])
@@ -154,13 +153,6 @@ public:
                 Eigen::Matrix<double, 1, 1> f3;
                 f3 << x_obs;
                 jacobian_f3 = f3;
-            }
-            if(jacobians[3])
-            {
-                Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_f4(jacobians[3]);
-                Eigen::Matrix<double, 1, 1> f4;
-                f4 << x_obs;
-                jacobian_f4 = f4;
             }
         } 
         return true;
