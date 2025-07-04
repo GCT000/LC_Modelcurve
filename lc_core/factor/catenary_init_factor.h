@@ -88,7 +88,7 @@ public:
         const double T1 = parameters[0][0];
         const double T2 = parameters[1][0];
         const double T3 = parameters[2][0];
-        residual[0] = T1 + T2 * y_obs + T3 * y_obs * y_obs - x_obs ;
+        residual[0] = T1 + T2 * y_obs + T3*y_obs*y_obs  - x_obs ;
         if (jacobians)
         {
             if(jacobians[0])

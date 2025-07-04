@@ -33,7 +33,7 @@ public:
     }
 
 private:
-    double F1, F2, F3;
+    double F1, F2, F3, F4, F5;
     double T1, T2, T3;
     bool is_manual;
 };

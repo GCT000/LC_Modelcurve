@@ -22,15 +22,38 @@ static int y_optimize = 0;
 #ifdef MY_DEBUG
 static std::string temp_path = "/home/gct/LC-CurveModel/data/temp/";
 #endif
-static std::string res_path;
 static bool dark = false;
-Eigen::Vector3d end_point;
 
-void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file) {
+bool CurveModeling::if_no_end_point()
+{
+    return (end_point[0] == 0.0) && (end_point[1] == 0.0) && (end_point[2] == 0.0);
+}
+
+std::pair<std::string, std::vector<std::string>> CurveModeling::get_cal_distance_files()
+{
+    return std::make_pair(raw_pcd_file, output_files);
+}
+
+void CurveModeling::set_end_point(const Eigen::Vector4f &point)
+{
+    end_point[0] = point[0];
+    end_point[1] = point[1];
+    end_point[2] = point[2];
+    LOG(INFO) << "END POINT" << end_point[0] << end_point[1] << end_point[0];
+}
+
+std::pair<std::vector<std::string>, Eigen::Vector4f> CurveModeling::get_files_point()
+{
+    return std::make_pair(pcd_files, end_point_wgs84);
+}
+
+void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file)
+{
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     pcl::io::loadPCDFile<pcl::PointXYZ>(pcd_file, *cloud);
     std::ofstream out_file(txt_file, std::ios::out);
-    for (const auto &point : cloud->points) {
+    for (const auto &point : cloud->points)
+    {
         out_file << point.x << " " << point.y << " " << point.z << "\n";
     }
 }
@@ -38,12 +61,48 @@ void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file) {
 CurveModeling::CurveModeling(const std::string &yaml_file)
 {
     YAML::Node yaml = YAML::LoadFile(yaml_file);
-    if (yaml["dark"]) {
+    if (yaml["dark"])
+    {
 
         dark = yaml["dark"].as<int>();
     }
-    std::vector<double> end_point_vec = yaml["end_point"].as<std::vector<double>>();
-    end_point << end_point_vec[0], end_point_vec[1], end_point_vec[2];
+    if (yaml["end_point"])
+    {
+        std::vector<double> end_point_vec = yaml["end_point"].as<std::vector<double>>();
+        end_point << end_point_vec[0], end_point_vec[1], end_point_vec[2];
+    }
+    if (yaml["end_point_wgs84"])
+    {
+        std::vector<double> end_point_wgs84_tmp = yaml["end_point_wgs84"].as<std::vector<double>>();
+        end_point_wgs84 << end_point_wgs84_tmp[0], end_point_wgs84_tmp[1], end_point_wgs84_tmp[2], 1;
+    }
+
+    if (yaml["source_file"])
+    {
+        std::string source_file = yaml["source_file"].as<std::string>();
+        pcd_files.push_back(source_file);
+    }
+    if (yaml["target_file"])
+    {
+        std::string target_file = yaml["target_file"].as<std::string>();
+        pcd_files.push_back(target_file);
+    }
+
+    if (yaml["raw_pcd_file"])
+    {
+        raw_pcd_file = yaml["raw_pcd_file"].as<std::string>();
+    }
+    if (yaml["matched_point_file"])
+    {
+        std::string matched_point_file = yaml["matched_point_file"].as<std::string>();
+        output_files.push_back(matched_point_file);
+    }
+    if (yaml["tunnel_cloud_file"])
+    {
+        std::string tunnel_cloud_file = yaml["tunnel_cloud_file"].as<std::string>();
+        output_files.push_back(tunnel_cloud_file);
+    }
+
 
     // load camera
     loadCamera(yaml, yaml_file);
@@ -113,7 +172,7 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             optical_flow();
         }
     }
-    
+
     if (yaml["selected_points"] && !std::filesystem::exists(std::filesystem::path(curve_point_file)))
     {
         std::string selected_points = yaml["selected_points"].as<std::string>();
@@ -122,7 +181,8 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             LOG(ERROR) << "no curve point file or selected point file\n";
             return;
         }
-        if (!dark) {
+        if (!dark)
+        {
             generateCurveImagePoints(selected_points);
         }
     }
@@ -185,15 +245,6 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
     std::vector<Eigen::Vector3d> lidar_points;
     lidar_points = input_pcd.getPoints();
 
-    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
-    // double angle = M_PI / 4; 
-    // rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
-
-    // // 对每个点应用旋转
-    // for (auto& point : lidar_points) {
-    //     point = rotation_matrix * point;
-    // }
-
     std::sort(lidar_points.begin(), lidar_points.end(), [](const Eigen::Vector3d &a, const Eigen::Vector3d &b)
               { return a(0) < b(0); });
 
@@ -239,13 +290,6 @@ void CurveModeling::loadLidar2CameraExtrinsic(const YAML::Node &yaml)
     Eigen::Matrix4d T = Eigen::Map<Eigen::Matrix<double, 4, 4, Eigen::RowMajor>>(vecT.data());
     R_c_l_ = T.block<3, 3>(0, 0);
     t_c_l_ = T.block<3, 1>(0, 3);
-
-    // Eigen::Matrix3d rotation_matrix = Eigen::Matrix3d::Identity();
-    // double angle = M_PI / 4; 
-    // rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
-    // Eigen::Matrix3d inverse_rotation = rotation_matrix.transpose();
-    // R_c_l_ = R_c_l_ * inverse_rotation;
-
 }
 
 void CurveModeling::lidarPreprocessing()
@@ -301,14 +345,10 @@ void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
     }
     file.close();
 
-    // img_points_ = samplePointsBetween(img_points[0], img_points[1], 100);
-    // std::reverse(img_points.begin(), img_points.end());
-
     std::vector<cv::Point2d> temp_points;
     // temp_points = calculateBSpline(img_points, bSplineNum);
     temp_points = calculateCatmullRomSpline(img_points, bSplineNum);
     LOG(INFO) << "temp_points size: " << temp_points.size() << "\n";
-    // cam_->undistortPoints(temp_points, temp_un_points);
 
     img_points_.clear();
     img_points_ = std::move(temp_points);
@@ -545,7 +585,7 @@ void CurveModeling::updateLidar2PixelPoints()
         {
             ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
 
-              pcl::PointXYZ point;
+            pcl::PointXYZ point;
             point.x = rotated_p(0);
             point.y = rotated_p(1);
             point.z = rotated_p(2);

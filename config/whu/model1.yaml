@@ -3,18 +3,27 @@
 # line number
 line_num: 1
 # environment
-dark: 1
+dark: 0
 # camera yaml
 cam_calib: "cam0.yaml"
 # the known end point
-end_point: [205.825, -4.813, -28.245]     #0degree
+# end_point: [162.358994, 4.878000, 9.462000]     #0degree
 #end_point: [75.261, -11.057, -70.1846]   #45degree
 #end_point: [100.66, -11.057, 21.3897]   #10degree
-#end_point: [102.769, -11.057, -5.38675]  #5degree
+end_point: [0, 0, 0]  #5degree
 # end_point: [96.4, 1.33, -1.526]
+
+
+end_point_wgs84: [22, -64, 38]
+source_file: "/home/gct/LC-CurveModel_raw/lc_core/lidar.pcd"
+target_file: "/home/gct/LC-CurveModel_raw/lc_core/wurenji.pcd"
+
+raw_pcd_file: "/home/gct/LC-CurveModel/data/wangan_0630/extracted_points_0630.pcd"
+matched_point_file: "/home/gct/LC-CurveModel/data/matched_points.pcd"
+tunnel_cloud_file: "/home/gct/LC-CurveModel/data/filtered_cloud.pcd"
 y_interval:
-  start: -4.9
-  end: 12
+  start: -4.91
+  end: 10
 
 # curve point file
 curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
@@ -51,7 +60,7 @@ ref_image_points: "/home/gct/LC-CurveModel/data/image_ref_0103.txt"
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1
 b_spline_num: 1000
-sample: 0.01
+sample: 0.001
 
 # transmission model(0: parabola  1: catenary)
 transmission_model: 1

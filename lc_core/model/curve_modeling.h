@@ -31,6 +31,7 @@
 #include <Eigen/Dense>
 #include <execution>
 #include <thread>
+#include <utility>
 
 namespace lc_core
 {
@@ -59,6 +60,22 @@ public:
 
     /// @brief  optimize ex
     void optimizationEx();
+
+    /// @brief  is exist end_point
+    bool if_no_end_point();
+
+    /// @brief  set end point
+    void set_end_point(const Eigen::Vector4f& point);
+
+    /// @brief  get pcd_files and end_point_wgs84
+    std::pair<std::vector<std::string>, Eigen::Vector4f> get_files_point();
+    
+    /// @brief  get res path 
+    std::string get_res_path(){return res_path;}
+
+    /// @brief  get cal_distance files
+    std::pair<std::string, std::vector<std::string>> get_cal_distance_files();
+
 
 private:
     /// @brief  lidar 2 pixel
@@ -95,7 +112,12 @@ private:
     void optical_flow();
 
 private:
+    std::string curve_point_file;
+    std::string res_path;
+    std::string raw_pcd_file;
+
     std::vector<Eigen::Vector3d> lidar_points_;
+    std::vector<std::string> output_files;
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
     double y_interval_start_;
@@ -103,7 +125,10 @@ private:
     cv::Mat img_, last_img_;
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_;
-
+    Eigen::Vector3d end_point;
+    Eigen::Vector4f end_point_wgs84;
+    
+    std::vector<std::string> pcd_files;
     std::vector<cv::Point2d> img_points_;
     std::vector<cv::Point2d> ori_lidar2img_points_;
 
@@ -111,7 +136,8 @@ private:
 
     std::shared_ptr<TransmissionModel> transmission_model_;
 
-    std::string curve_point_file;
+
+    
 };
 
 } // namespace lc_core

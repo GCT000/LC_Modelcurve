@@ -6,6 +6,8 @@
  */
 
 #include "curve_modeling.h"
+#include "cloud_registration.h"
+#include "cal_distance.h"
 #include "loadPCD.h"
 #include "bSpline.h"
 #include <glog/logging.h>
@@ -37,11 +39,15 @@ int main(int argc, char **argv)
 
     // check log dir
     struct stat info;
-    if (stat(FLAGS_dir.c_str(), &info) != 0 || !(info.st_mode & S_IFDIR)) {
+    if (stat(FLAGS_dir.c_str(), &info) != 0 || !(info.st_mode & S_IFDIR))
+    {
         int status = mkdir(FLAGS_dir.c_str(), 0777);
-        if (status != 0) {
+        if (status != 0)
+        {
             LOG(ERROR) << "Cannot create log directory: " << FLAGS_dir << ", error code: " << strerror(errno);
-        } else {
+        }
+        else
+        {
             LOG(INFO) << "Successfully create log directory: " << FLAGS_dir;
         }
     }
@@ -57,17 +63,32 @@ int main(int argc, char **argv)
     // set log dir
     FLAGS_log_dir = FLAGS_dir;
     google::SetLogFilenameExtension(".log");
-
     google::FlushLogFiles(google::INFO);
 
     lc_core::CurveModeling curve_modeling(FLAGS_yaml);
-    
+
+
+    // get end_point if 
+    if (curve_modeling.if_no_end_point())
+    {
+        Cloud_registration cloud_registration;
+        LOG(INFO) << "HERE";
+        cloud_registration.cal_Tlw(curve_modeling.get_files_point().first, curve_modeling.get_files_point().second);
+        curve_modeling.set_end_point(cloud_registration.get_end_point());
+    }
+
     // process lidar points
     curve_modeling.lidarPreprocessing();
     curve_modeling.optimization();
-    if (FLAGS_visualize) {
+    if (FLAGS_visualize)
+    {
         curve_modeling.visualization();
     }
+    
+    // calculate distances 
+    Cal_dist_paragram cal_dist_paragram("/home/gct/LC-CurveModel/data/wangan_0630/tempfinal_line_points.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second);
+    Cal_distance cal_distance(cal_dist_paragram);
+    cal_distance.calculate_distance();
 
     return 0;
 }

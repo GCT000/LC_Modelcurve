@@ -45,7 +45,7 @@ void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
 
 Eigen::Vector3d Catenary::generateSinglePoint(const double &y)
 {
-    double x = T1 + T2 * y + T3 * y * y;
+    double x = T1 + T2 * y + T3 *y *y ;
     double z = F1 * x*x + F2 + F3 *x;
     return Eigen::Vector3d(x, y, z);
 }
