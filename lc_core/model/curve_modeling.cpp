@@ -102,6 +102,14 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         std::string tunnel_cloud_file = yaml["tunnel_cloud_file"].as<std::string>();
         output_files.push_back(tunnel_cloud_file);
     }
+    if (yaml["ndt_paragram"])
+    {
+        ndt = yaml["ndt_paragram"].as<std::vector<float>>();
+    }
+    if (yaml["icp_paragram"])
+    {
+        icp = yaml["icp_paragram"].as<std::vector<float>>();
+    }
 
 
     // load camera

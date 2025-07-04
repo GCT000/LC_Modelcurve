@@ -68,11 +68,11 @@ int main(int argc, char **argv)
     lc_core::CurveModeling curve_modeling(FLAGS_yaml);
 
 
-    // get end_point if 
+    // get end_point if no input
     if (curve_modeling.if_no_end_point())
     {
-        Cloud_registration cloud_registration;
-        LOG(INFO) << "HERE";
+        Data_paragram data_para(curve_modeling.get_ndt_icp_para().first, curve_modeling.get_ndt_icp_para().second);
+        Cloud_registration cloud_registration(data_para);
         cloud_registration.cal_Tlw(curve_modeling.get_files_point().first, curve_modeling.get_files_point().second);
         curve_modeling.set_end_point(cloud_registration.get_end_point());
     }

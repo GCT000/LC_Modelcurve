@@ -9,9 +9,39 @@
 #include <glog/logging.h>
 #include <boost/thread/thread.hpp>
 
-
 typedef pcl::PointXYZ PointT;
 typedef pcl::PointCloud<PointT> PointCloudT;
+
+struct Data_paragram
+{
+    float ndt_resolution;
+    float ndt_step_size;
+    float ndt_outlier_ratio;
+    float ndt_max_iterations;
+
+    float icp_max_iterations;
+    float icp_max_correspondence_distance;
+    float icp_transformation_epsilon;
+    float icp_fitness_epsilon;
+
+    Data_paragram() = default;
+
+    Data_paragram(std::vector<float> ndt, std::vector<float> icp)
+    {
+        if (ndt.size() < 4 || icp.size() < 4)
+        {
+            LOG(ERROR) << "no enough ndt or icp paragram";
+        }
+        ndt_resolution = ndt[0];
+        ndt_step_size = ndt[1];
+        ndt_outlier_ratio = ndt[2];
+        ndt_max_iterations = ndt[3];
+        icp_max_iterations = icp[0];
+        icp_max_correspondence_distance = icp[1];
+        icp_transformation_epsilon = icp[2];
+        icp_fitness_epsilon = icp[3];
+    }
+};
 
 struct Ndt_transform
 {
@@ -22,11 +52,10 @@ struct Ndt_transform
     float max_iterations;
     Ndt_transform(const Eigen::Matrix4f &initmatrix = Eigen::Matrix4f::Identity(),
                   float resolution_ = 0.5, float step_size_ = 0.1,
-                  float outlier_ratio_ = 0.55, float max_iterations_ = 100) : 
-                  resolution(resolution_),
-                  step_size(step_size_),
-                  outlier_ratio(outlier_ratio_),
-                  max_iterations(max_iterations_) {}
+                  float outlier_ratio_ = 0.55, float max_iterations_ = 100) : resolution(resolution_),
+                                                                              step_size(step_size_),
+                                                                              outlier_ratio(outlier_ratio_),
+                                                                              max_iterations(max_iterations_) {}
 };
 
 struct Icp_transform
@@ -39,18 +68,17 @@ struct Icp_transform
 
     Icp_transform(const Eigen::Matrix4f &initmatrix = Eigen::Matrix4f::Identity(),
                   float max_iterations_ = 100, float max_correspondence_distance_ = 0.5,
-                  float transformation_epsilon_ = 1e-8, float fitness_epsilon_ = 1e-8) : 
-                  icp_transform(initmatrix),
-                  max_iterations(max_iterations_),
-                  max_correspondence_distance(max_correspondence_distance_),
-                  transformation_epsilon(transformation_epsilon_),
-                  fitness_epsilon(fitness_epsilon_) {}
+                  float transformation_epsilon_ = 1e-8, float fitness_epsilon_ = 1e-8) : icp_transform(initmatrix),
+                                                                                         max_iterations(max_iterations_),
+                                                                                         max_correspondence_distance(max_correspondence_distance_),
+                                                                                         transformation_epsilon(transformation_epsilon_),
+                                                                                         fitness_epsilon(fitness_epsilon_) {}
 };
 
 class Cloud_registration
 {
 public:
-    Cloud_registration();
+    Cloud_registration(Data_paragram data_para_);
     /// @brief  load pcd files
     void load_file();
     /// @brief  print T
@@ -71,6 +99,7 @@ public:
     void cal_Tlw(std::vector<std::string> file_names, Eigen::Vector4f end_point_);
 
     Eigen::Vector4f get_end_point();
+
 private:
     std::string source_file, target_file;
 
@@ -99,4 +128,6 @@ private:
 
     Ndt_transform ndt_transform;
     Icp_transform icp_transform;
+
+    Data_paragram data_para;
 };

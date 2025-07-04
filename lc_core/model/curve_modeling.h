@@ -76,6 +76,12 @@ public:
     /// @brief  get cal_distance files
     std::pair<std::string, std::vector<std::string>> get_cal_distance_files();
 
+    /// @brief  get ndt and icp paragram
+    std::pair<std::vector<float>, std::vector<float>> get_ndt_icp_para()
+    {
+        return std::make_pair(ndt,icp);
+    }
+
 
 private:
     /// @brief  lidar 2 pixel
@@ -118,6 +124,8 @@ private:
 
     std::vector<Eigen::Vector3d> lidar_points_;
     std::vector<std::string> output_files;
+    std::vector<float> ndt, icp;
+
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
     double y_interval_start_;
@@ -135,9 +143,6 @@ private:
     std::shared_ptr<ExOptimization> ex_optimization_;
 
     std::shared_ptr<TransmissionModel> transmission_model_;
-
-
-    
 };
 
 } // namespace lc_core

@@ -1,9 +1,8 @@
 #include "cloud_registration.h"
 
-
-
-Cloud_registration::Cloud_registration() {
-
+Cloud_registration::Cloud_registration(Data_paragram data_para_)
+{
+    data_para = data_para_;
     leaf_size = 0.1;
     end_point = {0, 0, 0, 0};
     final_transform = Eigen::Matrix4f::Identity();
@@ -19,15 +18,15 @@ Cloud_registration::Cloud_registration() {
     cloud_target_downsampled = boost::make_shared<PointCloudT>();
     cloud_source_transformed = boost::make_shared<PointCloudT>();
     cloud_source_final = boost::make_shared<PointCloudT>();
-    ndt_transform = Ndt_transform();
-    icp_transform = Icp_transform();
+    ndt_transform = Ndt_transform(Eigen::Matrix4f::Identity(), data_para.ndt_resolution, data_para.ndt_step_size, data_para.ndt_outlier_ratio, data_para.ndt_max_iterations);
+    icp_transform = Icp_transform(Eigen::Matrix4f::Identity(), data_para.icp_max_iterations, data_para.icp_max_correspondence_distance, data_para.icp_transformation_epsilon, data_para.icp_fitness_epsilon);
 }
 
 void Cloud_registration::get_file_names(std::vector<std::string> file_names)
 {
-    if(file_names.size() < 2)
+    if (file_names.size() < 2)
     {
-        LOG(INFO) << "no enough files"; 
+        LOG(INFO) << "no enough files";
     }
     source_file = file_names[0];
     target_file = file_names[1];
@@ -56,7 +55,6 @@ void Cloud_registration::load_file()
     LOG(INFO) << "Target viewpoint: " << cloud_target->sensor_origin_.transpose()
               << " " << cloud_target->sensor_orientation_.coeffs().transpose();
 }
-
 
 void Cloud_registration::print4x4Matrix(const Eigen::Matrix4f &matrix)
 {
@@ -170,14 +168,12 @@ void Cloud_registration::applyViewpointTransform(PointCloudT::Ptr cloud, PointCl
 
     pcl::transformPointCloud(*cloud, *cloud, origin, rotation);
 
-
     cloud_record->sensor_orientation_ = cloud->sensor_orientation_;
     cloud_record->sensor_origin_ = cloud->sensor_origin_;
 
     // Reset viewpoint after applying
     cloud->sensor_origin_ = Eigen::Vector4f(0, 0, 0, 0);
     cloud->sensor_orientation_ = Eigen::Quaternionf(1, 0, 0, 0);
-
 }
 
 void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vector4f end_point_)
@@ -187,8 +183,8 @@ void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vec
     end_point = end_point_;
     // Apply viewpoint transformations to both clouds
     LOG(INFO) << "\nApplying viewpoint transformations...";
-    applyViewpointTransform(cloud_source,cloud_src_viewpoint);
-    applyViewpointTransform(cloud_target,cloud_tgt_viewpoint);
+    applyViewpointTransform(cloud_source, cloud_src_viewpoint);
+    applyViewpointTransform(cloud_target, cloud_tgt_viewpoint);
 
     // Downsample both clouds for faster processing
     cloud_source_downsampled = downsamplePointCloud(cloud_source);
@@ -223,7 +219,7 @@ void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vec
 
     // Visualize results
     visualizePointClouds();
-    
+
     // get TS TT
     T_src_vp = Eigen::Matrix4f::Identity();
     T_src_vp.block<3, 1>(0, 3) = cloud_src_viewpoint->sensor_origin_.head<3>();
@@ -233,43 +229,20 @@ void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vec
     T_tgt_vp.block<3, 1>(0, 3) = cloud_tgt_viewpoint->sensor_origin_.head<3>();
     T_tgt_vp.block<3, 3>(0, 0) = cloud_tgt_viewpoint->sensor_orientation_.toRotationMatrix();
     print4x4Matrix(T_tgt_vp);
-    
-    // W_2_L
+
+    // L_2_W
     T_final = T_tgt_vp.inverse() * final_transform * T_src_vp;
     LOG(INFO) << "\nFinal transformation (Original Source -> Original Target):";
     print4x4Matrix(T_final);
 
-    // L_2_W
+    // W_2_L
     T_final_inv = T_final.inverse();
     // Eigen::Vector4f P_orig(22.213433, -63.339874, 48.940902, 1.0);
 
     P_transformed = T_final_inv * end_point;
 
-    LOG(INFO) << "Transformed point: " 
-              << P_transformed[0] << ", " 
-              << P_transformed[1] << ", " 
+    LOG(INFO) << "Transformed point: "
+              << P_transformed[0] << ", "
+              << P_transformed[1] << ", "
               << P_transformed[2];
-}
-
-int main(int argc, char **argv)
-{
-    if (argc < 2)
-    {
-        std::cerr << "Usage: " << argv[0] << " source.pcd target.pcd";
-        return -1;
-    }
-
-    std::vector<std::string> file_names;
-    file_names.push_back(argv[1]);
-    file_names.push_back(argv[2]);
-
-    Eigen::Vector4f end_point;
-    end_point[0] = std::stod(argv[3]);
-    end_point[1] = std::stod(argv[4]);
-    end_point[2] = std::stod(argv[5]);
-    end_point[3] = 1.0;
-
-    Cloud_registration cloud_registration;
-    cloud_registration.cal_Tlw(file_names, end_point);
-    return 0;
 }

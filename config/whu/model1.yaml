@@ -14,13 +14,17 @@ end_point: [0, 0, 0]  #5degree
 # end_point: [96.4, 1.33, -1.526]
 
 
-end_point_wgs84: [22, -64, 38]
+end_point_wgs84: [22, -64, 48]
 source_file: "/home/gct/LC-CurveModel_raw/lc_core/lidar.pcd"
 target_file: "/home/gct/LC-CurveModel_raw/lc_core/wurenji.pcd"
 
 raw_pcd_file: "/home/gct/LC-CurveModel/data/wangan_0630/extracted_points_0630.pcd"
 matched_point_file: "/home/gct/LC-CurveModel/data/matched_points.pcd"
 tunnel_cloud_file: "/home/gct/LC-CurveModel/data/filtered_cloud.pcd"
+
+ndt_paragram: [0.5, 0.1, 0.55, 100]   #  resolution, step_size, outlier_ratio, max_iterations;
+icp_paragram: [100, 0.5, 1e-8, 1e-8]  #  max_iterations, max_correspondence_distance, transformation_epsilon, fitness_epsilon;
+
 y_interval:
   start: -4.91
   end: 10
