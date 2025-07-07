@@ -6,15 +6,10 @@ line_num: 1
 dark: 0
 # camera yaml
 cam_calib: "cam0.yaml"
-# the known end point
-# end_point: [162.358994, 4.878000, 9.462000]     #0degree
-#end_point: [75.261, -11.057, -70.1846]   #45degree
-#end_point: [100.66, -11.057, 21.3897]   #10degree
-end_point: [0, 0, 0]  #5degree
-# end_point: [96.4, 1.33, -1.526]
 
-
+end_point: [0, 0, 0] 
 end_point_wgs84: [22, -64, 48]
+
 source_file: "/home/gct/LC-CurveModel_raw/lc_core/lidar.pcd"
 target_file: "/home/gct/LC-CurveModel_raw/lc_core/wurenji.pcd"
 
@@ -36,25 +31,18 @@ curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
 last_image_path: ""
 
 # image path
-# image_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/image_1.png"
 image_path: "/home/gct/LC-CurveModel/data/4.png"
-# image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/image_1.png"
-# image_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/image_1.png"
+
 # lidar points path
-# lidar_points_path: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/line_1.pcd"
 lidar_points_path: "/home/gct/LC-CurveModel/data/filtered_4.pcd"
-# lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_0910/extracted/line_1.pcd"
-# lidar_points_path: "/ssd/DATA/Transmisson/whu/0109/20250109_2010/extracted/line_1.pcd"
+
 # res path
 res_path: "/home/gct/LC-CurveModel/data/temp"
 # res_path: "/home/zyp/Lidar/LC-CurveModel/res/whu/"
 
 # points selected
 # Note: please choose points from far away to near
-# selected_points: "/home/gct/Curveline_ws/src/LC-CurveModel/data/raw_data/points.txt"
 selected_points: "/home/gct/LC-CurveModel/data/points.txt"
-# selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line1.txt"
-# selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0109_line_dark.txt"
 
 # ex optimization
 ex_optimization: 0

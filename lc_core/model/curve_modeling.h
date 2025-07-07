@@ -123,7 +123,7 @@ private:
     std::string raw_pcd_file;
 
     std::vector<Eigen::Vector3d> lidar_points_;
-    std::vector<std::string> output_files;
+    std::vector<std::string> cal_dis_output_files;
     std::vector<float> ndt, icp;
 
     std::shared_ptr<Camera> cam_;

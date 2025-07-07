@@ -31,7 +31,7 @@ bool CurveModeling::if_no_end_point()
 
 std::pair<std::string, std::vector<std::string>> CurveModeling::get_cal_distance_files()
 {
-    return std::make_pair(raw_pcd_file, output_files);
+    return std::make_pair(raw_pcd_file, cal_dis_output_files);
 }
 
 void CurveModeling::set_end_point(const Eigen::Vector4f &point)
@@ -95,12 +95,12 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     if (yaml["matched_point_file"])
     {
         std::string matched_point_file = yaml["matched_point_file"].as<std::string>();
-        output_files.push_back(matched_point_file);
+        cal_dis_output_files.push_back(matched_point_file);
     }
     if (yaml["tunnel_cloud_file"])
     {
         std::string tunnel_cloud_file = yaml["tunnel_cloud_file"].as<std::string>();
-        output_files.push_back(tunnel_cloud_file);
+        cal_dis_output_files.push_back(tunnel_cloud_file);
     }
     if (yaml["ndt_paragram"])
     {

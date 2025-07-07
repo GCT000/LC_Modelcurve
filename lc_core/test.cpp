@@ -5,11 +5,8 @@
  * @date   2024-07
  */
 
-#include "curve_modeling.h"
-#include "cloud_registration.h"
-#include "cal_distance.h"
-#include "loadPCD.h"
-#include "bSpline.h"
+
+
 #include <glog/logging.h>
 #include <gflags/gflags.h>
 #include <gtest/gtest.h>
@@ -17,20 +14,42 @@
 #include <sys/stat.h>
 #include <errno.h>
 
+#include "curve_modeling.h"
+#include "cloud_registration.h"
+#include "cal_distance.h"
+#include "loadPCD.h"
+#include "bSpline.h"
+
+extern "C" {
+#include "monitor.h"
+#include "rtklib.h" 
+}
+
 // DEFINE_string(input_pcd, "/home/zyp/HD2/DATA/Transmisson/0912/test5/filter.pcd", "输入的点云");
 // DEFINE_string(input_pcd, "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd", "输入的点云");
 DEFINE_string(yaml, "/home/gct/LC-CurveModel/config/whu/model1.yaml", "yaml文件");
 DEFINE_string(dir, "/home/gct/LC-CurveModel/data/temp/log", "日志文件夹");
 DEFINE_bool(visualize, true, "是否可视化");
 
-/// @brief 测试加载pcd文件是否正常
-TEST(loadPcdFile, loadPcd)
+
+
+void test_gnss()
 {
-    std::string pcd_file = "test_pcd_file.pcd";
-    lc_core::LoadPCD input_pcd;
-    input_pcd(pcd_file);
-    LOG(INFO) << "input points num: " << input_pcd.getPoints().size();
-    EXPECT_EQ(input_pcd.getPoints().empty(), false);
+    mInfo moniInfo1;
+    gtime_t ts, te;
+    double es[6] = {2025, 6, 30, 7, 30, 37}, ee[6] = {2025, 6, 30, 7, 50, 37};
+    ts = epoch2time(es);
+    te = epoch2time(ee);
+    gtime_t tn = te;
+    char tsstr[40], testr[40];
+    time2str(ts, tsstr, 0);
+    time2str(tn, testr, 0);
+    sprintf(moniInfo1.configStr, "3@2@%s@%s@@0@PSYJ01@PSYJ02@/home/gct/LC-CurveModel/data/@.obs@/home/gct/LC-CurveModel/data/brdc.rnx@45@/home/gct/LC-CurveModel/data/test.pos@0@0@0.5@@@", tsstr, testr);
+
+    startMonitor(&moniInfo1);
+
+
+    printf("solBuf: %s\n", moniInfo1.solBuf);
 }
 
 int main(int argc, char **argv)
@@ -51,6 +70,8 @@ int main(int argc, char **argv)
             LOG(INFO) << "Successfully create log directory: " << FLAGS_dir;
         }
     }
+
+    test_gnss();
 
     google::InitGoogleLogging(argv[0]);
     // testing::InitGoogleTest(&argc, argv);
