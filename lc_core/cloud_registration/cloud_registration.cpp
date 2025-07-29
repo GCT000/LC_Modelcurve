@@ -1,10 +1,11 @@
 #include "cloud_registration.h"
 
-Cloud_registration::Cloud_registration(Data_paragram data_para_)
+Cloud_registration::Cloud_registration(Data_paragram data_para_, Eigen::Matrix4f T_ecef_l_)
 {
     data_para = data_para_;
-    leaf_size = 0.1;
+    leaf_size = 0.03;
     end_point = {0, 0, 0, 0};
+    T_ecef_l = T_ecef_l_;
     final_transform = Eigen::Matrix4f::Identity();
     T_src_vp = Eigen::Matrix4f::Identity();
     T_tgt_vp = Eigen::Matrix4f::Identity();
@@ -138,6 +139,7 @@ void Cloud_registration::performICPRegistration(const Eigen::Matrix4f &initial_g
     icp.setMaxCorrespondenceDistance(icp_transform.max_correspondence_distance);
     icp.setTransformationEpsilon(icp_transform.transformation_epsilon);
     icp.setEuclideanFitnessEpsilon(icp_transform.fitness_epsilon);
+    icp.setUseReciprocalCorrespondences(true);
     icp.setInputSource(cloud_source_transformed);
     icp.setInputTarget(cloud_target);
 
@@ -182,7 +184,7 @@ void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vec
     load_file();
     end_point = end_point_;
     // Apply viewpoint transformations to both clouds
-    LOG(INFO) << "\nApplying viewpoint transformations...";
+    LOG(INFO) << "Applying viewpoint transformations...";
     applyViewpointTransform(cloud_source, cloud_src_viewpoint);
     applyViewpointTransform(cloud_target, cloud_tgt_viewpoint);
 
@@ -196,7 +198,7 @@ void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vec
               << " to " << cloud_target_downsampled->size() << " points";
 
     // First perform NDT for coarse registration
-    LOG(INFO) << "\nStarting NDT registration...";
+    LOG(INFO) << "Starting NDT registration...";
     performNDTRegistration(); // Max iterations
 
     // Apply NDT transform to original source cloud
@@ -204,10 +206,12 @@ void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vec
 
     // Then perform ICP for fine registration
     LOG(INFO) << "\nStarting ICP registration...";
-    performICPRegistration(Eigen::Matrix4f::Identity());
+    performICPRegistration(ndt_transform.ndt_transform);
+
+    //icp_transform.icp_transform = Eigen::Matrix4f::Identity();
 
     // Combine both transformations
-    final_transform = icp_transform.icp_transform * ndt_transform.ndt_transform;
+    final_transform = icp_transform.icp_transform;
     LOG(INFO) << "\nFinal transformation matrix:";
     print4x4Matrix(final_transform);
 
@@ -224,15 +228,14 @@ void Cloud_registration::cal_Tlw(std::vector<std::string> file_names, Eigen::Vec
     T_src_vp = Eigen::Matrix4f::Identity();
     T_src_vp.block<3, 1>(0, 3) = cloud_src_viewpoint->sensor_origin_.head<3>();
     T_src_vp.block<3, 3>(0, 0) = cloud_src_viewpoint->sensor_orientation_.toRotationMatrix();
-    print4x4Matrix(T_src_vp);
+
     T_tgt_vp = Eigen::Matrix4f::Identity();
     T_tgt_vp.block<3, 1>(0, 3) = cloud_tgt_viewpoint->sensor_origin_.head<3>();
     T_tgt_vp.block<3, 3>(0, 0) = cloud_tgt_viewpoint->sensor_orientation_.toRotationMatrix();
-    print4x4Matrix(T_tgt_vp);
 
     // L_2_W
-    T_final = T_tgt_vp.inverse() * final_transform * T_src_vp;
-    LOG(INFO) << "\nFinal transformation (Original Source -> Original Target):";
+    T_final = T_tgt_vp.inverse() * final_transform * T_src_vp * T_ecef_l;
+    LOG(INFO) << "Final transformation (Original Source -> Original Target):";
     print4x4Matrix(T_final);
 
     // W_2_L

@@ -34,14 +34,14 @@ struct Trans{
 };
 
 struct OptimizationInput {
-    std::vector<double> ySamples;
+    std::vector<double> xySamples;
     Eigen::Matrix3d R;
     Eigen::Vector3d t;
     Eigen::Vector3d end_point;
     std::shared_ptr<Camera> cam;
 
-    OptimizationInput(const std::vector<double>& _ySamples, const Eigen::Matrix3d& _R, const Eigen::Vector3d& _t, const Eigen::Vector3d& _end_point, std::shared_ptr<Camera> _cam)
-        : ySamples(_ySamples), R(_R), t(_t), end_point(_end_point), cam(_cam) {}
+    OptimizationInput(const std::vector<double>& _xySamples, const Eigen::Matrix3d& _R, const Eigen::Vector3d& _t, const Eigen::Vector3d& _end_point, std::shared_ptr<Camera> _cam)
+        : xySamples(_xySamples), R(_R), t(_t), end_point(_end_point), cam(_cam) {}
 };
 
 } // namespace lc_core

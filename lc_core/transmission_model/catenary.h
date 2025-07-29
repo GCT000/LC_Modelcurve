@@ -19,7 +19,7 @@ public:
     Catenary(): T1(100){};
     ~Catenary() = default;
 
-    void fitTransmissionModel(std::vector<Eigen::Vector3d> &points) override;
+    void fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point) override;
 
     Eigen::Vector3d generateSinglePoint(const double &y) override;
 

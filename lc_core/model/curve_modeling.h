@@ -13,7 +13,7 @@
 #include "loadPCD.h"
 #include "ex_optimization.h"
 #include "matcher.h"
-#include "parabola.h"
+#include "straight_line.h"
 #include "catenary.h"
 #include "base_type.h"
 #include "imgPreProcess.h"
@@ -128,8 +128,8 @@ private:
 
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
-    double y_interval_start_;
-    double y_interval_end_;
+    double xy_interval_start_;
+    double xy_interval_end_;
     cv::Mat img_, last_img_;
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_;

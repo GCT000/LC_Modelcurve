@@ -9,6 +9,7 @@
 #include <limits>
 #include <vector>
 #include <utility>
+#include <fstream>
 
 struct Cal_dist_paragram
 {
@@ -25,10 +26,10 @@ struct Cal_dist_paragram
 
     Cal_dist_paragram(std::string file_line_pcd = "",
                       std::string file_raw_pcd = "",
-                      std::vector<std::string> output_files = {"",""},
-                      float excu_line_threshold = 0.15,
+                      std::vector<std::string> output_files = {"","",""},
+                      float excu_line_threshold = 0.4,
                       float tunnel_radius = 0.8,
-                      float match_distance_threshold = 0.5,
+                      float match_distance_threshold = 0.6,
                       float excu_raw_radius_threshold = 0.2,
                       float visual_region_radius =0.15,
                       std::pair<float, float> radius_filter_paragram = {0.1, 5}) : 
@@ -59,7 +60,14 @@ public:
         cloud_result_line(new pcl::PointCloud<pcl::PointXYZ>),
         cloud_raw(new pcl::PointCloud<pcl::PointXYZ>),
         cloud_final(new pcl::PointCloud<pcl::PointXYZ>),
-        cloud_raw_filtered(new pcl::PointCloud<pcl::PointXYZ>){}
+        cloud_raw_filtered(new pcl::PointCloud<pcl::PointXYZ>){
+        if (!std::all_of(output_files.begin(), output_files.end(), [](const std::string& s) {
+            return !s.empty();
+        }))
+        {
+            LOG(ERROR) << "some output files are empty strings";
+        }
+        }
 
 
     void load_pcd_file();
@@ -73,6 +81,8 @@ public:
     void visual();
 
     void calculate_distance();
+
+    void save_match_points_txt();
 
 private:
     float excu_line_threshold;

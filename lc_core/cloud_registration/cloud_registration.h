@@ -78,7 +78,7 @@ struct Icp_transform
 class Cloud_registration
 {
 public:
-    Cloud_registration(Data_paragram data_para_);
+    Cloud_registration(Data_paragram data_para_,Eigen::Matrix4f T_ecef_l_);
     /// @brief  load pcd files
     void load_file();
     /// @brief  print T
@@ -107,6 +107,7 @@ private:
     Eigen::Vector4f P_transformed;
 
     float leaf_size;
+    Eigen::Matrix4f T_ecef_l;
     Eigen::Matrix4f final_transform;
     Eigen::Matrix4f T_src_vp;
     Eigen::Matrix4f T_tgt_vp;

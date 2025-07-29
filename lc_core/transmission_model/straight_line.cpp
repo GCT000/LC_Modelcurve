@@ -1,4 +1,4 @@
-#include "parabola.h"
+#include "straight_line.h"
 #include "glog/logging.h"
 #include "ceres/ceres.h"
 #include "curve_factor.h"
@@ -7,47 +7,35 @@
 
 using namespace lc_core;
 
-void Parabola::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
+void Parabola::fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point)
 {
-    Eigen::MatrixXd A1(points.size(), 3);
-    Eigen::VectorXd b1(points.size());
+    auto [k, m] = ransacFitLine(points);
+    k_ = k;
+    m_ = m;
+
+    Eigen::MatrixXd A(points.size(), 3);
+    Eigen::VectorXd b(points.size());
     for (int i = 0; i < points.size(); ++i)
     {
-        A1(i, 0) = points[i](1) * points[i](1);
-        A1(i, 1) = points[i](1);
-        A1(i, 2) = 1.0;
-        b1(i) = points[i](0);
+        A(i, 0) = points[i](0) * points[i](0);
+        A(i, 1) = points[i](0);
+        A(i, 2) = 1.0;
+        b(i) = points[i](2);
     }
 
-    Eigen::VectorXd x1 = A1.colPivHouseholderQr().solve(b1);
-    a1_ = x1(0);
-    b1_ = x1(1);
-    c1_ = x1(2);
+    Eigen::VectorXd x = A.colPivHouseholderQr().solve(b);
+    a_ = x(0);
+    b_ = x(1);
+    c_ = x(2);
 
-
-    Eigen::MatrixXd A2(points.size(), 3);
-    Eigen::VectorXd b2(points.size());
-    for (int i = 0; i < points.size(); ++i)
-    {
-        A2(i, 0) = points[i](1) * points[i](1);
-        A2(i, 1) = points[i](1);
-        A2(i, 2) = 1.0;
-        b2(i) = points[i](2);
-    }
-
-    Eigen::VectorXd x2 = A2.colPivHouseholderQr().solve(b2);
-    a2_ = x2(0);
-    b2_ = x2(1);
-    c2_ = x2(2);
-
-    LOG(INFO) << "a1: " << a1_ << " b1: " << b1_ << " c1: " << c1_;
-    LOG(INFO) << "a2: " << a2_ << " b2: " << b2_ << " c2: " << c2_;
+    LOG(INFO) << "a: " << a_ << " b: " << b_ << " c: " << c_;
+    LOG(INFO) << "k: " << k_ << " m: " << m_;
 }
 
-Eigen::Vector3d Parabola::generateSinglePoint(const double &y)
+Eigen::Vector3d Parabola::generateSinglePoint(const double &x)
 {
-    double x = a1_ * y * y + b1_ * y + c1_;
-    double z = a2_ * y * y + b2_ * y + c2_;
+    double y = k_ * x + m_;
+    double z = a_ * x * x + b_ * x + c_;
     return Eigen::Vector3d(x, y, z);
 }
 
@@ -59,12 +47,20 @@ void Parabola::optimizeTransmissionModel(const P2LMatchResult &lines, const Opti
     options.minimizer_progress_to_stdout = true;
     options.max_num_iterations = 10;
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-    // options.num_threads = 8;_function, nullptr, &a_, &b_, &c_, &k_, &m_);
+    // options.num_threads = 8;
 
+    problem.AddParameterBlock(&k_, 1);
+    problem.AddParameterBlock(&m_, 1);
+
+    if (!y_optimize)
+    {
+        problem.SetParameterBlockConstant(&k_);
+        problem.SetParameterBlockConstant(&m_);
+    }
 #if 0
     for (size_t i = 0; i < lines.size(); i++)
     {
-        ceres::CostFunction *cost_function = CurveFactor::Create(lines[i], input.xSamples[i], Trans(input.R, input.t), input.cam);
+        ceres::CostFunction *cost_function = CurveFactor::Create(lines[i], input.xySamples[i], Trans(input.R, input.t), input.cam);
         problem.AddResidualBlock(cost_function, nullptr, &a_, &b_, &c_, &k_, &m_);
     }
     ceres::CostFunction *cost_function = ParabolaEpFactor::Create(input.end_point(0), input.end_point(1), input.end_point(2));
@@ -72,18 +68,18 @@ void Parabola::optimizeTransmissionModel(const P2LMatchResult &lines, const Opti
 #else
     for (size_t i = 0; i < lines.size(); i++)
     {
-        ceres::CostFunction *cost_function = new CurveFactorA(lines[i], input.ySamples[i], Trans(input.R, input.t), input.cam);
-        problem.AddResidualBlock(cost_function, nullptr, &a1_, &b1_, &c1_, &b2_, &c2_);
+        ceres::CostFunction *cost_function = new CurveFactorA(lines[i], input.xySamples[i], Trans(input.R, input.t), input.cam);
+        problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &a_, &b_, &c_);
     }
     ceres::CostFunction *cost_function = new ParabolaEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr, &a1_, &b1_, &c1_, &b2_, &c2_);
+    problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &a_, &b_, &c_);
 #endif
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     LOG(INFO) << "After optimization: ";
-    LOG(INFO) << "a: " << a1_ << " b: " << b1_ << " c: " << c1_;
-    LOG(INFO) << "k: " << a2_ << " m: " << b2_;
+    LOG(INFO) << "a: " << a_ << " b: " << b_ << " c: " << c_;
+    LOG(INFO) << "k: " << k_ << " m: " << m_;
 }
 
 void Parabola::optimizeTransmissionModel(const P2PMatchResult &points, const OptimizationInput &input, int y_optimize, int time)
@@ -98,19 +94,19 @@ void Parabola::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
     options.trust_region_strategy_type = ceres::DOGLEG;
     // options.num_threads = 8;
 
-    // problem.AddParameterBlock(&k_, 1);
-    // problem.AddParameterBlock(&m_, 1);
+    problem.AddParameterBlock(&k_, 1);
+    problem.AddParameterBlock(&m_, 1);
 
-    // if (!y_optimize || time == 2)
-    // {
-    //     problem.SetParameterBlockConstant(&k_);
-    //     problem.SetParameterBlockConstant(&m_);
-    // }
+    if (!y_optimize || time == 2)
+    {
+        problem.SetParameterBlockConstant(&k_);
+        problem.SetParameterBlockConstant(&m_);
+    }
 #if 0
 
     for (size_t i = 0; i < points.size(); i++)
     {
-        ceres::CostFunction *cost_function = CurveP2PFactor::Create(points[i], input.xSamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
+        ceres::CostFunction *cost_function = CurveP2PFactor::Create(points[i], input.xySamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
         problem.AddResidualBlock(cost_function, loss_function, &a_, &b_, &c_, &k_, &m_);
     }
 
@@ -119,11 +115,11 @@ void Parabola::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
 #else
     for (size_t i = 0; i < points.size(); i++)
     {
-        ceres::CostFunction *cost_function = new CurveP2PFactorA(points[i], input.ySamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
-        problem.AddResidualBlock(cost_function, nullptr, &a1_, &b1_, &c1_, &a2_, &b2_, &c2_);
+        ceres::CostFunction *cost_function = new CurveP2PFactorA(points[i], input.xySamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
+        problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &a_, &b_, &c_);
     }
             ceres::CostFunction *cost_function = new ParabolaEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr, &a1_, &b1_, &c1_, &a2_, &b2_, &c2_);
+    problem.AddResidualBlock(cost_function, nullptr, &k_, &m_, &a_, &b_, &c_);
 
 #endif
 
@@ -131,8 +127,8 @@ void Parabola::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     LOG(INFO) << "After optimization: ";
-    LOG(INFO) << "a1: " << a1_ << " b1: " << b1_ << " c1: " << c1_;
-    LOG(INFO) << "a2: " << a2_ << " b2: " << b2_ << " c2: " << c2_;
+    LOG(INFO) << "a: " << a_ << " b: " << b_ << " c: " << c_;
+    LOG(INFO) << "k: " << k_ << " m: " << m_;
 }
 
 void Parabola::optimizeTransmissionModelDark(const Eigen::Vector3d& end_point)
@@ -144,24 +140,24 @@ void Parabola::optimizeTransmissionModelDark(const Eigen::Vector3d& end_point)
     options.max_num_iterations = 10;
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
 
-    problem.AddParameterBlock(&a1_, 1);
-    problem.AddParameterBlock(&b1_, 1);
-    problem.AddParameterBlock(&c1_, 1);
-    problem.AddParameterBlock(&a2_, 1);
-    problem.AddParameterBlock(&b2_, 1);
+    problem.AddParameterBlock(&a_, 1);
+    problem.AddParameterBlock(&b_, 1);
+    problem.AddParameterBlock(&c_, 1);
+    problem.AddParameterBlock(&k_, 1);
+    problem.AddParameterBlock(&m_, 1);
 
-    problem.SetParameterBlockConstant(&a1_);
+    problem.SetParameterBlockConstant(&a_);
 #if 0
     ceres::CostFunction *cost_function = ParabolaEpFactor::Create(end_point(0), end_point(1), end_point(2));
     problem.AddResidualBlock(cost_function, nullptr, &a_, &b_, &c_, &k_, &m_);
 #else
     ceres::CostFunction *cost_function = new ParabolaEpFactorA(end_point(0), end_point(1), end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr,&a1_, &b1_, &c1_, &a2_, &b2_);
+    problem.AddResidualBlock(cost_function, nullptr,&k_, &m_, &a_, &b_, &c_);
 #endif
 
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
     LOG(INFO) << "After optimization: ";
-    LOG(INFO) << "a1: " << a1_ << " b1: " << b1_ << " c1: " << c1_;
-    LOG(INFO) << "a2: " << a2_ << " b2: " << b2_ << " c2: " << c2_;
+    LOG(INFO) << "a: " << a_ << " b: " << b_ << " c: " << c_;
+    LOG(INFO) << "k: " << k_ << " m: " << m_;
 }

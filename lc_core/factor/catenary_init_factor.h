@@ -88,7 +88,7 @@ public:
         const double T1 = parameters[0][0];
         const double T2 = parameters[1][0];
         const double T3 = parameters[2][0];
-        residual[0] = T1 + T2 * y_obs + T3*y_obs*y_obs  - x_obs ;
+        residual[0] = T1 + T2/10 * y_obs + T3/1000*y_obs*y_obs  - x_obs ;
         if (jacobians)
         {
             if(jacobians[0])
@@ -102,14 +102,14 @@ public:
             {
                 Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_t2(jacobians[1]);
                 Eigen::Matrix<double, 1, 1> t2;
-                t2 << y_obs;
+                t2 << y_obs/10;
                 jacobian_t2 = t2;
             }
             if(jacobians[2])
             {
                 Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_t3(jacobians[2]);
                 Eigen::Matrix<double, 1, 1> t3;
-                t3 << y_obs*y_obs;
+                t3 << y_obs*y_obs/1000;
                 jacobian_t3 = t3;
             }
         } 
@@ -130,14 +130,14 @@ public:
         const double F2 = parameters[1][0];
         const double F3 = parameters[2][0];
 
-        residual[0] = F1 * x_obs*x_obs + F2 + F3 *x_obs-z_obs;
+        residual[0] = F1/10000 * x_obs*x_obs + F2 + F3/10 *x_obs-z_obs;
         if (jacobians)
         {
             if(jacobians[0])
             {
                 Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_f1(jacobians[0]);
                 Eigen::Matrix<double, 1, 1> f1;
-                f1 << x_obs*x_obs;
+                f1 << x_obs*x_obs/10000;
                 jacobian_f1 = f1;
             }
             if(jacobians[1])
@@ -151,7 +151,7 @@ public:
             {
                 Eigen::Map<Eigen::Matrix<double, 1, 1, Eigen::RowMajor>> jacobian_f3(jacobians[2]);
                 Eigen::Matrix<double, 1, 1> f3;
-                f3 << x_obs;
+                f3 << x_obs/10;
                 jacobian_f3 = f3;
             }
         } 

@@ -36,71 +36,62 @@ namespace lc_core
         double ex_, ey_, ez_;
     };
 
-    class ParabolaEpFactorA : public ceres::SizedCostFunction<2, 1, 1, 1, 1, 1, 1>
+    class ParabolaEpFactorA : public ceres::SizedCostFunction<2, 1, 1, 1, 1, 1>
     {
     public:
         ParabolaEpFactorA(double _ex, double _ey, double _ez) : ex_(_ex), ey_(_ey), ez_(_ez) {}
 
         virtual bool Evaluate(double const *const *parameters, double *residual, double **jacobians) const
         {
-            const double a1 = parameters[0][0];
-            const double b1 = parameters[1][0];
-            const double c1 = parameters[2][0];
-            const double a2 = parameters[3][0];
-            const double b2 = parameters[4][0];
-            const double c2 = parameters[5][0];
+            const double k = parameters[0][0];
+            const double m = parameters[1][0];
+            const double c = parameters[2][0];
+            const double c1 = parameters[3][0];
+            const double c2 = parameters[4][0];
 
-            residual[0] = 1e2 * ceres::abs(ez_ - a2 * ey_ * ey_ - b2 * ey_ - c2);
-            residual[1] = 1e2 * ceres::abs(ex_ - a1 * ey_ * ey_ - b1 * ey_ - c1);
+            residual[0] = 1e2 * ceres::abs(ez_ - c * ex_ * ex_ - c1 * ex_ - c2);
+            residual[1] = 1e2 * ceres::abs(ey_ - k * ex_ - m);
 
             if (jacobians)
             {
-                double dz = ez_ - a2 * ey_ * ey_ - b2 * ey_ - c2;
-                double dx = ex_ - a1 * ey_ * ey_ - b1 * ey_ - c1;
+                double dz = ez_ - c * ex_ * ex_ - c1 * ex_ - c2;
+                double dy = ey_ - k * ex_ - m;
+                double inex = (ex_ + c1) / c;
                 if (jacobians[0])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2a1(jacobians[0]);
-                    Eigen::Matrix<double, 2, 1> v2a1;
-                    v2a1 = dx > 0 ? Eigen::Vector2d(0, -ey_ * ey_) : Eigen::Vector2d(0, ey_ * ey_);
-                    jacobians_v2a1 = 1e2 * v2a1;
+                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2k(jacobians[0]);
+                    Eigen::Matrix<double, 2, 1> v2k;
+                    v2k = dy > 0 ? Eigen::Vector2d(0, -ex_) : Eigen::Vector2d(0, ex_);
+                    jacobians_v2k = 1e2 * v2k;
                 }
 
                 if (jacobians[1])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2b1(jacobians[1]);
-                    Eigen::Matrix<double, 2, 1> v2b1;
-                    v2b1 = dx > 0 ? Eigen::Vector2d(0, -ey_) : Eigen::Vector2d(0, ey_);
-                    jacobians_v2b1 = 1e2 * v2b1;
+                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2m(jacobians[1]);
+                    Eigen::Matrix<double, 2, 1> v2m;
+                    v2m = dy > 0 ? Eigen::Vector2d(0, -1) : Eigen::Vector2d(0, 1);
+                    jacobians_v2m = 1e2 * v2m;
                 }
 
                 if (jacobians[2])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c1(jacobians[2]);
-                    Eigen::Matrix<double, 2, 1> v2c1;
-                    v2c1 = dx > 0 ? Eigen::Vector2d(0, -1) : Eigen::Vector2d(0, 1);
-                    jacobians_v2c1 = 1e2 * v2c1;
+                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c(jacobians[2]);
+                    Eigen::Matrix<double, 2, 1> v2c;
+                    v2c = dz > 0 ? Eigen::Vector2d(-ex_ * ex_, 0) : Eigen::Vector2d(ex_ * ex_, 0);
+                    jacobians_v2c = 1e2 * v2c;
                 }
-
 
                 if (jacobians[3])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2a2(jacobians[3]);
-                    Eigen::Matrix<double, 2, 1> v2a2;
-                    v2a2 = dz > 0 ? Eigen::Vector2d(-ey_ * ey_, 0) : Eigen::Vector2d(ey_ * ey_, 0);
-                    jacobians_v2a2 = 1e2 * v2a2;
+                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c1(jacobians[3]);
+                    Eigen::Matrix<double, 2, 1> v2c1;
+                    v2c1 = dz > 0 ? Eigen::Vector2d(-ex_, 0) : Eigen::Vector2d(ex_, 0);
+                    jacobians_v2c1 = 1e2 * v2c1;
                 }
 
                 if (jacobians[4])
                 {
-                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2b2(jacobians[4]);
-                    Eigen::Matrix<double, 2, 1> v2b2;
-                    v2b2 = dz > 0 ? Eigen::Vector2d(-ey_, 0) : Eigen::Vector2d(ey_, 0);
-                    jacobians_v2b2 = 1e2 * v2b2;
-                }
-
-                if (jacobians[5])
-                {
-                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c2(jacobians[5]);
+                    Eigen::Map<Eigen::Matrix<double, 2, 1, Eigen::ColMajor>> jacobians_v2c2(jacobians[4]);
                     Eigen::Matrix<double, 2, 1> v2c2;
                     v2c2 = dz > 0 ? Eigen::Vector2d(-1, 0) : Eigen::Vector2d(1, 0);
                     jacobians_v2c2 = 1e2 * v2c2;

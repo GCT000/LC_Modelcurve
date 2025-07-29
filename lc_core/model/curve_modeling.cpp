@@ -17,7 +17,7 @@ using namespace lc_core;
 
 static int bSplineNum;
 static double sample;
-static std::vector<double> ySamples, ySamplesUsed;
+static std::vector<double> xySamples, xySamplesUsed;
 static int y_optimize = 0;
 #ifdef MY_DEBUG
 static std::string temp_path = "/home/gct/LC-CurveModel/data/temp/";
@@ -39,7 +39,6 @@ void CurveModeling::set_end_point(const Eigen::Vector4f &point)
     end_point[0] = point[0];
     end_point[1] = point[1];
     end_point[2] = point[2];
-    LOG(INFO) << "END POINT" << end_point[0] << end_point[1] << end_point[0];
 }
 
 std::pair<std::vector<std::string>, Eigen::Vector4f> CurveModeling::get_files_point()
@@ -102,6 +101,11 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         std::string tunnel_cloud_file = yaml["tunnel_cloud_file"].as<std::string>();
         cal_dis_output_files.push_back(tunnel_cloud_file);
     }
+    if (yaml["point_txt_file"])
+    {
+        std::string point_txt_file = yaml["point_txt_file"].as<std::string>();
+        cal_dis_output_files.push_back(point_txt_file);
+    }
     if (yaml["ndt_paragram"])
     {
         ndt = yaml["ndt_paragram"].as<std::vector<float>>();
@@ -119,10 +123,10 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     loadLidar2CameraExtrinsic(yaml);
 
     // x sample
-    if (yaml["y_interval"])
+    if (yaml["xy_interval"])
     {
-        y_interval_start_ = yaml["y_interval"]["start"].as<double>();
-        y_interval_end_ = yaml["y_interval"]["end"].as<double>();
+        xy_interval_start_ = yaml["xy_interval"]["start"].as<double>();
+        xy_interval_end_ = yaml["xy_interval"]["end"].as<double>();
     }
 
     // load image
@@ -305,9 +309,9 @@ void CurveModeling::lidarPreprocessing()
     // fit curve
     curveLidarFitting();
 
-    // generate ySamples
-    ySamples = std::vector<double>(static_cast<size_t>((y_interval_end_ - y_interval_start_) / sample) + 1, y_interval_start_);
-    std::generate(ySamples.begin(), ySamples.end(), [y = y_interval_start_]() mutable
+    // generate xySamples
+    xySamples = std::vector<double>(static_cast<size_t>((xy_interval_end_ - xy_interval_start_) / sample) + 1, xy_interval_start_);
+    std::generate(xySamples.begin(), xySamples.end(), [y = xy_interval_start_]() mutable
                   { return y += sample; });
 
     // generate curve points
@@ -324,7 +328,7 @@ void CurveModeling::lidarPreprocessing()
 void CurveModeling::curveLidarFitting()
 {
     // fit transmission model
-    transmission_model_->fitTransmissionModel(lidar_points_);
+    transmission_model_->fitTransmissionModel(lidar_points_,end_point);
     LOG(INFO) << "Lidar points size after fitting: " << lidar_points_.size() << "\n";
 }
 
@@ -459,7 +463,7 @@ void CurveModeling::optimization()
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "match_visualization.jpg");
 #endif
 
-    OptimizationInput input(ySamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
+    OptimizationInput input(xySamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
     // Perform optimization based on the matching result
     std::visit([this, &input](auto &&matchResult)
                { transmission_model_->optimizeTransmissionModel(matchResult, input, y_optimize); }, result);
@@ -496,7 +500,7 @@ void CurveModeling::optimizationDark()
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
     outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "middle_line_points.pcd");
     ori_lidar2img_points_.clear();
-    for (const double &y : ySamplesUsed)
+    for (const double &y : xySamplesUsed)
     {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(y);
         Eigen::Vector2d p_img = lidar2pixel(p);
@@ -569,7 +573,7 @@ void CurveModeling::updateLidar2PixelPoints()
 {
     ori_lidar2img_points_.clear();
     bool is_first_time = true;
-    if (!ySamplesUsed.empty())
+    if (!xySamplesUsed.empty())
     {
         is_first_time = false;
     }
@@ -583,7 +587,7 @@ void CurveModeling::updateLidar2PixelPoints()
     // 创建PCL点云对象
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     cloud->header.frame_id = "lidar_frame";
-    for (const double &iy : ySamples)
+    for (const double &iy : xySamples)
     {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(iy);
 
@@ -600,7 +604,7 @@ void CurveModeling::updateLidar2PixelPoints()
             cloud->points.push_back(point);
 
             if (is_first_time)
-                ySamplesUsed.push_back(iy);
+                xySamplesUsed.push_back(iy);
         }
     }
 
@@ -623,7 +627,7 @@ void CurveModeling::updateLidar2PixelPoints()
 void CurveModeling::output3DPointsToTxt(const std::string &filename)
 {
     std::ofstream output_points(filename, std::ios::out);
-    for (const double &y : ySamples)
+    for (const double &y : xySamples)
     {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(y);
         output_points << p(0) << " " << p(1) << " " << p(2) << "\n";

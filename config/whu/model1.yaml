@@ -7,22 +7,24 @@ dark: 0
 # camera yaml
 cam_calib: "cam0.yaml"
 
-end_point: [0, 0, 0] 
-end_point_wgs84: [22, -64, 48]
+#end_point: [219.938004, 8.151000, -16.052999]
+end_point: [234.462006, -8.070000, -31.159000] 
+#end_point_wgs84: [-2273648.000000, 5012386.000000, 3212195.500000]
 
-source_file: "/home/gct/LC-CurveModel_raw/lc_core/lidar.pcd"
-target_file: "/home/gct/LC-CurveModel_raw/lc_core/wurenji.pcd"
+source_file: "/media/gct/T9/canglong/place3/place3_calib_out.pcd"
+target_file: "/media/gct/T9/canglong/place3/line.pcd"
 
-raw_pcd_file: "/home/gct/LC-CurveModel/data/wangan_0630/extracted_points_0630.pcd"
-matched_point_file: "/home/gct/LC-CurveModel/data/matched_points.pcd"
-tunnel_cloud_file: "/home/gct/LC-CurveModel/data/filtered_cloud.pcd"
+raw_pcd_file: "/media/gct/T9/7-24-nanhu/2.pcd"
+matched_point_file: "/media/gct/T9/7-24-nanhu/matched_points.pcd"
+tunnel_cloud_file: "/media/gct/T9/7-24-nanhu/filtered_cloud.txt"
+point_txt_file: "/media/gct/T9/7-24-nanhu/matched_points.txt"
 
-ndt_paragram: [0.5, 0.1, 0.55, 100]   #  resolution, step_size, outlier_ratio, max_iterations;
-icp_paragram: [100, 0.5, 1e-8, 1e-8]  #  max_iterations, max_correspondence_distance, transformation_epsilon, fitness_epsilon;
+ndt_paragram: [0.7, 0.35, 0.55, 200]   #  resolution, step_size, outlier_ratio, max_iterations;
+icp_paragram: [200, 0.2, 1e-8, 1e-8]  #  max_iterations, max_correspondence_distance, transformation_epsilon, fitness_epsilon;
 
-y_interval:
-  start: -4.91
-  end: 10
+xy_interval:
+  start: -8.2
+  end: 12
 
 # curve point file
 curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
@@ -31,10 +33,10 @@ curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
 last_image_path: ""
 
 # image path
-image_path: "/home/gct/LC-CurveModel/data/4.png"
+image_path: "/home/gct/canglongdao/7.25/image_1.png"
 
 # lidar points path
-lidar_points_path: "/home/gct/LC-CurveModel/data/filtered_4.pcd"
+lidar_points_path: "/home/gct/canglongdao/7.25/place1_middle.pcd"
 
 # res path
 res_path: "/home/gct/LC-CurveModel/data/temp"
@@ -42,19 +44,19 @@ res_path: "/home/gct/LC-CurveModel/data/temp"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/gct/LC-CurveModel/data/points.txt"
+selected_points: "/home/gct/canglongdao/7.25/points.txt"
 
 # ex optimization
-ex_optimization: 0
+ex_optimization: 1
 ref_lidar_points: "/home/gct/LC-CurveModel/data/lidar_ref_0103.txt"
 ref_image_points: "/home/gct/LC-CurveModel/data/image_ref_0103.txt"
 
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1
 b_spline_num: 1000
-sample: 0.001
+sample: 0.01
 
-# transmission model(0: parabola  1: catenary)
+# transmission model(0: straightline  1: catenary)
 transmission_model: 1
 y_optimize: 1           # 0: no optimize, 1: optimize
 
@@ -74,11 +76,16 @@ T_cam_lidar:
   #        0.999948, -0.00614274,  0.00799642, -0.117265,
   #        0.0, 0.0, 0.0, 1.0] 
   # 0415
-  # data: [-0.0167814,   -0.999916,   -0.0110512, -0.0425305,
-  #        -0.0114918,  0.0111279,   -0.999986, 0.0922477,
-  #         0.999911, -0.0165367,  -0.0117924, -0.117265,
-  #        0.0, 0.0, 0.0, 1.0]                           
-  data: [-0.0129485,   -1.00003,   0.000851149, -0.0425305,
-         -0.00548969,  -0.000896547,   -1.0001, 0.0922477,
-          1.00002, -0.0128372,  -0.005595, -0.117265,
-         0.0, 0.0, 0.0, 1.0]                                                                                                                                                                            
+  data: [-0.0167814,   -0.999916,   -0.0110512, -0.0425305,
+         -0.0114918,  0.0111279,   -0.999986, 0.0922477,
+          0.999911, -0.0165367,  -0.0117924, -0.117265,
+         0.0, 0.0, 0.0, 1.0]                           
+  # data: [-0.0129485,   -1.00003,   0.000851149, -0.0425305,
+  #        -0.00548969,  -0.000896547,   -1.0001, 0.0922477,
+  #         1.00002, -0.0128372,  -0.005595, -0.117265,
+  #        0.0, 0.0, 0.0, 1.0]            
+  #0725
+  # data: [-0.0344072, -0.999519, -0.00411855, -0.0425305,
+  #        -0.0100747,  0.00435061, -1.00006, 0.0922477,
+  #        0.999477, -0.0342479, -0.0103376, -0.117265,
+  #        0.0, 0.0, 0.0, 1.0]                                                                                                                                                                

@@ -8,7 +8,7 @@
 
 using namespace lc_core;
 
-void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
+void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point)
 {
     ceres::Problem problem_xy;
     ceres::Solver::Options options_xy;
@@ -21,6 +21,8 @@ void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
         ceres::CostFunction *cost_function = new CatenaryInitFactor_xy(points[i].x(), points[i].y());
         problem_xy.AddResidualBlock(cost_function, nullptr, &T1, &T2, &T3);
     }
+    ceres::CostFunction *cost_functionxy = new CatenaryEpFactorxy(end_point(0), end_point(1), end_point(2));
+    problem_xy.AddResidualBlock(cost_functionxy, nullptr, &T1, &T2, &T3);
     ceres::Solver::Summary summary_xy;
     ceres::Solve(options_xy, &problem_xy, &summary_xy);
 
@@ -36,8 +38,15 @@ void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
         ceres::CostFunction *cost_function = new CatenaryInitFactor_xz(points[i].x(), points[i].z());
         problem_xz.AddResidualBlock(cost_function, nullptr, &F1, &F2, &F3);
     }
+    ceres::CostFunction *cost_functionxz = new CatenaryEpFactorxz(end_point(0), end_point(1), end_point(2));
+    problem_xz.AddResidualBlock(cost_functionxz, nullptr, &F1, &F2, &F3);
     ceres::Solver::Summary summary_xz;
     ceres::Solve(options_xz, &problem_xz, &summary_xz);
+
+    T2 = T2 /10;
+    T3 = T3 /1000;
+    F1 = F1 /10000;
+    F3 = F3 /10;
 
     LOG(INFO) << "T1: " << T1 << " T2: " << T2 << "T3: " << T3;
     LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3;
@@ -45,7 +54,7 @@ void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
 
 Eigen::Vector3d Catenary::generateSinglePoint(const double &y)
 {
-    double x = T1 + T2 * y + T3 *y *y ;
+    double x = T1 + T2 * y + T3 *y *y;
     double z = F1 * x*x + F2 + F3 *x;
     return Eigen::Vector3d(x, y, z);
 }
@@ -72,7 +81,7 @@ void Catenary::optimizeTransmissionModel(const P2LMatchResult &lines, const Opti
 #else
     for (size_t i = 0; i < lines.size(); i++)
     {
-        ceres::CostFunction *cost_function = new CatenaryP2LFactorA(lines[i], input.ySamples[i], Trans(input.R, input.t), input.cam);
+        ceres::CostFunction *cost_function = new CatenaryP2LFactorA(lines[i], input.xySamples[i], Trans(input.R, input.t), input.cam);
         problem.AddResidualBlock(cost_function, nullptr, &F1, &F2, &F3);
     }
     ceres::CostFunction *cost_function = new CatenaryEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
@@ -109,11 +118,11 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
 #else
     for (size_t i = 0; i < points.size(); i++)
     {
-        ceres::CostFunction *cost_function = new CatenaryP2PFactorA(points[i], input.ySamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
+        ceres::CostFunction *cost_function = new CatenaryP2PFactorA(points[i], input.xySamples[i], Trans(input.R, input.t), input.cam, static_cast<WeightType>(time));
         problem.AddResidualBlock(cost_function, NULL, &T1, &T2, &T3, &F1, &F2, &F3);
     }
-    ceres::CostFunction *cost_function = new CatenaryEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr, &T1, &T2, &T3, &F1, &F2, &F3);
+    // ceres::CostFunction *cost_function = new CatenaryEpFactorA(input.end_point(0), input.end_point(1), input.end_point(2));
+    // problem.AddResidualBlock(cost_function, nullptr, &T1, &T2, &T3, &F1, &F2, &F3);
 #endif
 
     ceres::Solver::Summary summary;

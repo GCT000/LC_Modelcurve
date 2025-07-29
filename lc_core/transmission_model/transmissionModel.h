@@ -28,7 +28,7 @@ namespace lc_core
         virtual ~TransmissionModel() = default;
 
         /// @brief  Fit the transmission model based on the given points
-        virtual void fitTransmissionModel(std::vector<Eigen::Vector3d> &points)
+        virtual void fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point)
         {
             LOG(INFO) << "Choose one transmission model";
         }
