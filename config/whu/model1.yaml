@@ -8,35 +8,37 @@ dark: 0
 cam_calib: "cam0.yaml"
 
 #end_point: [219.938004, 8.151000, -16.052999]
-end_point: [234.462006, -8.070000, -31.159000] 
+end_point: [234.561996, -13.389000, -23.40700] 
 #end_point_wgs84: [-2273648.000000, 5012386.000000, 3212195.500000]
 
 source_file: "/media/gct/T9/canglong/place3/place3_calib_out.pcd"
 target_file: "/media/gct/T9/canglong/place3/line.pcd"
 
-raw_pcd_file: "/media/gct/T9/7-24-nanhu/2.pcd"
-matched_point_file: "/media/gct/T9/7-24-nanhu/matched_points.pcd"
-tunnel_cloud_file: "/media/gct/T9/7-24-nanhu/filtered_cloud.txt"
-point_txt_file: "/media/gct/T9/7-24-nanhu/matched_points.txt"
+raw_pcd_file: "/media/gct/T9/8-4canglong/bag/1130.pcd"
+matched_point_file: "/media/gct/T9/8-4canglong/bag/matched_points.pcd"
+tunnel_cloud_file: "/media/gct/T9/8-4canglong/bag/filtered_cloud.txt"
+point_txt_file: "/media/gct/T9/8-4canglong/bag/matched_points.txt"
 
 ndt_paragram: [0.7, 0.35, 0.55, 200]   #  resolution, step_size, outlier_ratio, max_iterations;
 icp_paragram: [200, 0.2, 1e-8, 1e-8]  #  max_iterations, max_correspondence_distance, transformation_epsilon, fitness_epsilon;
+cal_distance_paragram: [0.4,0.8,0.6,0.2,0.15]  # excu_line_threshold, tunnel_radius, match_distance_threshold, excu_raw_radius_threshold, visual_region_radius
+rectang_size: [76.197, 94.239,2.443, 9.753,2.693, 11.97]
 
 xy_interval:
-  start: -8.2
+  start: -12
   end: 12
 
 # curve point file
 curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
 
 # last image_path
-last_image_path: ""
+last_image_path: "/media/gct/T9/8-4canglong/picture/1140.png"
 
 # image path
-image_path: "/home/gct/canglongdao/7.25/image_1.png"
+image_path: "/media/gct/T9/8-4canglong/picture/1130.png"
 
 # lidar points path
-lidar_points_path: "/home/gct/canglongdao/7.25/place1_middle.pcd"
+lidar_points_path: "/media/gct/T9/8-4canglong/pcd/1130_filtered.pcd"
 
 # res path
 res_path: "/home/gct/LC-CurveModel/data/temp"
@@ -44,10 +46,10 @@ res_path: "/home/gct/LC-CurveModel/data/temp"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/gct/canglongdao/7.25/points.txt"
+selected_points: "/media/gct/T9/8-4canglong/picture/points.txt"
 
 # ex optimization
-ex_optimization: 1
+ex_optimization: 0
 ref_lidar_points: "/home/gct/LC-CurveModel/data/lidar_ref_0103.txt"
 ref_image_points: "/home/gct/LC-CurveModel/data/image_ref_0103.txt"
 

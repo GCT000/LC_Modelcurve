@@ -7,12 +7,6 @@ void Cal_distance::load_pcd_file()
         PCL_ERROR("Couldn't read result_line\n");
     }
     LOG(INFO) << "Loaded " << cloud_result_line->size() << " data points from " << file_line_pcd;
-
-    if (pcl::io::loadPCDFile<pcl::PointXYZ>(file_raw_pcd, *cloud_raw) == -1)
-    {
-        PCL_ERROR("Couldn't read raw_cloud\n");
-    }
-    LOG(INFO) << "Loaded " << cloud_raw->size() << " data points from " << file_raw_pcd;
 }
 
 void Cal_distance::excu_line_point()
@@ -70,7 +64,7 @@ void Cal_distance::cloud_tunnel_filter()
     radius_filter.setMinNeighborsInRadius(radius_filter_paragram.second);
     radius_filter.filter(*cloud_final);
 
-    LOG(INFO) << "complete tunnel filter";
+    LOG(INFO) << "Complete tunnel filter";
 }
 
 void Cal_distance::get_clostest_points()
@@ -216,22 +210,11 @@ void Cal_distance::visual()
         white_point.z = point.z;
         white_cloud_final->push_back(white_point);
     }
-    // 将cloud_raw_line to yellow
-    // for (const auto &point : *cloud_result_line)
-    // {
-    //     pcl::PointXYZ yellow_point;
-    //     yellow_point.x = point.x;
-    //     yellow_point.y = point.y;
-    //     yellow_point.z = point.z;
-    //     white_cloud_final->push_back(yellow_point);
-    // }
-    // pcl::io::savePCDFileASCII(output_files[1], *white_cloud_final);
-    //LOG(INFO) << "Filtered cloud saved to filtered_cloud.txt with " << white_cloud_final->size() << " white points.";
 
     std::ofstream outFile(output_files[1]); 
     if (!outFile.is_open())
     {
-        LOG(ERROR) << "Failed to open TXT file for writing: " << output_files[1];
+        LOG(ERROR) << "Failed to open txt file for writing: " << output_files[1];
     }
 
     for (const auto &point : *white_cloud_final)
@@ -243,7 +226,7 @@ void Cal_distance::visual()
     }
 
     outFile.close();
-    LOG(INFO) << "Filtered cloud saved to TXT file: " << output_files[1]
+    LOG(INFO) << "Filtered cloud saved to txt file: " << output_files[1]
               << " with " << white_cloud_final->size() << " points.";
 }
 
@@ -252,10 +235,10 @@ void Cal_distance::save_match_points_txt()
     std::ofstream file(output_files[2]);
     if (!file.is_open())
     {
-        std::cerr << "无法打开文件: " << output_files[2] << std::endl;
+        LOG(ERROR) << "Fail to open : " << output_files[2];
+        exit(EXIT_FAILURE);
     }
 
-    // 写入每一对点
     for (const auto &pair : matched_points)
     {
         file << "first point: " << pair.first.x << " " << pair.first.y << " " << pair.first.z << "   second point: "
@@ -263,7 +246,7 @@ void Cal_distance::save_match_points_txt()
     }
 
     file.close();
-    std::cout << "成功保存了 " << matched_points.size() << " 对点到 " << output_files[2] << std::endl;
+    LOG(INFO) << "Successfully saved " << matched_points.size() << " point pairs to the file " << output_files[2];
 }
 
 void Cal_distance::calculate_distance()

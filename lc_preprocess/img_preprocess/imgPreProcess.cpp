@@ -18,6 +18,7 @@ void ImgPreProcess::setPoints(const std::string &file_name)
     {
         pre_img_points_.push_back(point);
     }
+    start_point = pre_img_points_.front();
     end_point = pre_img_points_.back();
     LOG(INFO) << "Read " << pre_img_points_.size() << " points from " << file_name;
 }
@@ -43,11 +44,11 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
     std::vector<uchar> backward_status;
     std::vector<float> backward_err;
     cv::calcOpticalFlowPyrLK(cur_img, pre_img, cur_points_f, reverse_points, backward_status, backward_err, window_size, 0, criteria);
-
+    
     // calculate bidirectional tracking error and filter points
     std::vector<cv::Point2d> filtered_pre_points, filtered_cur_points;
+    filtered_cur_points.push_back(start_point);
     const double max_err = 0.1;
-    filtered_cur_points.push_back(end_point);
     for(size_t i = 0; i < pre_points_f.size(); i++) {
         if(forward_status[i] && backward_status[i]) {
             double tracking_err = cv::norm(cv::Point2d(pre_points_f[i].x, pre_points_f[i].y) -
@@ -58,7 +59,7 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
             }
         }
     }
-
+    filtered_cur_points.push_back(end_point);
     // update tracking results
     pre_img_points_ = filtered_pre_points;
     cur_img_points_ = filtered_cur_points;
@@ -76,7 +77,7 @@ void ImgPreProcess::reInterpolate()
     // add the last point
     interpolated_points.push_back(temp_points.back());
     cur_img_points_ = std::move(interpolated_points);
-}
+}                        
 
 void ImgPreProcess::visualizeTracking(cv::Mat &cur_img)
 {

@@ -14,7 +14,7 @@
 struct Cal_dist_paragram
 {
     std::string file_line_pcd;
-    std::string file_raw_pcd;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_raw;
     float excu_line_threshold;
     float tunnel_radius;
     float match_distance_threshold;
@@ -25,23 +25,39 @@ struct Cal_dist_paragram
     std::vector<std::string> output_files;
 
     Cal_dist_paragram(std::string file_line_pcd = "",
-                      std::string file_raw_pcd = "",
+                      pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_raw = pcl::make_shared<pcl::PointCloud<pcl::PointXYZ>>(),
                       std::vector<std::string> output_files = {"","",""},
-                      float excu_line_threshold = 0.4,
-                      float tunnel_radius = 0.8,
-                      float match_distance_threshold = 0.6,
-                      float excu_raw_radius_threshold = 0.2,
-                      float visual_region_radius =0.15,
+                      std::vector<float>radius_para = {0,0,0,0,0},
                       std::pair<float, float> radius_filter_paragram = {0.1, 5}) : 
                       file_line_pcd(file_line_pcd),
-                      file_raw_pcd(file_raw_pcd),
+                      cloud_raw(cloud_raw),
                       output_files(output_files),
-                      excu_line_threshold(excu_line_threshold),
-                      tunnel_radius(tunnel_radius),
-                      match_distance_threshold(match_distance_threshold),
-                      excu_raw_radius_threshold(excu_raw_radius_threshold),
-                      visual_region_radius(visual_region_radius),
-                      radius_filter_paragram(radius_filter_paragram){}
+                      excu_line_threshold(radius_para[0]),
+                      tunnel_radius(radius_para[1]),
+                      match_distance_threshold(radius_para[2]),
+                      excu_raw_radius_threshold(radius_para[3]),
+                      visual_region_radius(radius_para[4]),
+                      radius_filter_paragram(radius_filter_paragram)
+                      {
+                        LOG(INFO) << "Begin to cal_distance";
+                        bool is_file_line_empty = file_line_pcd.empty();
+                        bool is_cloud_empty = (cloud_raw == nullptr) || (cloud_raw->empty());
+
+                        bool is_output_files_empty = false;
+                        if (!output_files.empty()) {
+                            for (const auto& file : output_files) {
+                                if (file.empty()) {
+                                    is_output_files_empty = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_file_line_empty)
+                        {
+                            LOG(ERROR) << "When calculating the distance, there is no input file or no output file path." << file_line_pcd;
+                            exit(EXIT_FAILURE);
+                        }
+                      }
 };
 
 class Cal_distance
@@ -49,7 +65,6 @@ class Cal_distance
 public:
     Cal_distance(Cal_dist_paragram cal_dist_paragram) : 
         file_line_pcd(cal_dist_paragram.file_line_pcd),
-        file_raw_pcd(cal_dist_paragram.file_raw_pcd),
         output_files(cal_dist_paragram.output_files),
         radius_filter_paragram(cal_dist_paragram.radius_filter_paragram),
         excu_line_threshold(cal_dist_paragram.excu_line_threshold),
@@ -58,7 +73,7 @@ public:
         excu_raw_radius_threshold(cal_dist_paragram.excu_raw_radius_threshold),
         visual_region_radius(cal_dist_paragram.visual_region_radius),
         cloud_result_line(new pcl::PointCloud<pcl::PointXYZ>),
-        cloud_raw(new pcl::PointCloud<pcl::PointXYZ>),
+        cloud_raw(cal_dist_paragram.cloud_raw),
         cloud_final(new pcl::PointCloud<pcl::PointXYZ>),
         cloud_raw_filtered(new pcl::PointCloud<pcl::PointXYZ>){
         if (!std::all_of(output_files.begin(), output_files.end(), [](const std::string& s) {
@@ -92,7 +107,6 @@ private:
     float visual_region_radius;
 
     std::string file_line_pcd;
-    std::string file_raw_pcd;
     std::pair<float, float> radius_filter_paragram;
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result_line;
@@ -101,7 +115,6 @@ private:
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_raw_filtered;
 
     std::vector<std::pair<pcl::PointXYZ, pcl::PointXYZ>> matched_points;
-    Cal_dist_paragram cal_dist_paragram;
 
     std::vector<std::string> output_files;
 };

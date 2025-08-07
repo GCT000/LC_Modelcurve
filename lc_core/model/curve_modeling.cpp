@@ -29,9 +29,9 @@ bool CurveModeling::if_no_end_point()
     return (end_point[0] == 0.0) && (end_point[1] == 0.0) && (end_point[2] == 0.0);
 }
 
-std::pair<std::string, std::vector<std::string>> CurveModeling::get_cal_distance_files()
+std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, std::vector<std::string>> CurveModeling::get_cal_distance_files()
 {
-    return std::make_pair(raw_pcd_file, cal_dis_output_files);
+    return std::make_pair(raw_cloud, cal_dis_output_files);
 }
 
 void CurveModeling::set_end_point(const Eigen::Vector4f &point)
@@ -39,6 +39,7 @@ void CurveModeling::set_end_point(const Eigen::Vector4f &point)
     end_point[0] = point[0];
     end_point[1] = point[1];
     end_point[2] = point[2];
+    LOG(INFO) << "Set end point : [" << end_point[0] << "、" << end_point[1] << "、" << end_point[2] << "]";
 }
 
 std::pair<std::vector<std::string>, Eigen::Vector4f> CurveModeling::get_files_point()
@@ -59,16 +60,34 @@ void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file)
 
 CurveModeling::CurveModeling(const std::string &yaml_file)
 {
+    first_time = false;
     YAML::Node yaml = YAML::LoadFile(yaml_file);
     if (yaml["dark"])
     {
-
         dark = yaml["dark"].as<int>();
     }
     if (yaml["end_point"])
     {
+        bool is_zero = true;
         std::vector<double> end_point_vec = yaml["end_point"].as<std::vector<double>>();
         end_point << end_point_vec[0], end_point_vec[1], end_point_vec[2];
+        for (const auto num : end_point_vec)
+        {
+            if (std::abs(num) > 1e-9)
+            {
+                is_zero = false;
+                break;
+            }
+            else {
+                continue;
+            }
+        }
+        if (is_zero)
+        {
+            LOG(ERROR) << "No end_point . please input it";
+            exit(EXIT_FAILURE);
+        }
+
     }
     if (yaml["end_point_wgs84"])
     {
@@ -90,6 +109,13 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     if (yaml["raw_pcd_file"])
     {
         raw_pcd_file = yaml["raw_pcd_file"].as<std::string>();
+        raw_cloud = pcl::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+        LOG(INFO) << "Begin to load raw pcd file";
+        if (pcl::io::loadPCDFile<pcl::PointXYZ>(raw_pcd_file, *raw_cloud) == -1)
+        {
+            LOG(ERROR) << "no rawpcd file cannot continue";
+            exit(EXIT_FAILURE);
+        }
     }
     if (yaml["matched_point_file"])
     {
@@ -105,6 +131,14 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     {
         std::string point_txt_file = yaml["point_txt_file"].as<std::string>();
         cal_dis_output_files.push_back(point_txt_file);
+        for (const auto str : cal_dis_output_files)
+        {
+            if (str.empty())
+            {
+                LOG(ERROR) << "There is no enough outputfiles";
+                exit(EXIT_FAILURE);
+            }
+        }
     }
     if (yaml["ndt_paragram"])
     {
@@ -114,7 +148,15 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     {
         icp = yaml["icp_paragram"].as<std::vector<float>>();
     }
-
+    if (yaml["cal_distance_paragram"])
+    {
+        cal_distance_para = yaml["cal_distance_paragram"].as<std::vector<float>>();
+        if (cal_distance_para.size() != 5)
+        {
+            LOG(ERROR) << "No enough cal_distance paragram   check it !!!";
+            exit(EXIT_FAILURE);
+        }
+    }
 
     // load camera
     loadCamera(yaml, yaml_file);
@@ -154,6 +196,76 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         }
     }
 
+    if (yaml["curve_point_file"] && !dark)
+    {
+        curve_point_file = yaml["curve_point_file"].as<std::string>();
+        if (std::filesystem::exists(std::filesystem::path(yaml["last_image_path"].as<std::string>())) &&
+            std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
+        {
+            if (std::filesystem::exists(std::filesystem::path(curve_point_file)))
+            {
+                optical_flow();
+            }
+        }
+        else if (!std::filesystem::exists(std::filesystem::path(yaml["last_image_path"].as<std::string>())) &&
+                 std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
+        {
+            LOG(ERROR) << "no last_image, can not calculate";
+            exit(EXIT_FAILURE);
+        }
+        else
+        {
+            first_time = true;
+            LOG(INFO) << "FIRST TIME TO CALCULATE";
+        }
+    }
+
+    if (yaml["selected_points"] && !std::filesystem::exists(std::filesystem::path(curve_point_file)))
+    {
+        std::string selected_points = yaml["selected_points"].as<std::string>();
+        if (!std::filesystem::exists(std::filesystem::path(selected_points)))
+        {
+            LOG(ERROR) << "No curve point file or selected point file\n";
+            return;
+        }
+        if (!dark)
+        {
+            generateCurveImagePoints(selected_points);
+            LOG(INFO) << "Finish create curve points";
+        }
+    }
+
+    if (yaml["ex_optimization"].as<int>())
+    {
+        LOG(INFO) << "Begin to optimize extrinsic parameters";
+        ex_optimization_ = std::make_shared<ExOptimization>(R_c_l_, t_c_l_, cam_);
+        ex_optimization_->loadLidarPoints(yaml["ref_lidar_points"].as<std::string>());
+        ex_optimization_->loadImgPoints(yaml["ref_image_points"].as<std::string>());
+        // ex_optimization_->optimization();
+        optimizationEx();
+    }
+
+    if (yaml["rectang_size"])
+    {
+        std::vector<double> rectang_size_ = yaml["rectang_size"].as<std::vector<double>>();
+        rectang_size = rectang_size_;
+        bool flag = true;
+        for (double i : rectang_size)
+        {
+            if (std::abs(i) > 1e-9)
+            {
+                flag = true;
+                break;
+            }
+            flag = false;
+        }
+        if (first_time == false && (rectang_size.empty() || !flag))
+        {
+            LOG(ERROR) << "Not first time and There is no rectangle size information or size = 0";
+            exit(EXIT_FAILURE);
+        }
+    }
+
     if (yaml["lidar_points_path"])
     {
         std::string lidar_points_path = yaml["lidar_points_path"].as<std::string>();
@@ -163,6 +275,11 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     if (yaml["res_path"])
     {
         res_path = yaml["res_path"].as<std::string>();
+        if (res_path.empty())
+        {
+            LOG(ERROR) << "No res_path. please set it!!";
+            exit(EXIT_FAILURE);
+        }
     }
 
     if (yaml["b_spline_num"])
@@ -173,39 +290,7 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     if (yaml["sample"])
     {
         sample = yaml["sample"].as<double>();
-        LOG(INFO) << "sample interval: " << sample << "\n";
-    }
-
-    if (yaml["curve_point_file"] && !dark)
-    {
-        curve_point_file = yaml["curve_point_file"].as<std::string>();
-        if (std::filesystem::exists(std::filesystem::path(curve_point_file)))
-        {
-            optical_flow();
-        }
-    }
-
-    if (yaml["selected_points"] && !std::filesystem::exists(std::filesystem::path(curve_point_file)))
-    {
-        std::string selected_points = yaml["selected_points"].as<std::string>();
-        if (!std::filesystem::exists(std::filesystem::path(selected_points)))
-        {
-            LOG(ERROR) << "no curve point file or selected point file\n";
-            return;
-        }
-        if (!dark)
-        {
-            generateCurveImagePoints(selected_points);
-        }
-    }
-
-    if (yaml["ex_optimization"].as<int>())
-    {
-        ex_optimization_ = std::make_shared<ExOptimization>(R_c_l_, t_c_l_, cam_);
-        ex_optimization_->loadLidarPoints(yaml["ref_lidar_points"].as<std::string>());
-        ex_optimization_->loadImgPoints(yaml["ref_image_points"].as<std::string>());
-        // ex_optimization_->optimization();
-        optimizationEx();
+        LOG(INFO) << "Sample interval: " << sample << "\n";
     }
 
     if (yaml["matcher_type"])
@@ -250,19 +335,99 @@ Eigen::Vector2d CurveModeling::lidar2pixel(const Eigen::Vector3d &p_l)
     return p_img;
 }
 
+void CurveModeling::getRectangle(std::vector<Eigen::Vector3d> &points_)
+{
+    if (!std::filesystem::exists(std::filesystem::path(raw_pcd_file)))
+    {
+        LOG(ERROR) << "Not the first solution and missing the original point cloud file";
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::CropBox<pcl::PointXYZ> crop_box;
+        crop_box.setInputCloud(raw_cloud);
+        Eigen::Vector4f min_pt(rectang_size[0], rectang_size[2], rectang_size[4], 1.0f);
+        Eigen::Vector4f max_pt(rectang_size[1], rectang_size[3], rectang_size[5], 1.0f);
+        crop_box.setMin(min_pt);
+        crop_box.setMax(max_pt);
+        crop_box.filter(*filtered_cloud);
+
+        LOG(INFO) << "Rectangle cloud size: " << filtered_cloud->size();
+
+        points_.reserve(filtered_cloud->points.size());
+        for (const auto &p : filtered_cloud->points)
+        {
+            points_.emplace_back(p.x, p.y, p.z);
+        }
+    }
+}
+
+void CurveModeling::getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, std::vector<Eigen::Vector3d> &line_points)
+{
+    for (const Eigen::Vector3d &lp : lidar_points)
+    {
+        bool is_true_point = false;
+        Eigen::Vector2d p_img = lidar2pixel(lp);
+        for (const auto &p : img_points_)
+        {
+            double x = p.x - p_img.x();
+            double y = p.y - p_img.y();
+            double dis = x * x + y * y;
+            if (dis < 100)
+            {
+                is_true_point = true;
+                break;
+            }
+        }
+        if (is_true_point)
+        {
+            line_points.push_back(lp);
+        }
+    }
+    LOG(INFO) << "After filtered line cloud size: " << line_points.size();
+}
+
 void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
 {
     lc_core::LoadPCD input_pcd;
     input_pcd(lidar_points_path);
     std::vector<Eigen::Vector3d> lidar_points;
-    lidar_points = input_pcd.getPoints();
+    std::vector<Eigen::Vector3d> line_points;
+    if (first_time)
+    {
+        line_points = input_pcd.getPoints();
+    }
+    else
+    {
+        getRectangle(lidar_points);
+        getFilteredLine(lidar_points, line_points);
+        std::sort(line_points.begin(), line_points.end(), [](const Eigen::Vector3d &a, const Eigen::Vector3d &b)
+                  { return a(0) < b(0); });
 
-    std::sort(lidar_points.begin(), lidar_points.end(), [](const Eigen::Vector3d &a, const Eigen::Vector3d &b)
-              { return a(0) < b(0); });
+        double min_x = std::numeric_limits<double>::max();
+        double max_x = std::numeric_limits<double>::lowest();
+        double min_y = std::numeric_limits<double>::max();
+        double max_y = std::numeric_limits<double>::lowest();
+        double min_z = std::numeric_limits<double>::max();
+        double max_z = std::numeric_limits<double>::lowest();
+        for (const auto &point : line_points)
+        {
+            min_x = std::min(min_x, point.x());
+            max_x = std::max(max_x, point.x());
+            min_y = std::min(min_y, point.y());
+            max_y = std::max(max_y, point.y());
+            min_z = std::min(min_z, point.z());
+            max_z = std::max(max_z, point.z());
+        }
+        LOG(INFO) << "X range: [" << min_x - 3 << ", " << max_x + 3 << "]";
+        LOG(INFO) << "Y range: [" << min_y - 3 << ", " << max_y + 3 << "]";
+        LOG(INFO) << "Z range: [" << min_z - 3 << ", " << max_z + 3 << "]";
+    }
 
-    LOG(INFO) << "Load " << lidar_points.size() << " lidar points.\n";
+    LOG(INFO) << "Load " << line_points.size() << " lidar points.\n";
 
-    lidar_points_ = std::move(lidar_points);
+    lidar_points_ = std::move(line_points);
 
 #ifdef MY_DEBUG
     lidarP2img();
@@ -328,7 +493,7 @@ void CurveModeling::lidarPreprocessing()
 void CurveModeling::curveLidarFitting()
 {
     // fit transmission model
-    transmission_model_->fitTransmissionModel(lidar_points_,end_point);
+    transmission_model_->fitTransmissionModel(lidar_points_, end_point);
     LOG(INFO) << "Lidar points size after fitting: " << lidar_points_.size() << "\n";
 }
 
@@ -579,48 +744,17 @@ void CurveModeling::updateLidar2PixelPoints()
     }
 
     // generate curve points using new mesh_param_ and plane_param_
-
-    Eigen::Matrix3d rotation_matrix;
-    double angle = 360.0 * M_PI / 180.0; // 转换为弧度
-    rotation_matrix = Eigen::AngleAxisd(angle, Eigen::Vector3d::UnitY());
-
-    // 创建PCL点云对象
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
-    cloud->header.frame_id = "lidar_frame";
     for (const double &iy : xySamples)
     {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(iy);
-
-        Eigen::Vector3d rotated_p = rotation_matrix * p;
         Eigen::Vector2d p_img = lidar2pixel(p);
         if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows)
         {
             ori_lidar2img_points_.emplace_back(p_img(0), p_img(1));
 
-            pcl::PointXYZ point;
-            point.x = rotated_p(0);
-            point.y = rotated_p(1);
-            point.z = rotated_p(2);
-            cloud->points.push_back(point);
-
             if (is_first_time)
                 xySamplesUsed.push_back(iy);
         }
-    }
-
-    // 设置点云宽度和高度
-    cloud->width = cloud->points.size();
-    cloud->height = 1;
-
-    // 保存点云到PCD文件
-    std::string filename = "/home/gct/LC-CurveModel/data/0degree_points.pcd";
-    if (pcl::io::savePCDFileASCII(filename, *cloud) == 0)
-    {
-        LOG(INFO) << "成功保存点云到 " << filename << "，共 " << cloud->points.size() << " 个点";
-    }
-    else
-    {
-        LOG(ERROR) << "保存点云失败: " << filename;
     }
 }
 
@@ -648,4 +782,6 @@ void CurveModeling::optical_flow()
     pp.visualizeReInterpolated(img_);
 
     outputPoints(curve_point_file, img_points_);
+
+    LOG(INFO) << "Finish optical_flow";
 }

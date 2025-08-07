@@ -22,6 +22,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
+#include <pcl/io/pcd_io.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/crop_box.h>
 
 #include <iostream>
 #include <memory>
@@ -32,6 +35,7 @@
 #include <execution>
 #include <thread>
 #include <utility>
+#include <chrono>
 
 namespace lc_core
 {
@@ -74,12 +78,17 @@ public:
     std::string get_res_path(){return res_path;}
 
     /// @brief  get cal_distance files
-    std::pair<std::string, std::vector<std::string>> get_cal_distance_files();
+    std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, std::vector<std::string>> get_cal_distance_files();
 
     /// @brief  get ndt and icp paragram
     std::pair<std::vector<float>, std::vector<float>> get_ndt_icp_para()
     {
         return std::make_pair(ndt,icp);
+    }
+    /// @brief get cal_distance paragram
+    std::vector<float> get_cal_distance_para()
+    {
+        return cal_distance_para;
     }
 
 
@@ -117,7 +126,15 @@ private:
     /// @brief  Optical flow
     void optical_flow();
 
+    /// @brief  get rectangle
+    void getRectangle(std::vector<Eigen::Vector3d> &points_);
+
+    /// @brief  get filtered line
+    void getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, std::vector<Eigen::Vector3d> &line_points);
+
 private:
+    bool first_time;
+
     std::string curve_point_file;
     std::string res_path;
     std::string raw_pcd_file;
@@ -125,6 +142,8 @@ private:
     std::vector<Eigen::Vector3d> lidar_points_;
     std::vector<std::string> cal_dis_output_files;
     std::vector<float> ndt, icp;
+    std::vector<double> rectang_size;
+    std::vector<float> cal_distance_para;
 
     std::shared_ptr<Camera> cam_;
     std::shared_ptr<Matcher> matcher_;
@@ -132,13 +151,15 @@ private:
     double xy_interval_end_;
     cv::Mat img_, last_img_;
     Eigen::Matrix3d R_c_l_;
-    Eigen::Vector3d t_c_l_;
+    Eigen::Vector3d t_c_l_; 
     Eigen::Vector3d end_point;
     Eigen::Vector4f end_point_wgs84;
     
     std::vector<std::string> pcd_files;
     std::vector<cv::Point2d> img_points_;
     std::vector<cv::Point2d> ori_lidar2img_points_;
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr raw_cloud;
 
     std::shared_ptr<ExOptimization> ex_optimization_;
 

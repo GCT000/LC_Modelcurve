@@ -90,6 +90,7 @@ namespace lc_core
         if (!out_file.is_open())
         {
             LOG(ERROR) << "Can't open file: " << file_name;
+            LOG(ERROR) << "Can't open file: " << file_name;
             return;
         }
 

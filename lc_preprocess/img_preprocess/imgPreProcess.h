@@ -51,7 +51,7 @@ namespace lc_preprocess
     private:
         std::vector<cv::Point2d> pre_img_points_;
         std::vector<cv::Point2d> cur_img_points_;
-        cv::Point2d end_point;
+        cv::Point2d start_point,end_point;
     };
 
 } // namespace lc_preprocess

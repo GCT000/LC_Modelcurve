@@ -103,6 +103,7 @@ int main(int argc, char **argv)
     // get end_point if no input
     if (curve_modeling.if_no_end_point())
     {
+        LOG(INFO) << "Cannot get end point. Begin to estimate it";
         test_gnss(rover, angle);
         LidarEcefTransform lidarEcefTransform(rover[0], rover[1], rover[2], 0, -0.23, 2.5 * M_PI - angle[0]);
         Eigen::Matrix4f T_ecef_l = lidarEcefTransform.get_T_ecef_l();
@@ -122,8 +123,7 @@ int main(int argc, char **argv)
     }
 
     // calculate distances
-    Cal_dist_paragram cal_dist_paragram(curve_modeling.get_res_path()+ "final_line_points.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second);
-
+    Cal_dist_paragram cal_dist_paragram(curve_modeling.get_res_path()+ "final_line_points.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second,curve_modeling.get_cal_distance_para());
     Cal_distance cal_distance(cal_dist_paragram);
     cal_distance.calculate_distance();
 
