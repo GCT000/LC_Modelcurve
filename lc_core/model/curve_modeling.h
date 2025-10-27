@@ -90,6 +90,8 @@ public:
     {
         return cal_distance_para;
     }
+    /// @brief get points in dark
+    void setPoints(const std::string &file_name);
 
 
 private:

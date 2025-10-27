@@ -211,23 +211,17 @@ void Cal_distance::visual()
         white_cloud_final->push_back(white_point);
     }
 
-    std::ofstream outFile(output_files[1]); 
-    if (!outFile.is_open())
+    pcl::PCDWriter writer;
+    // 使用二进制格式保存（更高效），如果需要ASCII格式可以将第二个参数改为true
+    if (writer.writeBinary(output_files[1], *white_cloud_final) == -1)
     {
-        LOG(ERROR) << "Failed to open txt file for writing: " << output_files[1];
+        LOG(ERROR) << "Failed to open pcd file for writing: " << output_files[1];
     }
-
-    for (const auto &point : *white_cloud_final)
+    else
     {
-        outFile << std::fixed << std::setprecision(6)
-                << point.x << " "
-                << point.y << " "
-                << point.z << " "<< std::endl;
+        LOG(INFO) << "Filtered cloud saved to pcd file: " << output_files[1]
+                  << " with " << white_cloud_final->size() << " points.";
     }
-
-    outFile.close();
-    LOG(INFO) << "Filtered cloud saved to txt file: " << output_files[1]
-              << " with " << white_cloud_final->size() << " points.";
 }
 
 void Cal_distance::save_match_points_txt()

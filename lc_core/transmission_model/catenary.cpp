@@ -134,32 +134,32 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
 
 void Catenary::optimizeTransmissionModelDark(const Eigen::Vector3d &end_point)
 {
-    ceres::Problem problem;
-    ceres::Solver::Options options;
-    options.linear_solver_type = ceres::DENSE_QR;
-    options.minimizer_progress_to_stdout = true;
-    options.max_num_iterations = 10;
-    options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
-    // options.num_threads = 8;
+//     ceres::Problem problem;
+//     ceres::Solver::Options options;
+//     options.linear_solver_type = ceres::DENSE_QR;
+//     options.minimizer_progress_to_stdout = true;
+//     options.max_num_iterations = 10;
+//     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
+//     // options.num_threads = 8;
 
-    // problem.AddParameterBlock(&c_, 1);
-    // problem.AddParameterBlock(&c1_, 1);
-    // problem.AddParameterBlock(&c2_, 1);
-    // problem.AddParameterBlock(&k_, 1);
-    // problem.AddParameterBlock(&m_, 1);
+//     // problem.AddParameterBlock(&c_, 1);
+//     // problem.AddParameterBlock(&c1_, 1);
+//     // problem.AddParameterBlock(&c2_, 1);
+//     // problem.AddParameterBlock(&k_, 1);
+//     // problem.AddParameterBlock(&m_, 1);
 
-    // problem.SetParameterBlockConstant(&c_);
-#if 0
-    ceres::CostFunction *cost_function = CatenaryEpFactor::Create(end_point(0), end_point(1), end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr, &c_, &c1_, &c2_, &k_, &m_);
-#else
-    ceres::CostFunction *cost_function = new CatenaryEpFactorA(end_point(0), end_point(1), end_point(2));
-    problem.AddResidualBlock(cost_function, nullptr,&T1, &T2, &T3, &F1, &F2, &F3);
-#endif
+//     // problem.SetParameterBlockConstant(&c_);
+// #if 0
+//     ceres::CostFunction *cost_function = CatenaryEpFactor::Create(end_point(0), end_point(1), end_point(2));
+//     problem.AddResidualBlock(cost_function, nullptr, &c_, &c1_, &c2_, &k_, &m_);
+// #else
+//     ceres::CostFunction *cost_function = new CatenaryEpFactorA(end_point(0), end_point(1), end_point(2));
+//     problem.AddResidualBlock(cost_function, nullptr,&T1, &T2, &T3, &F1, &F2, &F3);
+// #endif
 
-    ceres::Solver::Summary summary;
-    ceres::Solve(options, &problem, &summary);
-    LOG(INFO) << "After optimization: ";
-    // LOG(INFO) << "c: " << c_ << " c1: " << c1_ << " c2: " << c2_;
-    // LOG(INFO) << "k: " << k_ << " m: " << m_;
+//     ceres::Solver::Summary summary;
+//     ceres::Solve(options, &problem, &summary);
+//     LOG(INFO) << "After optimization: ";
+//     // LOG(INFO) << "c: " << c_ << " c1: " << c1_ << " c2: " << c2_;
+//     // LOG(INFO) << "k: " << k_ << " m: " << m_;
 }

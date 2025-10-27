@@ -78,7 +78,8 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
                 is_zero = false;
                 break;
             }
-            else {
+            else
+            {
                 continue;
             }
         }
@@ -87,7 +88,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             LOG(ERROR) << "No end_point . please input it";
             exit(EXIT_FAILURE);
         }
-
     }
     if (yaml["end_point_wgs84"])
     {
@@ -196,27 +196,42 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         }
     }
 
-    if (yaml["curve_point_file"] && !dark)
+    if (yaml["curve_point_file"])
     {
         curve_point_file = yaml["curve_point_file"].as<std::string>();
-        if (std::filesystem::exists(std::filesystem::path(yaml["last_image_path"].as<std::string>())) &&
-            std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
+        if (!dark)
         {
-            if (std::filesystem::exists(std::filesystem::path(curve_point_file)))
+            if (std::filesystem::exists(std::filesystem::path(yaml["last_image_path"].as<std::string>())) &&
+                std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
             {
-                optical_flow();
+                if (std::filesystem::exists(std::filesystem::path(curve_point_file)))
+                {
+                    optical_flow();
+                }
             }
-        }
-        else if (!std::filesystem::exists(std::filesystem::path(yaml["last_image_path"].as<std::string>())) &&
-                 std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
-        {
-            LOG(ERROR) << "no last_image, can not calculate";
-            exit(EXIT_FAILURE);
+            else if (!std::filesystem::exists(std::filesystem::path(yaml["last_image_path"].as<std::string>())) &&
+                     std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
+            {
+                LOG(ERROR) << "no last_image, can not calculate";
+                exit(EXIT_FAILURE);
+            }
+            else
+            {
+                first_time = true;
+                LOG(INFO) << "FIRST TIME TO CALCULATE";
+            }
         }
         else
         {
-            first_time = true;
-            LOG(INFO) << "FIRST TIME TO CALCULATE";
+            if (!std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
+            {
+                LOG(ERROR) << "IN dark situation but no curve_point_file";
+            }
+            else
+            {
+                LOG(INFO) << "FRAEJCEDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
+                setPoints(curve_point_file);
+            }
         }
     }
 
@@ -327,6 +342,22 @@ CurveModeling::~CurveModeling()
     cam_.reset();
 }
 
+void CurveModeling::setPoints(const std::string &file_name)
+{
+    std::ifstream in_file(file_name, std::ios::in);
+    if (!in_file.is_open())
+    {
+        LOG(ERROR) << "Can't open file: " << file_name << std::endl;
+        return;
+    }
+    cv::Point2d point;
+    while (in_file >> point.x >> point.y)
+    {
+        img_points_.push_back(point);
+    }
+    LOG(INFO) << "In dark read " << img_points_.size() << " points from " << file_name;
+}
+
 Eigen::Vector2d CurveModeling::lidar2pixel(const Eigen::Vector3d &p_l)
 {
     Eigen::Vector3d p_c = R_c_l_ * p_l + t_c_l_;
@@ -374,7 +405,7 @@ void CurveModeling::getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, 
             double x = p.x - p_img.x();
             double y = p.y - p_img.y();
             double dis = x * x + y * y;
-            if (dis < 100)
+            if (dis < 10)
             {
                 is_true_point = true;
                 break;
@@ -478,7 +509,7 @@ void CurveModeling::lidarPreprocessing()
     xySamples = std::vector<double>(static_cast<size_t>((xy_interval_end_ - xy_interval_start_) / sample) + 1, xy_interval_start_);
     std::generate(xySamples.begin(), xySamples.end(), [y = xy_interval_start_]() mutable
                   { return y += sample; });
-
+    LOG(INFO) << "REACHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH";
     // generate curve points
     updateLidar2PixelPoints();
     // output 3D points to txt file
@@ -663,7 +694,7 @@ void CurveModeling::optimizationDark()
 
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
-    outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "middle_line_points.pcd");
+    outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "final_line_points.pcd");
     ori_lidar2img_points_.clear();
     for (const double &y : xySamplesUsed)
     {
@@ -761,11 +792,19 @@ void CurveModeling::updateLidar2PixelPoints()
 void CurveModeling::output3DPointsToTxt(const std::string &filename)
 {
     std::ofstream output_points(filename, std::ios::out);
+    if (!output_points.is_open())
+    {
+        LOG(ERROR) << "错误: 无法打开文件 " << filename << " 进行写入!" << std::endl;
+        return;
+    }
+    size_t pointCount = 0;
     for (const double &y : xySamples)
     {
         Eigen::Vector3d p = transmission_model_->generateSinglePoint(y);
         output_points << p(0) << " " << p(1) << " " << p(2) << "\n";
+        pointCount++;
     }
+    LOG(INFO) << "3D点输出完成! 共输出 " << pointCount << " 个点到文件: " << filename << std::endl;
     output_points.close();
 }
 

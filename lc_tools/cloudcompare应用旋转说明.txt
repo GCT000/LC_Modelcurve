@@ -1,0 +1,2 @@
+在应用cloudcompare旋转后记录下旋转矩阵
+如果是对raw.pcd进行的旋转那么它的iewpoint是0001000但是保存的新pcd就会改变 这个时候需要对raw.pcd进行一个apply_r_t.py进行坐标转换就得到的新的

@@ -20,7 +20,7 @@
 namespace lc_core
 {
 
-class Camera
+class Camera  
 {
 public:
     Camera() = default;
