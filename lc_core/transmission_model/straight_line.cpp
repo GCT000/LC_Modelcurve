@@ -7,7 +7,7 @@
 
 using namespace lc_core;
 
-void Parabola::fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point)
+void Parabola::fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point, std::vector<double> &cov_t, std::vector<double> &cov_f, std::vector<double> &para)
 {
     auto [k, m] = ransacFitLine(points);
     k_ = k;

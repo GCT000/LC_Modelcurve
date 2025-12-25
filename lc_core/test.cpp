@@ -114,7 +114,7 @@ int main(int argc, char **argv)
         curve_modeling.set_end_point(cloud_registration.get_end_point());
     }
 
-    // process lidar points
+    //process lidar points
     curve_modeling.lidarPreprocessing();
     curve_modeling.optimization();
     if (FLAGS_visualize)
@@ -122,8 +122,10 @@ int main(int argc, char **argv)
         curve_modeling.visualization();
     }
 
-    // calculate distances
-    Cal_dist_paragram cal_dist_paragram(curve_modeling.get_res_path()+ "final_line_points.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second,curve_modeling.get_cal_distance_para());
+    //calculate distances
+    
+    Cal_dist_paragram cal_dist_paragram(curve_modeling.get_res_path()+ "final_line_points.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second,curve_modeling.get_cal_distance_para(), curve_modeling.ex_line_tower_X());
+    //Cal_dist_paragram cal_dist_paragram("/home/gct/LC-CurveModel/lc_tools/filtered_2.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second,curve_modeling.get_cal_distance_para(), curve_modeling.ex_line_tower_X());
     Cal_distance cal_distance(cal_dist_paragram);
     cal_distance.calculate_distance();
 

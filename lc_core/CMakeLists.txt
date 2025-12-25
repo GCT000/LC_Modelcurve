@@ -7,7 +7,8 @@ include_directories(../lc_preprocess/img_preprocess)
 include_directories(cloud_registration)
 include_directories(cal_distance)
 include_directories(gnss/gnss-monitor-tools-v1/include) 
-include_directories(rough_registration)                                                  
+include_directories(rough_registration)          
+include_directories(kf_filter)                                        
 
 
 # If this macro definition is turned on, 
@@ -55,6 +56,8 @@ target_link_libraries(cal_distance_lib ${catkin_LIBRARIES})
 
 add_executable(read_imu read_imu.cpp)
 target_link_libraries(read_imu curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread ${catkin_LIBRARIES})
+add_executable(kf_filter kf_filter/filter.cpp)
+target_link_libraries(kf_filter ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp)
 
 enable_testing()
 

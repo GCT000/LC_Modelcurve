@@ -22,12 +22,14 @@ struct Cal_dist_paragram
     float visual_region_radius;
 
     std::pair<float, float> radius_filter_paragram;
+    std::pair<float, float> ex_line_tower_X;
     std::vector<std::string> output_files;
 
     Cal_dist_paragram(std::string file_line_pcd = "",
                       pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_raw = pcl::make_shared<pcl::PointCloud<pcl::PointXYZ>>(),
                       std::vector<std::string> output_files = {"","",""},
                       std::vector<float>radius_para = {0,0,0,0,0},
+                      std::pair<float, float> ex_line_tower_X = std::make_pair(0, 0),
                       std::pair<float, float> radius_filter_paragram = {0.1, 5}) : 
                       file_line_pcd(file_line_pcd),
                       cloud_raw(cloud_raw),
@@ -37,7 +39,8 @@ struct Cal_dist_paragram
                       match_distance_threshold(radius_para[2]),
                       excu_raw_radius_threshold(radius_para[3]),
                       visual_region_radius(radius_para[4]),
-                      radius_filter_paragram(radius_filter_paragram)
+                      radius_filter_paragram(radius_filter_paragram),
+                      ex_line_tower_X(ex_line_tower_X)
                       {
                         LOG(INFO) << "Begin to cal_distance";
                         bool is_file_line_empty = file_line_pcd.empty();
@@ -72,6 +75,7 @@ public:
         match_distance_threshold(cal_dist_paragram.match_distance_threshold),
         excu_raw_radius_threshold(cal_dist_paragram.excu_raw_radius_threshold),
         visual_region_radius(cal_dist_paragram.visual_region_radius),
+        ex_line_tower_X(cal_dist_paragram.ex_line_tower_X),
         cloud_result_line(new pcl::PointCloud<pcl::PointXYZ>),
         cloud_raw(cal_dist_paragram.cloud_raw),
         cloud_final(new pcl::PointCloud<pcl::PointXYZ>),
@@ -108,6 +112,7 @@ private:
 
     std::string file_line_pcd;
     std::pair<float, float> radius_filter_paragram;
+    std::pair<float, float> ex_line_tower_X;
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_result_line;
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_raw;

@@ -1,0 +1,8 @@
+%YAML: 1.0
+
+# line number
+input_path_R: "/home/gct/LC-CurveModel/data/filter_test/1756Q.txt"
+input_path_Q: "/home/gct/LC-CurveModel/data/filter_test/1756Q.txt"
+input_path_Q_raw: "/home/gct/LC-CurveModel/data/filter_test/1752VL.txt"
+output_path: "/home/gct/LC-CurveModel/data/filter_test/1756VL.txt"
+pcd_path: "/home/gct/LC-CurveModel/data/filter_test/1756VL.pcd"

@@ -28,7 +28,7 @@ namespace lc_core
         virtual ~TransmissionModel() = default;
 
         /// @brief  Fit the transmission model based on the given points
-        virtual void fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point)
+        virtual void fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point, std::vector<double> &cov_t, std::vector<double> &cov_f, std::vector<double> &para)
         {
             LOG(INFO) << "Choose one transmission model";
         }
@@ -63,6 +63,12 @@ namespace lc_core
 
         /// @brief  RANSAC fit x-y line
         virtual std::pair<double, double> ransacFitLine(std::vector<Eigen::Vector3d> &points);
+
+        virtual std::vector<std::vector<double>> getpara()
+        {
+            std::vector<std::vector<double>> empty;
+            return empty;
+        }
 
 
     };

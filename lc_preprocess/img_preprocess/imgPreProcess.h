@@ -48,10 +48,22 @@ namespace lc_preprocess
             return cur_img_points_;
         }
 
+        bool Is_track()
+        {
+            return is_track;
+        }
+
+        std::vector<cv::Point2d> Get_pre_point()
+        {
+            return pre_img_points_back;
+        }
+
     private:
         std::vector<cv::Point2d> pre_img_points_;
+        std::vector<cv::Point2d> pre_img_points_back;
         std::vector<cv::Point2d> cur_img_points_;
         cv::Point2d start_point,end_point;
+        bool is_track;
     };
 
 } // namespace lc_preprocess

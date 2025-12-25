@@ -64,7 +64,29 @@ void Cal_distance::cloud_tunnel_filter()
     radius_filter.setMinNeighborsInRadius(radius_filter_paragram.second);
     radius_filter.filter(*cloud_final);
 
+    // exclude line and tower point
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_x_filtered = boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+    cloud_x_filtered->reserve(cloud_final->size()); // 预留空间提升效率
+    for (const auto& point : *cloud_final)
+    {
+        // 保留x在[80, 240]范围内的点
+        if (point.x >= ex_line_tower_X.first+1 && point.x <= ex_line_tower_X.second-2)
+        {
+            cloud_x_filtered->push_back(point);
+        }
+    }
+    // 更新cloud_final为过滤后的结果
+    *cloud_final = *cloud_x_filtered;
+    cloud_final->width = cloud_final->size();
+    cloud_final->height = 1;
+
+    LOG(INFO) << "Points after x range filter (80-240): " << cloud_final->size();
     LOG(INFO) << "Complete tunnel filter";
+    if (cloud_final->size() < 20)
+    {
+        LOG(ERROR) << "after tunnel filter no points left";
+        exit(EXIT_FAILURE);  
+    }
 }
 
 void Cal_distance::get_clostest_points()
@@ -123,7 +145,6 @@ void Cal_distance::visual()
 
     pcl::KdTreeFLANN<pcl::PointXYZ> cloud_final_kdtree_for_region;
     cloud_final_kdtree_for_region.setInputCloud(cloud_final);
-
     // mark points
     for (const auto &pair : matched_points)
     {
@@ -196,6 +217,7 @@ void Cal_distance::visual()
             }
         }
     }
+    LOG(INFO) << output_files[0];
     // save cloud
     pcl::io::savePCDFileASCII(output_files[0], *colored_matches);
     LOG(INFO) << "Matched points saved to matched_points.pcd";
@@ -210,6 +232,7 @@ void Cal_distance::visual()
         white_point.z = point.z;
         white_cloud_final->push_back(white_point);
     }
+
 
     pcl::PCDWriter writer;
     // 使用二进制格式保存（更高效），如果需要ASCII格式可以将第二个参数改为true
@@ -249,6 +272,12 @@ void Cal_distance::calculate_distance()
     excu_line_point();
     cloud_tunnel_filter();
     get_clostest_points();
+    if (matched_points.size() == 0)
+    {
+        LOG(INFO) << "matched_points.size == 0   FINISH IT";
+        return;
+    }
     visual();
+
     save_match_points_txt();
 }

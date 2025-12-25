@@ -10,6 +10,7 @@
 #include <ceres/ceres.h>
 #include <chrono>
 #include <unordered_map>
+#include <array>
 #include <cassert>
 #include <filesystem>
 
@@ -61,7 +62,17 @@ void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file)
 CurveModeling::CurveModeling(const std::string &yaml_file)
 {
     first_time = false;
+    is_track = true;
     YAML::Node yaml = YAML::LoadFile(yaml_file);
+    if (yaml["res_path"])
+    {
+        res_path = yaml["res_path"].as<std::string>();
+        if (res_path.empty())
+        {
+            LOG(ERROR) << "No res_path. please set it!!";
+            exit(EXIT_FAILURE);
+        }
+    }
     if (yaml["dark"])
     {
         dark = yaml["dark"].as<int>();
@@ -229,7 +240,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             }
             else
             {
-                LOG(INFO) << "FRAEJCEDFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF";
                 setPoints(curve_point_file);
             }
         }
@@ -285,16 +295,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     {
         std::string lidar_points_path = yaml["lidar_points_path"].as<std::string>();
         loadLidarPoints(lidar_points_path);
-    }
-
-    if (yaml["res_path"])
-    {
-        res_path = yaml["res_path"].as<std::string>();
-        if (res_path.empty())
-        {
-            LOG(ERROR) << "No res_path. please set it!!";
-            exit(EXIT_FAILURE);
-        }
     }
 
     if (yaml["b_spline_num"])
@@ -405,7 +405,7 @@ void CurveModeling::getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, 
             double x = p.x - p_img.x();
             double y = p.y - p_img.y();
             double dis = x * x + y * y;
-            if (dis < 10)
+            if (dis < 80)
             {
                 is_true_point = true;
                 break;
@@ -454,6 +454,15 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
         LOG(INFO) << "X range: [" << min_x - 3 << ", " << max_x + 3 << "]";
         LOG(INFO) << "Y range: [" << min_y - 3 << ", " << max_y + 3 << "]";
         LOG(INFO) << "Z range: [" << min_z - 3 << ", " << max_z + 3 << "]";
+        if (line_points.size() < 10)
+        {
+            std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
+            ofs << "0  : get filter points fail";
+            LOG(ERROR) << "0  : get filter points fail";
+            ofs.close();
+            sleep(5);
+            exit(EXIT_FAILURE);
+        }
     }
 
     LOG(INFO) << "Load " << line_points.size() << " lidar points.\n";
@@ -509,9 +518,34 @@ void CurveModeling::lidarPreprocessing()
     xySamples = std::vector<double>(static_cast<size_t>((xy_interval_end_ - xy_interval_start_) / sample) + 1, xy_interval_start_);
     std::generate(xySamples.begin(), xySamples.end(), [y = xy_interval_start_]() mutable
                   { return y += sample; });
-    LOG(INFO) << "REACHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHHH";
     // generate curve points
     updateLidar2PixelPoints();
+    int size = 0;
+    std::unordered_map<int, std::array<double, 6>> Qxyz;
+    std::cout << "begin to create output QRfile"<< std::endl;
+    std::ofstream ofs(res_path + "lidar_points_Q.txt", std::ios::trunc);
+    if (!ofs.is_open())
+    {
+        LOG(ERROR) << "错误: 无法打开文件 " << res_path + "lidar_points_Q.txt" << " 进行写入!" << std::endl;
+        return;
+    }
+    for (double &iy : xySamples)
+    {
+        Eigen::Vector3d p = transmission_model_->generateSinglePoint(iy);
+        std::array<double, 6> arr;
+        arr[0] = cov_t[0] + pow(p.y(), 2) * cov_t[3] + pow(p.y(), 4) * cov_t[5] + 2 * p.y() * cov_t[1] + 2 * pow(p.y(), 2) * cov_t[2] + 2 * pow(p.y(), 3) * cov_t[4];
+        arr[1] = 0;
+        arr[2] = arr[0] * (2 * para[3] * p.x() + para[5]);
+        arr[3] = 0;
+        arr[4] = 0;
+        arr[5] = cov_f[0] * pow(p.x(), 4) + cov_f[3] + pow(p.x(), 2) * cov_f[5] + 2 * pow(p.x(), 2) * cov_f[1] + 2 * pow(p.x(), 3) * cov_f[2] + 2 * pow(p.x(), 1) * cov_f[4] + arr[2];
+        Qxyz[size++] = arr;
+        if ((int)((iy - xy_interval_start_)/ sample) % 2 == 0)
+        {
+            ofs << std::left<< std::fixed<< std::setprecision(10) << std::setw(15) << p.x()  << std::left << std::setw(15)<< p.y()  << std::left << std::setw(15)<< p.z()  << std::left << std::setw(15)<< arr[0]  << std::left << std::setw(15)<< arr[1]  << std::left << std::setw(15)<< arr[2]  << std::left << std::setw(15)<< arr[3]  << std::left << std::setw(15)<< arr[4]  << std::left << std::setw(15)<< arr[5] << std::endl;
+        }
+    }
+
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "original_output_lidar_points.txt");
     outputPCD(res_path + "original_output_lidar_points.txt", res_path + "ori_line_points.pcd");
@@ -524,7 +558,10 @@ void CurveModeling::lidarPreprocessing()
 void CurveModeling::curveLidarFitting()
 {
     // fit transmission model
-    transmission_model_->fitTransmissionModel(lidar_points_, end_point);
+    transmission_model_->fitTransmissionModel(lidar_points_, end_point, cov_t, cov_f, para);
+
+    LOG(INFO) << "SIGMA_XY " << "    " << cov_t[0] << "    " << cov_t[1] << "    " << cov_t[2] << "    " << cov_t[3] << "    " << cov_t[4] << "    " << cov_t[5];
+    LOG(INFO) << "SIGMA_XZ " << "    " << cov_f[0] << "    " << cov_f[1] << "    " << cov_f[2] << "    " << cov_f[3] << "    " << cov_f[4] << "    " << cov_f[5];
     LOG(INFO) << "Lidar points size after fitting: " << lidar_points_.size() << "\n";
 }
 
@@ -648,6 +685,8 @@ void CurveModeling::optimization()
     {
         // optimize dark
         optimizationDark();
+        std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
+        ofs << "1";
         return;
     }
 
@@ -675,6 +714,35 @@ void CurveModeling::optimization()
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
     outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
 
+    std::vector<std::vector<double>> test = transmission_model_->getpara();
+    for (size_t i = 0; i < 3; i++)
+    {
+        for (size_t j = 0; j < test[i].size(); j++)
+        {
+            std::cout << "   " << test[i][j] << std::endl;
+        }
+    }
+
+    int size = 0;
+    std::unordered_map<int, std::array<double, 6>> Rxyz;
+    std::ofstream ofs(res_path + "visual_points_R.txt", std::ios::trunc);
+    for (double &iy : xySamples)
+    {
+        Eigen::Vector3d p = transmission_model_->generateSinglePoint(iy);
+        std::array<double, 6> arr;
+        arr[0] = test[0][0] + pow(p.y(), 2) * test[0][3] + pow(p.y(), 4) * test[0][5] + 2 * p.y() * test[0][1] + 2 * pow(p.y(), 2) * test[0][2] + 2 * pow(p.y(), 3) * test[0][4];
+        arr[1] = 0;
+        arr[2] = arr[0] * (2 * test[2][3] * p.x() + test[2][5]);
+        arr[3] = 0;
+        arr[4] = 0;
+        arr[5] = test[1][0] * pow(p.x(), 4) + test[1][3] + pow(p.x(), 2) * test[1][5] + 2 * pow(p.x(), 2) * test[1][1] + 2 * pow(p.x(), 3) * test[1][2] + 2 * pow(p.x(), 1) * test[1][4] + arr[2];
+        Rxyz[size++] = arr;
+        if ((int)((iy - xy_interval_start_)/ sample) % 2 == 0)
+        {
+            ofs << std::left << std::fixed<< std::setprecision(10)<< std::setw(15) << p.x()  << std::left << std::setw(15)<< p.y()  << std::left << std::setw(15)<< p.z()  << std::left << std::setw(15)<< arr[0]  << std::left << std::setw(15)<< arr[1]  << std::left << std::setw(15)<< arr[2]  << std::left << std::setw(15)<< arr[3]  << std::left << std::setw(15)<< arr[4]  << std::left << std::setw(15)<< arr[5] << std::endl;
+        }
+    }
+
     // save final 3D points to txt file
     savePcd2Txt(res_path + "final_line_points.pcd", res_path + "final_line_points.txt");
 
@@ -682,7 +750,22 @@ void CurveModeling::optimization()
     result = matcher_->match(ori_lidar2img_points_, img_points_);
     std::tie(avg_err, max_err) = calculateReprojectError(result, ori_lidar2img_points_);
     LOG(INFO) << "Final match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
-
+    if (!dark)
+    {
+        std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
+        if (is_track == false && avg_err > 50)
+        {
+            ofs << "0";
+        }
+        else if (is_track == false && avg_err <= 50)
+        {
+            ofs << "2";
+        }
+        else
+        {
+            ofs << "3";
+        }
+    }
 #ifdef MY_DEBUG
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "final_match_visualization.jpg");
 #endif
@@ -694,7 +777,7 @@ void CurveModeling::optimizationDark()
 
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
-    outputPCD(res_path + "middle_output_lidar_points.txt", res_path + "final_line_points.pcd");
+    outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
     ori_lidar2img_points_.clear();
     for (const double &y : xySamplesUsed)
     {
@@ -815,12 +898,22 @@ void CurveModeling::optical_flow()
 
     pp.track(last_img_, img_);
     // pp.visualizeTracking(img_);
-    pp.reInterpolate();
+    if (!pp.Is_track())
+    {
+        img_points_ = pp.Get_pre_point();
+        LOG(INFO) << "  SDFDSFSDFSDFSDF" << img_points_.size();
+        is_track = false;
+        LOG(INFO) << "Fail to track img";
+        return;
+    }
+    else
+    {
+        pp.reInterpolate();
+        img_points_ = pp.get_cur_points();
+        pp.visualizeReInterpolated(img_);
 
-    img_points_ = pp.get_cur_points();
-    pp.visualizeReInterpolated(img_);
-
-    outputPoints(curve_point_file, img_points_);
-
-    LOG(INFO) << "Finish optical_flow";
+        outputPoints(curve_point_file, img_points_);
+        is_track = true;
+        LOG(INFO) << "Finish optical_flow";
+    }
 }

@@ -17,6 +17,7 @@ void ImgPreProcess::setPoints(const std::string &file_name)
     while (in_file >> point.x >> point.y)
     {
         pre_img_points_.push_back(point);
+        pre_img_points_back.push_back(point);
     }
     start_point = pre_img_points_.front();
     end_point = pre_img_points_.back();
@@ -26,6 +27,7 @@ void ImgPreProcess::setPoints(const std::string &file_name)
 void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
 {
     // convert Point2d to Point2f
+    int size = pre_img_points_.size();
     std::vector<cv::Point2f> pre_points_f(pre_img_points_.begin(), pre_img_points_.end());
     std::vector<cv::Point2f> cur_points_f;
     cur_points_f.reserve(pre_points_f.size());
@@ -64,6 +66,14 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
     pre_img_points_ = filtered_pre_points;
     cur_img_points_ = filtered_cur_points;
     LOG(INFO) << "After tracking, " << cur_img_points_.size() << " points are left";
+    if ((double)(cur_img_points_.size())/size < 0.1)
+    {
+        LOG(INFO) << "ERROR to track img points";
+        is_track = false;
+    }
+    else {
+        is_track = true;
+    }
 }
 
 void ImgPreProcess::reInterpolate()

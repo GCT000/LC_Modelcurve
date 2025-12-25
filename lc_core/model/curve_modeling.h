@@ -93,6 +93,17 @@ public:
     /// @brief get points in dark
     void setPoints(const std::string &file_name);
 
+    std::pair<double, double> ex_line_tower_X()
+    {
+        if(end_point[0] != 0){
+            return std::make_pair(rectang_size[1], end_point[0]);
+        }
+        else{
+            return std::make_pair(rectang_size[1], end_point_wgs84[0]);
+        }
+    }
+    
+    bool is_track;
 
 private:
     /// @brief  lidar 2 pixel
@@ -145,6 +156,7 @@ private:
     std::vector<std::string> cal_dis_output_files;
     std::vector<float> ndt, icp;
     std::vector<double> rectang_size;
+    std::vector<double> cov_t, cov_f, para;
     std::vector<float> cal_distance_para;
 
     std::shared_ptr<Camera> cam_;
