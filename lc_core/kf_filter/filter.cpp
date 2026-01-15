@@ -96,6 +96,13 @@ void FusionPCDTool::readSingleFile(std::ifstream &ifs, VectorXd &z, VectorXd &y,
                 break;
             }
         }
+        if (line_num < 110 &&line_num > 100){
+        std::cout << line_num << std::endl;
+        for (size_t i = 0; i < data.size(); i++)
+        {
+            std::cout << data[i] << std::endl;
+        }
+        }
 
         if (data.size() != DATA_COLUMN_COUNT)
         {
@@ -157,7 +164,9 @@ bool FusionPCDTool::readInputData()
             throw std::runtime_error("无法打开文件：" + input_path_Q_raw_);
 
         readSingleFile(ifsr, zr_, yr_, Rr_);
+        std::cout << "first" <<std::endl;
         readSingleFile(ifsq, zq_, yq_, Rq_);
+                std::cout << "second" <<std::endl;
         readSingleFile(ifsq_raw, zq_raw_, yq_raw_, Rq_raw_);
 
         const int point_num = yr_.size();

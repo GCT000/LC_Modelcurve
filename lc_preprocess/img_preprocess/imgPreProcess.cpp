@@ -33,24 +33,21 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
     cur_points_f.reserve(pre_points_f.size());
 
     // set optical flow parameters
-    const auto window_size = cv::Size(35,35);
+    const auto window_size = cv::Size(20,20);
     const auto criteria = cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS, 30, 0.01);
-
     // forward tracking
     std::vector<uchar> forward_status;
     std::vector<float> forward_err;
-    cv::calcOpticalFlowPyrLK(pre_img, cur_img, pre_points_f, cur_points_f, forward_status, forward_err, window_size, 0, criteria);
-
+    cv::calcOpticalFlowPyrLK(pre_img, cur_img, pre_points_f, cur_points_f, forward_status, forward_err, window_size, 2, criteria);
     // backward tracking
     std::vector<cv::Point2f> reverse_points;
     std::vector<uchar> backward_status;
     std::vector<float> backward_err;
-    cv::calcOpticalFlowPyrLK(cur_img, pre_img, cur_points_f, reverse_points, backward_status, backward_err, window_size, 0, criteria);
-    
+    cv::calcOpticalFlowPyrLK(cur_img, pre_img, cur_points_f, reverse_points, backward_status, backward_err, window_size, 2, criteria);
     // calculate bidirectional tracking error and filter points
     std::vector<cv::Point2d> filtered_pre_points, filtered_cur_points;
     filtered_cur_points.push_back(start_point);
-    const double max_err = 0.1;
+    const double max_err = 0.5;
     for(size_t i = 0; i < pre_points_f.size(); i++) {
         if(forward_status[i] && backward_status[i]) {
             double tracking_err = cv::norm(cv::Point2d(pre_points_f[i].x, pre_points_f[i].y) -
@@ -66,7 +63,7 @@ void ImgPreProcess::track(cv::Mat &pre_img, cv::Mat &cur_img)
     pre_img_points_ = filtered_pre_points;
     cur_img_points_ = filtered_cur_points;
     LOG(INFO) << "After tracking, " << cur_img_points_.size() << " points are left";
-    if ((double)(cur_img_points_.size())/size < 0.1)
+    if ((double)(cur_img_points_.size())/size < 0.01)
     {
         LOG(INFO) << "ERROR to track img points";
         is_track = false;

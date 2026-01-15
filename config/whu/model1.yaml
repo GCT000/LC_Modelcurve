@@ -3,42 +3,42 @@
 # line number
 line_num: 1
 # environment
-dark: 1
+dark: 0
 # camera yaml
 cam_calib: "cam0.yaml"
 
 #end_point: [219.938004, 8.151000, -16.052999]
-end_point: [58.9, 0.586, 1.67] 
+end_point: [351.223999, -0.1406000, -19.796001] 
 #end_point_wgs84: [-2273648.000000, 5012386.000000, 3212195.500000]
 
 source_file: "/media/gct/T9/canglong/place3/place3_calib_out.pcd"
 target_file: "/media/gct/T9/canglong/place3/line.pcd"
 
-raw_pcd_file: "/home/gct/LC-CurveModel/data/filter_test/1752.pcd"
-matched_point_file: "/home/gct/LC-CurveModel/data/filter_testmatched_points.pcd"
-tunnel_cloud_file: "/home/gct/LC-CurveModel/data/filter_testfiltered_cloud.pcd"
-point_txt_file: "/home/gct/LC-CurveModel/data/filter_testmatched_points.txt"
+raw_pcd_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/extracted_points.pcd"
+matched_point_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/matched_points.pcd"
+tunnel_cloud_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/filtered_cloud.pcd"
+point_txt_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/matched_points.txt"
 
 ndt_paragram: [0.7, 0.35, 0.55, 200]   #  resolution, step_size, outlier_ratio, max_iterations;
 icp_paragram: [200, 0.2, 1e-8, 1e-8]  #  max_iterations, max_correspondence_distance, transformation_epsilon, fitness_epsilon;
-cal_distance_paragram: [1,10,5,0.2,0.15]  # excu_line_threshold, tunnel_radius, match_distance_threshold, excu_raw_radius_threshold, visual_region_radius
-rectang_size: [19.57, 25,-2.42, -0.40,0.559,0.678]
+cal_distance_paragram: [0.3,10,5,0.2,0.15]  # excu_line_threshold, tunnel_radius, match_distance_threshold, excu_raw_radius_threshold, visual_region_radius
+rectang_size: [91.56, 126.958, 5.577, 6.468, 3.208,11.021]
 
 xy_interval:
-  start: -2.42
-  end: 0.586
+  start: -0.14
+  end: 6.468
 
 # curve point file
 curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
 
 # last image_path
-last_image_path: "/home/gct/LC-CurveModel/data/filter_test/1747.png"
+last_image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1124.png"
 
 # image path
-image_path: "/home/gct/LC-CurveModel/data/filter_test/1747.png"
+image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/image_1.png"
 
 # lidar points path
-lidar_points_path: "/home/gct/LC-CurveModel/data/12-6guangzhou/filter.pcd"
+lidar_points_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1.pcd"
 
 # res path
 res_path: "/home/gct/LC-CurveModel/data/temp"
@@ -46,7 +46,7 @@ res_path: "/home/gct/LC-CurveModel/data/temp"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/gct/LC-CurveModel/data/12-6guangzhou/points.txt"
+selected_points: "/home/gct/LC-CurveModel/data/1-13guangzhou/image_points_1.txt"
 
 # ex optimization
 ex_optimization: 0
@@ -78,7 +78,7 @@ T_cam_lidar:
   #        0.999948, -0.00614274,  0.00799642, -0.117265,
   #        0.0, 0.0, 0.0, 1.0] 
   # 0415
-  # data: [-0.0167814,   -0.999916,   -0.0110512, -0.0425305,
+  # data: [-0.0167814,   -0.999916,   -0.0110512,-0.0025305,
   #        -0.0114918,  0.0111279,   -0.999986, 0.0922477,
   #         0.999911, -0.0165367,  -0.0117924, -0.127265,
   #        0.0, 0.0, 0.0, 1.0]                           
@@ -91,11 +91,15 @@ T_cam_lidar:
   #        -0.0100747,  0.00435061, -1.00006, 0.0922477,
   #        0.999477, -0.0342479, -0.0103376, -0.117265,
   #        0.0, 0.0, 0.0, 1.0]      
-  data: [-0.0213785,   -0.999868,   -0.00662369, -0.0025305,
-         0.000844071,  0.00649145,   -1.00009, 0.0922477,
-          0.999889, -0.0212678,  0.000587604, -0.127265,
-         0.0, 0.0, 0.0, 1.0]                   #九月苍龙到
+  # data: [-0.0213785,   -0.999868,   -0.00662369, -0.0025305,
+  #        0.000844071,  0.00649145,   -1.00009, 0.0922477,
+  #         0.999889, -0.0212678,  0.000587604, -0.127265,
+  #        0.0, 0.0, 0.0, 1.0]                   #九月苍龙到
   # data: [-0.0198112,   -0.999918,   0.00177007, -0.0025305,
   #        -0.00401909,  -0.00180512,   -1.0001, 0.0922477,
   #         0.999912, -0.0197042,  -0.00409888, -0.127265,
-  #        0.0, 0.0, 0.0, 1.0]                                                                                                                                         
+  #        0.0, 0.0, 0.0, 1.0]                           
+  data: [-0.0177814, -0.999835, 0.0038292, -0.0025305,
+        -0.0125737, 0.013906, -1.00001, 0.0922477,
+         0.999929, -0.0100499, -0.1180603, -0.127265,         
+         0.0, 0.0, 0.0, 1.0]                                                                                                        

@@ -2,81 +2,75 @@
 
 void Cal_distance::load_pcd_file()
 {
+    auto start = std::chrono::steady_clock::now();
     if (pcl::io::loadPCDFile<pcl::PointXYZ>(file_line_pcd, *cloud_result_line) == -1)
     {
         PCL_ERROR("Couldn't read result_line\n");
     }
     LOG(INFO) << "Loaded " << cloud_result_line->size() << " data points from " << file_line_pcd;
-}
-
-void Cal_distance::excu_line_point()
-{
-    pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
-    kdtree.setInputCloud(cloud_result_line);
-
-    for (const auto &point : *cloud_raw)
-    {
-        std::vector<int> pointIdxRadiusSearch;
-        std::vector<float> pointRadiusSquaredDistance;
-
-        if (kdtree.radiusSearch(point, excu_line_threshold, pointIdxRadiusSearch, pointRadiusSquaredDistance) == 0)
-        {
-            cloud_raw_filtered->push_back(point);
-        }
-    }
-    LOG(INFO) << "After excluding finalline points from rawpcd, remaining points in cloud_raw: " << cloud_raw_filtered->size();
+    auto end = std::chrono::steady_clock::now();
+    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "load pcd 耗时：" << duration_ms << " 毫秒" << std::endl;
 }
 
 void Cal_distance::cloud_tunnel_filter()
 {
+    auto start = std::chrono::steady_clock::now();
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered = boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
-    ;
     pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
+    kdtree.setEpsilon(0.0);
+    kdtree.setSortedResults(false);
     kdtree.setInputCloud(cloud_result_line);
 
     cloud_filtered->clear();
-    cloud_filtered->reserve(cloud_raw_filtered->size());
+    cloud_filtered->reserve(cloud_raw->size());
 
-    for (const auto &point : *cloud_raw_filtered)
+    std::vector<int> pointIdxNKNSearch(1);
+    std::vector<float> pointNKNSquaredDistance(1);
+    double max_dis = tunnel_radius * tunnel_radius;
+    double min_dis = excu_line_threshold * excu_line_threshold;
+
+        LOG(INFO) << "Points within tunnel: " << min_dis << "   " <<ex_line_tower_X.first ;
+            LOG(INFO) << "Points within tunnel: " << max_dis<< "   " <<ex_line_tower_X.second;
+
+    for (const auto &point : *cloud_raw)
     {
-        std::vector<int> pointIdxNKNSearch(1);
-        std::vector<float> pointNKNSquaredDistance(1);
+        if (point.x < ex_line_tower_X.first + 1 || point.x > ex_line_tower_X.second - 2)
+        {
+            continue;
+        }
 
+        pointIdxNKNSearch.clear();
+        pointIdxNKNSearch.reserve(1);
+        pointNKNSquaredDistance.clear();
+        pointNKNSquaredDistance.reserve(1);
         if (kdtree.nearestKSearch(point, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
         {
-            float distance = std::sqrt(pointNKNSquaredDistance[0]);
+            float distance = pointNKNSquaredDistance[0];
 
-            if (distance <= tunnel_radius)
+            if (distance >= min_dis && distance <= max_dis)
             {
                 cloud_filtered->push_back(point);
             }
         }
     }
+    auto end = std::chrono::steady_clock::now();
+    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "tunnel ——LINE 耗时：" << duration_ms << " 毫秒" << std::endl;
 
     cloud_filtered->width = cloud_filtered->size();
     cloud_filtered->height = 1;
 
     LOG(INFO) << "Points within tunnel: " << cloud_filtered->size();
 
-    pcl::RadiusOutlierRemoval<pcl::PointXYZ> radius_filter;
-    radius_filter.setInputCloud(cloud_filtered);
-    radius_filter.setRadiusSearch(radius_filter_paragram.first);
-    radius_filter.setMinNeighborsInRadius(radius_filter_paragram.second);
-    radius_filter.filter(*cloud_final);
+    // pcl::RadiusOutlierRemoval<pcl::PointXYZ> radius_filter;
+    // radius_filter.setInputCloud(cloud_filtered);
+    // radius_filter.setRadiusSearch(radius_filter_paragram.first);
+    // radius_filter.setMinNeighborsInRadius(radius_filter_paragram.second);
+    // radius_filter.filter(*cloud_final);
 
-    // exclude line and tower point
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_x_filtered = boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
-    cloud_x_filtered->reserve(cloud_final->size()); // 预留空间提升效率
-    for (const auto& point : *cloud_final)
-    {
-        // 保留x在[80, 240]范围内的点
-        if (point.x >= ex_line_tower_X.first+1 && point.x <= ex_line_tower_X.second-2)
-        {
-            cloud_x_filtered->push_back(point);
-        }
-    }
-    // 更新cloud_final为过滤后的结果
-    *cloud_final = *cloud_x_filtered;
+    *cloud_final = *cloud_filtered;
+
     cloud_final->width = cloud_final->size();
     cloud_final->height = 1;
 
@@ -85,12 +79,13 @@ void Cal_distance::cloud_tunnel_filter()
     if (cloud_final->size() < 20)
     {
         LOG(ERROR) << "after tunnel filter no points left";
-        exit(EXIT_FAILURE);  
+        exit(EXIT_FAILURE);
     }
 }
 
 void Cal_distance::get_clostest_points()
 {
+    auto start = std::chrono::steady_clock::now();
     pcl::KdTreeFLANN<pcl::PointXYZ> cloud1_kdtree;
     cloud1_kdtree.setInputCloud(cloud_result_line);
 
@@ -98,6 +93,7 @@ void Cal_distance::get_clostest_points()
 
     pcl::KdTreeFLANN<pcl::PointXYZ> final_cloud_kdtree;
     final_cloud_kdtree.setInputCloud(cloud_final);
+    double dis = match_distance_threshold * match_distance_threshold;
 
     for (size_t i = 0; i < cloud_final->size(); ++i)
     {
@@ -111,8 +107,8 @@ void Cal_distance::get_clostest_points()
 
         if (cloud1_kdtree.nearestKSearch(point, 1, pointIdxNKNSearch, pointNKNSquaredDistance) > 0)
         {
-            float distance = std::sqrt(pointNKNSquaredDistance[0]);
-            if (distance < match_distance_threshold)
+            float distance = pointNKNSquaredDistance[0];
+            if (distance < dis)
             {
                 pcl::PointXYZ matched_point = cloud_result_line->points[pointIdxNKNSearch[0]];
                 matched_points.push_back(std::make_pair(point, matched_point));
@@ -128,6 +124,9 @@ void Cal_distance::get_clostest_points()
             }
         }
     }
+    auto end = std::chrono::steady_clock::now();
+    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "CLOSED POINTS 耗时：" << duration_ms << " 毫秒" << std::endl;
     LOG(INFO) << "Found " << matched_points.size() << " point pairs.";
 }
 
@@ -137,6 +136,7 @@ void Cal_distance::visual()
     {
         LOG(ERROR) << "No enough output files";
     }
+    auto start = std::chrono::steady_clock::now();
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr colored_matches(new pcl::PointCloud<pcl::PointXYZRGB>);
 
     // KDTree
@@ -233,7 +233,6 @@ void Cal_distance::visual()
         white_cloud_final->push_back(white_point);
     }
 
-
     pcl::PCDWriter writer;
     // 使用二进制格式保存（更高效），如果需要ASCII格式可以将第二个参数改为true
     if (writer.writeBinary(output_files[1], *white_cloud_final) == -1)
@@ -245,6 +244,9 @@ void Cal_distance::visual()
         LOG(INFO) << "Filtered cloud saved to pcd file: " << output_files[1]
                   << " with " << white_cloud_final->size() << " points.";
     }
+    auto end = std::chrono::steady_clock::now();
+    auto duration_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    std::cout << "OUTPUT FILE 耗时：" << duration_ms << " 毫秒" << std::endl;
 }
 
 void Cal_distance::save_match_points_txt()
@@ -269,7 +271,6 @@ void Cal_distance::save_match_points_txt()
 void Cal_distance::calculate_distance()
 {
     load_pcd_file();
-    excu_line_point();
     cloud_tunnel_filter();
     get_clostest_points();
     if (matched_points.size() == 0)

@@ -175,6 +175,8 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     // load lidar-camera extrinsic
     loadLidar2CameraExtrinsic(yaml);
 
+
+
     // x sample
     if (yaml["xy_interval"])
     {
@@ -206,6 +208,7 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             cam_->undistortImg(img, last_img_);
         }
     }
+                        LOG(INFO) << "REACH HERE";
 
     if (yaml["curve_point_file"])
     {
@@ -244,6 +247,7 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             }
         }
     }
+
 
     if (yaml["selected_points"] && !std::filesystem::exists(std::filesystem::path(curve_point_file)))
     {
@@ -542,7 +546,7 @@ void CurveModeling::lidarPreprocessing()
         Qxyz[size++] = arr;
         if ((int)((iy - xy_interval_start_)/ sample) % 2 == 0)
         {
-            ofs << std::left<< std::fixed<< std::setprecision(10) << std::setw(15) << p.x()  << std::left << std::setw(15)<< p.y()  << std::left << std::setw(15)<< p.z()  << std::left << std::setw(15)<< arr[0]  << std::left << std::setw(15)<< arr[1]  << std::left << std::setw(15)<< arr[2]  << std::left << std::setw(15)<< arr[3]  << std::left << std::setw(15)<< arr[4]  << std::left << std::setw(15)<< arr[5] << std::endl;
+            ofs << std::left<< std::fixed<< std::setprecision(10) << std::setw(20) << p.x()  << std::left << std::setw(20)<< p.y()  << std::left << std::setw(20)<< p.z()  << std::left << std::setw(20)<< arr[0]  << std::left << std::setw(20)<< arr[1]  << std::left << std::setw(20)<< arr[2]  << std::left << std::setw(20)<< arr[3]  << std::left << std::setw(20)<< arr[4]  << std::left << std::setw(20)<< arr[5] << std::endl;
         }
     }
 
@@ -715,14 +719,6 @@ void CurveModeling::optimization()
     outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
 
     std::vector<std::vector<double>> test = transmission_model_->getpara();
-    for (size_t i = 0; i < 3; i++)
-    {
-        for (size_t j = 0; j < test[i].size(); j++)
-        {
-            std::cout << "   " << test[i][j] << std::endl;
-        }
-    }
-
     int size = 0;
     std::unordered_map<int, std::array<double, 6>> Rxyz;
     std::ofstream ofs(res_path + "visual_points_R.txt", std::ios::trunc);
@@ -739,7 +735,7 @@ void CurveModeling::optimization()
         Rxyz[size++] = arr;
         if ((int)((iy - xy_interval_start_)/ sample) % 2 == 0)
         {
-            ofs << std::left << std::fixed<< std::setprecision(10)<< std::setw(15) << p.x()  << std::left << std::setw(15)<< p.y()  << std::left << std::setw(15)<< p.z()  << std::left << std::setw(15)<< arr[0]  << std::left << std::setw(15)<< arr[1]  << std::left << std::setw(15)<< arr[2]  << std::left << std::setw(15)<< arr[3]  << std::left << std::setw(15)<< arr[4]  << std::left << std::setw(15)<< arr[5] << std::endl;
+            ofs << std::left << std::fixed<< std::setprecision(10)<< std::setw(20) << p.x()  << std::left << std::setw(20)<< p.y()  << std::left << std::setw(20)<< p.z()  << std::left << std::setw(20)<< arr[0]  << std::left << std::setw(20)<< arr[1]  << std::left << std::setw(20)<< arr[2]  << std::left << std::setw(20)<< arr[3]  << std::left << std::setw(20)<< arr[4]  << std::left << std::setw(20)<< arr[5] << std::endl;
         }
     }
 
@@ -842,7 +838,7 @@ void CurveModeling::lidarP2img()
         Eigen::Vector2d p_img = lidar2pixel(lp);
         if (p_img(0) > 0 && p_img(0) < img_.cols && p_img(1) > 0 && p_img(1) < img_.rows)
         {
-            cv::circle(img, cv::Point(p_img(0), p_img(1)), 3, cv::Scalar(0, 0, 255), -1);
+            cv::circle(img, cv::Point(p_img(0), p_img(1)), 1, cv::Scalar(0, 0, 255), -1);
         }
     }
     cv::imwrite(temp_path + "lidarP2img.jpg", img);
@@ -894,6 +890,7 @@ void CurveModeling::output3DPointsToTxt(const std::string &filename)
 void CurveModeling::optical_flow()
 {
     lc_preprocess::ImgPreProcess pp;
+
     pp.setPoints(curve_point_file);
 
     pp.track(last_img_, img_);

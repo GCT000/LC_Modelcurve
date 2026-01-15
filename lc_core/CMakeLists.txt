@@ -8,7 +8,8 @@ include_directories(cloud_registration)
 include_directories(cal_distance)
 include_directories(gnss/gnss-monitor-tools-v1/include) 
 include_directories(rough_registration)          
-include_directories(kf_filter)                                        
+include_directories(kf_filter)       
+include_directories(optical_flow)                                 
 
 
 # If this macro definition is turned on, 
@@ -31,6 +32,13 @@ add_library(curveModel_lib SHARED
     ../lc_preprocess/img_preprocess/imgPreProcess.cpp
 )
 
+add_library(imgprocess SHARED
+../lc_preprocess/img_preprocess/imgPreProcess.cpp
+)
+
+add_library(camera SHARED
+    camera/camera.cpp
+)
 
 add_library(cloud_registration_lib SHARED
     cloud_registration/cloud_registration.cpp
@@ -58,6 +66,8 @@ add_executable(read_imu read_imu.cpp)
 target_link_libraries(read_imu curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread ${catkin_LIBRARIES})
 add_executable(kf_filter kf_filter/filter.cpp)
 target_link_libraries(kf_filter ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp)
+add_executable(optical_flow optical_flow/optical_flow.cpp)
+target_link_libraries(optical_flow glog::glog camera ${yaml-cpp_LIBRARIES} yaml-cpp imgprocess ${OpenCV_LIBS} ${CERES_LIBRARIES})
 
 enable_testing()
 
