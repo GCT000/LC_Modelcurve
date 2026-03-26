@@ -146,14 +146,14 @@ bool Optical_flow::do_optical_flow()
     }
     else
     {
-        img_process.reInterpolate();
+        //img_process.reInterpolate();
         img_points_ = img_process.get_cur_points();
         img_process.visualizeReInterpolated(img);
 
         outputPoints(curve_points_file, img_points_);
         is_track = true;
         LOG(INFO) << "Finish optical_flow";
-        ofs << 3;
+        ofs << 1;
         return true;
     }
     ofs.close();

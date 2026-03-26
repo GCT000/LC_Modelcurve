@@ -9,7 +9,9 @@ include_directories(cal_distance)
 include_directories(gnss/gnss-monitor-tools-v1/include) 
 include_directories(rough_registration)          
 include_directories(kf_filter)       
-include_directories(optical_flow)                                 
+include_directories(optical_flow)    
+include_directories(generate_curve)                    
+include_directories(line_extractor)         
 
 
 # If this macro definition is turned on, 
@@ -30,6 +32,7 @@ add_library(curveModel_lib SHARED
     utils/evaluation.cpp
     utils/visualization.cpp
     ../lc_preprocess/img_preprocess/imgPreProcess.cpp
+    line_extractor/line_extractor.cpp
 )
 
 add_library(imgprocess SHARED
@@ -51,6 +54,9 @@ add_library(cal_distance_lib SHARED
 add_library(rough_registration_lib SHARED
     rough_registration/rough_registration.cpp
 )
+
+add_executable(generate_curve generate_curve/generate_curve.cpp)
+target_link_libraries(generate_curve  ${OpenCV_LIBS} ${CERES_LIBRARIES})
 
 add_subdirectory(gnss/gnss-monitor-tools-v1)
 

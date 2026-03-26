@@ -81,19 +81,19 @@ private:
     std::string pcd_path;
 
     // 输入数据存储
-    VectorXd zr_;   // 第一组观测向量 (x0,z0,x1,z1,...)
-    VectorXd zq_;   // 第二组观测向量 (x0,z0,x1,z1,...)
-    VectorXd zq_raw_;// 原始观测向量 (x0,z0,x1,z1,...)
+    std::vector<Vector2d> zr_;   // 第一组观测向量 (x0,z0,x1,z1,...)
+    std::vector<Vector2d> zq_;   // 第二组观测向量 (x0,z0,x1,z1,...)
+    std::vector<Vector2d> zq_raw_;// 原始观测向量 (x0,z0,x1,z1,...)
     VectorXd yr_;   // 第一组y坐标向量
     VectorXd yq_;   // 第二组y坐标向量
     VectorXd yq_raw_;// 原始y坐标向量
-    MatrixXd Rr_;   // 第一组协方差矩阵（2N×2N）
-    MatrixXd Rq_;   // 第二组协方差矩阵（2N×2N）
-    MatrixXd Rq_raw_;// 原始协方差矩阵（2N×2N）
+    std::vector<Matrix2d> Rr_;   // 第一组协方差矩阵（2N×2N）
+    std::vector<Matrix2d> Rq_;   // 第二组协方差矩阵（2N×2N）
+    std::vector<Matrix2d> Rq_raw_;// 原始协方差矩阵（2N×2N）
 
     // 融合结果存储
-    VectorXd z_fuse_all_;  // 所有点的融合后观测向量
-    MatrixXd P_fuse_all_;  // 所有点的融合后协方差矩阵
+    std::vector<Vector2d> z_fuse_all_;  // 所有点的融合后观测向量
+    std::vector<Matrix2d> P_fuse_all_;  // 所有点的融合后协方差矩阵
 
     /**
      * @brief 从单个文件读取观测数据和协方差矩阵
@@ -102,7 +102,7 @@ private:
      * @param y 输出：y坐标向量
      * @param R 输出：协方差矩阵
      */
-    void readSingleFile(std::ifstream& ifs, VectorXd& z, VectorXd& y, MatrixXd& R);
+    void readSingleFile(std::ifstream& ifs, std::vector<Vector2d>& z, VectorXd& y, std::vector<Matrix2d>& R);
 
     /**
      * @brief SVD分解求2x2矩阵的逆（兼容低版本Eigen）
@@ -133,7 +133,7 @@ private:
      * @param pcd_file_path 输出路径
      * @return 是否转换成功
      */
-    bool eigenVectorToPCD(const VectorXd& zr, const VectorXd& yr, const std::string& pcd_file_path);
+    bool eigenVectorToPCD(const std::vector<Vector2d>& zr, const VectorXd& yr, const std::string& pcd_file_path);
 };
 
 #endif // FILTER_H

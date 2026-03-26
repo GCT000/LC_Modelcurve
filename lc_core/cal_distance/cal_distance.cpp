@@ -35,7 +35,7 @@ void Cal_distance::cloud_tunnel_filter()
 
     for (const auto &point : *cloud_raw)
     {
-        if (point.x < ex_line_tower_X.first + 1 || point.x > ex_line_tower_X.second - 2)
+        if (point.x < ex_line_tower_X.first + 40 || point.x > ex_line_tower_X.second - 5)
         {
             continue;
         }
@@ -63,13 +63,13 @@ void Cal_distance::cloud_tunnel_filter()
 
     LOG(INFO) << "Points within tunnel: " << cloud_filtered->size();
 
-    // pcl::RadiusOutlierRemoval<pcl::PointXYZ> radius_filter;
-    // radius_filter.setInputCloud(cloud_filtered);
-    // radius_filter.setRadiusSearch(radius_filter_paragram.first);
-    // radius_filter.setMinNeighborsInRadius(radius_filter_paragram.second);
-    // radius_filter.filter(*cloud_final);
+    pcl::RadiusOutlierRemoval<pcl::PointXYZ> radius_filter;
+    radius_filter.setInputCloud(cloud_filtered);
+    radius_filter.setRadiusSearch(radius_filter_paragram.first);
+    radius_filter.setMinNeighborsInRadius(radius_filter_paragram.second);
+    radius_filter.filter(*cloud_final);
 
-    *cloud_final = *cloud_filtered;
+    //*cloud_final = *cloud_filtered;
 
     cloud_final->width = cloud_final->size();
     cloud_final->height = 1;
@@ -234,7 +234,6 @@ void Cal_distance::visual()
     }
 
     pcl::PCDWriter writer;
-    // 使用二进制格式保存（更高效），如果需要ASCII格式可以将第二个参数改为true
     if (writer.writeBinary(output_files[1], *white_cloud_final) == -1)
     {
         LOG(ERROR) << "Failed to open pcd file for writing: " << output_files[1];

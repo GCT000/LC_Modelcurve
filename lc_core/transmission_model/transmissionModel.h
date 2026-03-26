@@ -69,7 +69,16 @@ namespace lc_core
             std::vector<std::vector<double>> empty;
             return empty;
         }
+        
 
+        virtual bool get_is_visual()
+        {
+            return false;
+        }
+        virtual bool set_first_time()
+        {
+            return false;
+        }
 
     };
 

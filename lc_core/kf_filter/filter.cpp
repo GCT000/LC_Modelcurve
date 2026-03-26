@@ -60,20 +60,18 @@ FusionPCDTool::FusionPCDTool(const std::string &yaml_file)
 }
 
 // 读取单个文件数据
-void FusionPCDTool::readSingleFile(std::ifstream &ifs, VectorXd &z, VectorXd &y, MatrixXd &R)
+void FusionPCDTool::readSingleFile(std::ifstream &ifs, std::vector<Vector2d> &z, VectorXd &y, std::vector<Matrix2d> &R)
 {
     if (!ifs.is_open())
     {
         throw std::runtime_error("文件流未打开");
     }
 
-    // 初始化容器
-    z.resize(0);
-    y.resize(0);
-    R.resize(0, 0);
+    std::ofstream ofs("/home/gct/LC-CurveModel/data/filter_test/tes.txt", std::ios::trunc);
 
     std::string line;
     int line_num = 0;
+    y.resize(0);
     while (std::getline(ifs, line))
     {
         line_num++;
@@ -96,56 +94,54 @@ void FusionPCDTool::readSingleFile(std::ifstream &ifs, VectorXd &z, VectorXd &y,
                 break;
             }
         }
-        if (line_num < 110 &&line_num > 100){
-        std::cout << line_num << std::endl;
-        for (size_t i = 0; i < data.size(); i++)
-        {
-            std::cout << data[i] << std::endl;
-        }
-        }
-
         if (data.size() != DATA_COLUMN_COUNT)
         {
             LOG(ERROR) << "第" << line_num << "行列数不符（期望9列，实际" << data.size() << "列），跳过" << std::endl;
             continue;
         }
+        y.conservativeResize(y.size() + 1);
 
-        const int new_z_size = z.size() + 2;
-        const int new_y_size = y.size() + 1;
-        const int new_R_size = R.rows() + 2;
+        Vector2d temp_z;
+        Matrix2d temp_R;
 
-        z.conservativeResize(new_z_size);
-        y.conservativeResize(new_y_size);
-        R.conservativeResize(new_R_size, new_R_size);
-
-        z(new_z_size - 2) = data[0];
-        z(new_z_size - 1) = data[2];
-        y(new_y_size - 1) = data[1];
-
-        const int start_idx = new_R_size - 2;
-        for (int i = start_idx; i < new_R_size; ++i)
+        temp_z(0) = data[0];
+        temp_z(1) = data[2];
+        y(y.size() - 1) = data[1];
+        for (int i = 0; i < 2; i++)
         {
-            for (int j = 0; j < start_idx; ++j)
+            for (int j = 0; j < 2; j++)
             {
-                R(i, j) = 0.0;
-                R(j, i) = 0.0;
+                temp_R(i, j) = 0.0;
+                temp_R(j, i) = 0.0;
             }
         }
 
-        const double cov_xx = std::max(data[3], MIN_COV_VALUE);
+        const double cov_xx = std::max(data[3], -data[3]);
         const double cov_xz = data[5];
-        const double cov_zz = std::max(data[8], MIN_COV_VALUE);
+        const double cov_zz = std::max(data[8], -data[8]);
 
-        R(start_idx, start_idx) = cov_xx;
-        R(start_idx + 1, start_idx) = cov_xz;
-        R(start_idx, start_idx + 1) = cov_xz;
-        R(start_idx + 1, start_idx + 1) = cov_zz;
+        temp_R(0, 0) = cov_xx;
+        temp_R(1, 0) = cov_xz;
+        temp_R(0, 1) = cov_xz;
+        temp_R(1, 1) = cov_zz;
+
+        z.push_back(temp_z);
+        R.push_back(temp_R);
     }
 
     ifs.close();
-    LOG(INFO) << "[INFO] 文件读取完成：点数量=" << y.size()
-              << ", 观测向量长度=" << z.size()
-              << ", 协方差矩阵尺寸=" << R.rows() << "x" << R.cols() << std::endl;
+    for (size_t i = 0; i < z.size(); i++)
+    {
+        ofs << "data: " << z[i](0) << "  " << z[i](1) << std::endl;
+    }
+    for (size_t i = 0; i < R.size(); i++)
+    {
+        ofs << "R   : " << R[i](0, 0) << "  " << R[i](1, 1) << std::endl;
+        ofs << "R   : " << R[i](0, 1) << "  " << R[i](1, 0) << std::endl;
+    }
+    LOG(INFO) << "[INFO] 文件读取完成: 点数量=" << y.size()<< std::endl;
+    LOG(INFO) << "[INFO] 文件读取完成: Z尺寸=" << z.size()<< std::endl;
+    LOG(INFO) << "[INFO] 文件读取完成: R尺寸=" << R.size()<< std::endl;
 }
 
 bool FusionPCDTool::readInputData()
@@ -155,28 +151,20 @@ bool FusionPCDTool::readInputData()
         std::ifstream ifsr(input_path_R_);
         std::ifstream ifsq(input_path_Q_);
         std::ifstream ifsq_raw(input_path_Q_raw_);
-
         if (!ifsr.is_open())
             throw std::runtime_error("无法打开文件：" + input_path_R_);
         if (!ifsq.is_open())
             throw std::runtime_error("无法打开文件：" + input_path_Q_);
         if (!ifsq_raw.is_open())
             throw std::runtime_error("无法打开文件：" + input_path_Q_raw_);
-
         readSingleFile(ifsr, zr_, yr_, Rr_);
-        std::cout << "first" <<std::endl;
         readSingleFile(ifsq, zq_, yq_, Rq_);
-                std::cout << "second" <<std::endl;
         readSingleFile(ifsq_raw, zq_raw_, yq_raw_, Rq_raw_);
 
         const int point_num = yr_.size();
-        if (zr_.size() != 2 * point_num || zq_.size() != 2 * point_num || zq_raw_.size() != 2 * point_num)
+        if (zr_.size() != point_num || zq_.size() != point_num || zq_raw_.size() != point_num)
         {
             throw std::runtime_error("观测向量长度与点数量不匹配");
-        }
-        if (Rr_.rows() != 2 * point_num || Rr_.cols() != Rr_.rows() || Rq_.rows() != Rr_.rows() || Rq_raw_.rows() != Rr_.rows())
-        {
-            throw std::runtime_error("协方差矩阵尺寸不匹配");
         }
     }
     catch (const std::exception &e)
@@ -220,6 +208,8 @@ bool FusionPCDTool::fuse2dStatic(const Vector2d &z1, const Matrix2d &R1,
         return false;
     x_fuse = P_fuse * (R1_inv * z1 + R2_inv * z2);
 
+    // std::cout << "x_fuse: " << x_fuse(0) << "  " << x_fuse(1) << std::endl;
+    // std::cout << "R_fuse: " << P_fuse(0, 0) << "  " << P_fuse(1, 1) << std::endl;
     return true;
 }
 
@@ -234,50 +224,38 @@ bool FusionPCDTool::runFusion()
     }
 
     // 初始化融合结果容器
-    z_fuse_all_.resize(2 * point_num);
-    P_fuse_all_.resize(2 * point_num, 2 * point_num);
+    z_fuse_all_.resize(0);
+    P_fuse_all_.resize(0);
 
     // 逐点融合
     for (int i = 0; i < point_num; ++i)
     {
-        // 提取当前点的观测值和协方差
-        const Vector2d z1(zr_(2 * i), zr_(2 * i + 1));
-        const Vector2d z2(zq_(2 * i), zq_(2 * i + 1));
-        const Vector2d zq_single(zq_raw_(2 * i), zq_raw_(2 * i + 1));
-
-        Matrix2d R1, R2, Rq_single;
-        R1 << Rr_(2 * i, 2 * i), Rr_(2 * i, 2 * i + 1),
-            Rr_(2 * i + 1, 2 * i), Rr_(2 * i + 1, 2 * i + 1);
-        R2 << Rq_(2 * i, 2 * i), Rq_(2 * i, 2 * i + 1),
-            Rq_(2 * i + 1, 2 * i), Rq_(2 * i + 1, 2 * i + 1);
-        Rq_single << Rq_raw_(2 * i, 2 * i), Rq_raw_(2 * i, 2 * i + 1),
-            Rq_raw_(2 * i + 1, 2 * i), Rq_raw_(2 * i + 1, 2 * i + 1);
-
         // 第一步：WLS静态融合
         Vector2d z_fuse;
         Matrix2d R_fuse;
-        if (!fuse2dStatic(z1, R1, z2, R2, z_fuse, R_fuse))
+        if (!fuse2dStatic(zr_[i], Rr_[i], zq_[i], Rq_[i], z_fuse, R_fuse))
         {
             LOG(ERROR) << "[WARNING] 第" << i << "个点WLS融合失败，使用第一组数据作为默认值" << std::endl;
-            z_fuse = z1;
-            R_fuse = R1;
+            z_fuse = zr_[i];
+            R_fuse = Rr_[i];
         }
 
         // 第二步：卡尔曼滤波更新（融合后与原始数据融合）
-        const MatrixXd K_single = Rq_single * (Rq_single + R_fuse).inverse();
-        const Vector2d z_single = zq_single + K_single * (z_fuse - zq_single);
-        const Matrix2d P_END = (Matrix2d::Identity() - K_single) * Rq_single;
+        const MatrixXd K_single = Rq_raw_[i] * (Rq_raw_[i] + R_fuse).inverse();
+        //std::cout << "K_single: " << K_single(0, 0) << "  " << K_single(1, 1) << K_single(0, 1) << "  " << K_single(1, 0) << std::endl;
+        const Vector2d z_single = zq_raw_[i] + K_single * (z_fuse - zq_raw_[i]);
+        const Matrix2d P_END = (Matrix2d::Identity() - K_single) * Rq_raw_[i] + K_single * R_fuse;
 
         // 调试输出（y值接近阈值时）
         if (std::abs(yr_(i) - Y_DEBUG_THRESHOLD) < Y_DEBUG_TOL)
         {
             LOG(INFO) << "\n[DEBUG] 第" << i << "个点（y≈" << Y_DEBUG_THRESHOLD << "）：" << std::endl;
             LOG(INFO) << "R_L:\n"
-                      << R2 << std::endl;
+                      << Rq_[i] << std::endl;
             LOG(INFO) << "R_V:\n"
-                      << R1 << std::endl;
+                      << Rr_[i] << std::endl;
             LOG(INFO) << "R_raw:\n"
-                      << Rq_single << std::endl;
+                      << Rq_raw_[i] << std::endl;
             LOG(INFO) << "R_fuse:\n"
                       << R_fuse << std::endl;
             LOG(INFO) << "z_fuse:\n"
@@ -289,20 +267,18 @@ bool FusionPCDTool::runFusion()
         }
 
         // 保存到全局融合结果
-        double t1 = z1.y() - zq_single.y();
-        double t2 = z_single.y() - zq_single.y();
-        if (abs(t1 - t2) > 0.1)
+        double t1 = zr_[i](1) - zq_raw_[i](1);
+        double t2 = z_single(1) - zq_raw_[i](1);
+        if (abs(t1 - t2) > 0.3)
         {
             LOG(INFO) << "reach here" << i;
-            z_fuse_all_(2 * i) = zq_single.x();
-            z_fuse_all_(2 * i + 1) = zq_single.y();
-            P_fuse_all_.block<2, 2>(2 * i, 2 * i) = Rq_single;
+            z_fuse_all_.push_back(zq_raw_[i]);
+            P_fuse_all_.push_back(Rq_raw_[i]);
         }
         else
         {
-            z_fuse_all_(2 * i) = z_single.x();
-            z_fuse_all_(2 * i + 1) = z_single.y();
-            P_fuse_all_.block<2, 2>(2 * i, 2 * i) = P_END;
+            z_fuse_all_.push_back(z_single);
+            P_fuse_all_.push_back(P_END);
         }
     }
 
@@ -323,12 +299,12 @@ bool FusionPCDTool::exportFusionResult()
     const int point_num = yr_.size();
     for (int i = 0; i < point_num; ++i)
     {
-        const Matrix2d P_END = P_fuse_all_.block<2, 2>(2 * i, 2 * i);
+        const Matrix2d P_END = P_fuse_all_[i];
         // 格式化输出（与原始格式保持一致）
         ofs << std::left << std::fixed << std::setprecision(OUTPUT_PRECISION)
-            << std::setw(15) << z_fuse_all_(2 * i)
+            << std::setw(15) << z_fuse_all_[i](0)
             << std::setw(15) << yr_(i)
-            << std::setw(15) << z_fuse_all_(2 * i + 1)
+            << std::setw(15) << z_fuse_all_[i](1)
             << std::setw(15) << P_END(0, 0)
             << std::setw(15) << 0.0
             << std::setw(15) << P_END(0, 1)
@@ -344,16 +320,9 @@ bool FusionPCDTool::exportFusionResult()
 }
 
 // Eigen向量转PCD文件
-bool FusionPCDTool::eigenVectorToPCD(const VectorXd &zr, const VectorXd &yr, const std::string &pcd_file_path)
+bool FusionPCDTool::eigenVectorToPCD(const std::vector<Vector2d> &zr, const VectorXd &yr, const std::string &pcd_file_path)
 {
-    // 输入合法性检查
-    if (zr.size() % 2 != 0)
-    {
-        LOG(ERROR) << "观测向量长度必须为偶数（当前：" << zr.size() << "）" << std::endl;
-        return false;
-    }
-
-    const int point_num = zr.size() / 2;
+    const int point_num = zr.size();
     if (yr.size() != point_num)
     {
         LOG(ERROR) << "y向量长度与点数量不匹配（点数量：" << point_num << "，y长度：" << yr.size() << "）" << std::endl;
@@ -369,12 +338,12 @@ bool FusionPCDTool::eigenVectorToPCD(const VectorXd &zr, const VectorXd &yr, con
 
     // 填充点云并查找z最小值点
     int min_z_index = 0;
-    double min_z_value = zr(1);
+    double min_z_value = zr[0](1);
     for (int i = 0; i < point_num; ++i)
     {
-        const double x = zr(2 * i);
+        const double x = zr[i](0);
         const double y = yr(i);
-        const double z = zr(2 * i + 1);
+        const double z = zr[i](1);
 
         cloud->points[i].x = x;
         cloud->points[i].y = y;

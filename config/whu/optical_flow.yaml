@@ -2,7 +2,7 @@
 
 # line number
 cam_calib: "cam0.yaml"
-img_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/image_2.png"
-last_img_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/image_1.png"
+img_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/adjusted_1.png"
+last_img_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1224_1.png"
 curve_points_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/curve_points.txt"
 result_flag_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/optical_result.txt"

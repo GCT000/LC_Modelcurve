@@ -17,6 +17,7 @@
 #include "catenary.h"
 #include "base_type.h"
 #include "imgPreProcess.h"
+#include "line_extractor.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -144,6 +145,10 @@ private:
 
     /// @brief  get filtered line
     void getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, std::vector<Eigen::Vector3d> &line_points);
+
+    /// @brief  get cy line
+    void getCylinderCloud(std::vector<Eigen::Vector3d> &points_, float cylinder_radius);  
+
 
 private:
     bool first_time;

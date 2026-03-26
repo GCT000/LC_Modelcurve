@@ -10,6 +10,8 @@ using namespace lc_core;
 
 void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen::Vector3d &end_point, std::vector<double> &cov_t, std::vector<double> &cov_f, std::vector<double> &para)
 {
+    is_visual = false;
+    first_time = false;
     ceres::Problem problem_xy;
     ceres::Solver::Options options_xy;
     options_xy.linear_solver_type = ceres::DENSE_QR;
@@ -73,6 +75,7 @@ void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen:
     problem_xz.AddResidualBlock(cost_functionxz, nullptr, &F1, &F2, &F3);
     ceres::Solver::Summary summary_xz;
     ceres::Solve(options_xz, &problem_xz, &summary_xz);
+
     // cal Qxz
     double residual_sumxz = 0;
     for (size_t i = 0; i < points.size(); i++)
@@ -123,6 +126,12 @@ void Catenary::fitTransmissionModel(std::vector<Eigen::Vector3d> &points, Eigen:
     para.push_back(F1);
     para.push_back(F2);
     para.push_back(F3);
+    para_.push_back(T1);
+    para_.push_back(T2);
+    para_.push_back(T3);
+    para_.push_back(F1);
+    para_.push_back(F2);
+    para_.push_back(F3);
 
     LOG(INFO) << "T1: " << T1 << " T2: " << T2 << "T3: " << T3;
     LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3;
@@ -202,123 +211,140 @@ void Catenary::optimizeTransmissionModel(const P2PMatchResult &points, const Opt
     ceres::Solver::Summary summary;
     ceres::Solve(options, &problem, &summary);
 
-    double residual = 0;
-    double index_residual = 0;
-    double sqrt_info = 0;
-
-    for (size_t i = 0; i < input.xySamples.size(); i++)
+    Eigen::Vector3d p = generateSinglePoint(input.end_point(1));
+    double deta_x = (p(0) - input.end_point(0)) / input.end_point(0);
+    if ((deta_x > 0.1 || deta_x < -0.02)&& !first_time)
     {
-        Eigen::Matrix<double, 3, 1> pLidar;
-        double x = T1 + T2 * input.xySamples[i] + T3 * input.xySamples[i] * input.xySamples[i];
-        pLidar << x, input.xySamples[i], F1 * x * x + F2 + F3 * x;
-        Eigen::Matrix<double, 3, 1> pCam = input.R.cast<double>() * pLidar + input.t.cast<double>();
-        Eigen::Matrix<double, 2, 1> pImg;
-        input.cam->spaceToPlane(pCam, pImg);
-        double dist = ceres::sqrt((pImg(0) - points[i].x) * (pImg(0) - points[i].x) + (pImg(1) - points[i].y) * (pImg(1) - points[i].y));
-        residual += pow(dist, 2);
+        is_visual = false;
+        T1 = para_[0];
+        T2 = para_[1];
+        T3 = para_[2];
+        F1 = para_[3];
+        F2 = para_[4];
+        F3 = para_[5];
     }
-    double sigma_sq = residual / (points.size() - 6);
-    ceres::Covariance::Options cov_options;
-    ceres::Covariance covariance(cov_options);
-
-    // 定义需要计算协方差的参数块（6个参数）
-    std::vector<const double *> param_blocks = {&T1, &T2, &T3, &F1, &F2, &F3};
-
-    // 计算协方差（核心：基于优化后的Problem）
-    CHECK(covariance.Compute(param_blocks, &problem))
-        << "6参数协方差计算失败！请检查linear_solver_type是否为DENSE_QR/DENSE_NORMAL_CHOLESKY";
-
-    Eigen::Matrix<double, 6, 6> Sigma_6d;
-    // 提取所有协方差块并缩放（乘以σ²得到真实协方差）
-    covariance.GetCovarianceBlock(&T1, &T1, &Sigma_6d(0, 0));
-    Sigma_6d(0, 0) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T1, &T2, &Sigma_6d(0, 1));
-    Sigma_6d(0, 1) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T1, &T3, &Sigma_6d(0, 2));
-    Sigma_6d(0, 2) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T1, &F1, &Sigma_6d(0, 3));
-    Sigma_6d(0, 3) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T1, &F2, &Sigma_6d(0, 4));
-    Sigma_6d(0, 4) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T1, &F3, &Sigma_6d(0, 5));
-    Sigma_6d(0, 5) *= sigma_sq;
-
-    covariance.GetCovarianceBlock(&T2, &T2, &Sigma_6d(1, 1));
-    Sigma_6d(1, 1) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T2, &T3, &Sigma_6d(1, 2));
-    Sigma_6d(1, 2) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T2, &F1, &Sigma_6d(1, 3));
-    Sigma_6d(1, 3) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T2, &F2, &Sigma_6d(1, 4));
-    Sigma_6d(1, 4) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T2, &F3, &Sigma_6d(1, 5));
-    Sigma_6d(1, 5) *= sigma_sq;
-
-    covariance.GetCovarianceBlock(&T3, &T3, &Sigma_6d(2, 2));
-    Sigma_6d(2, 2) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T3, &F1, &Sigma_6d(2, 3));
-    Sigma_6d(2, 3) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T3, &F2, &Sigma_6d(2, 4));
-    Sigma_6d(2, 4) *= sigma_sq;
-    covariance.GetCovarianceBlock(&T3, &F3, &Sigma_6d(2, 5));
-    Sigma_6d(2, 5) *= sigma_sq;
-
-    covariance.GetCovarianceBlock(&F1, &F1, &Sigma_6d(3, 3));
-    Sigma_6d(3, 3) *= sigma_sq;
-    covariance.GetCovarianceBlock(&F1, &F2, &Sigma_6d(3, 4));
-    Sigma_6d(3, 4) *= sigma_sq;
-    covariance.GetCovarianceBlock(&F1, &F3, &Sigma_6d(3, 5));
-    Sigma_6d(3, 5) *= sigma_sq;
-
-    covariance.GetCovarianceBlock(&F2, &F2, &Sigma_6d(4, 4));
-    Sigma_6d(4, 4) *= sigma_sq;
-    covariance.GetCovarianceBlock(&F2, &F3, &Sigma_6d(4, 5));
-    Sigma_6d(4, 5) *= sigma_sq;
-
-    covariance.GetCovarianceBlock(&F3, &F3, &Sigma_6d(5, 5));
-    Sigma_6d(5, 5) *= sigma_sq;
-
-    // 对称填充下三角（协方差矩阵是对称的）
-    for (int i = 1; i < 6; i++)
+    else
     {
-        for (int j = 0; j < i; j++)
+        is_visual = true;
+
+        double residual = 0;
+        double index_residual = 0;
+        double sqrt_info = 0;
+
+        for (size_t i = 0; i < input.xySamples.size(); i++)
         {
-            Sigma_6d(i, j) = Sigma_6d(j, i);
+            Eigen::Matrix<double, 3, 1> pLidar;
+            double x = T1 + T2 * input.xySamples[i] + T3 * input.xySamples[i] * input.xySamples[i];
+            pLidar << x, input.xySamples[i], F1 * x * x + F2 + F3 * x;
+            Eigen::Matrix<double, 3, 1> pCam = input.R.cast<double>() * pLidar + input.t.cast<double>();
+            Eigen::Matrix<double, 2, 1> pImg;
+            input.cam->spaceToPlane(pCam, pImg);
+            double dist = ceres::sqrt((pImg(0) - points[i].x) * (pImg(0) - points[i].x) + (pImg(1) - points[i].y) * (pImg(1) - points[i].y));
+            residual += pow(dist, 2);
         }
-    }
+        double sigma_sq = residual / (points.size() - 6);
+        ceres::Covariance::Options cov_options;
+        ceres::Covariance covariance(cov_options);
 
-    // ========== 第五步：输出协方差结果（可选） ==========
-    LOG(INFO) << "6参数协方差矩阵：";
-    std::vector<std::string> param_names = {"T1", "T2", "T3", "F1", "F2", "F3"};
-    for (int i = 0; i < 6; i++)
-    {
-        std::string row_str = "";
-        for (int j = 0; j < 6; j++)
+        // 定义需要计算协方差的参数块（6个参数）
+        std::vector<const double *> param_blocks = {&T1, &T2, &T3, &F1, &F2, &F3};
+
+        // 计算协方差（核心：基于优化后的Problem）
+        CHECK(covariance.Compute(param_blocks, &problem))
+            << "6参数协方差计算失败！请检查linear_solver_type是否为DENSE_QR/DENSE_NORMAL_CHOLESKY";
+
+        Eigen::Matrix<double, 6, 6> Sigma_6d;
+        // 提取所有协方差块并缩放（乘以σ²得到真实协方差）
+        covariance.GetCovarianceBlock(&T1, &T1, &Sigma_6d(0, 0));
+        Sigma_6d(0, 0) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T1, &T2, &Sigma_6d(0, 1));
+        Sigma_6d(0, 1) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T1, &T3, &Sigma_6d(0, 2));
+        Sigma_6d(0, 2) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T1, &F1, &Sigma_6d(0, 3));
+        Sigma_6d(0, 3) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T1, &F2, &Sigma_6d(0, 4));
+        Sigma_6d(0, 4) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T1, &F3, &Sigma_6d(0, 5));
+        Sigma_6d(0, 5) *= sigma_sq;
+
+        covariance.GetCovarianceBlock(&T2, &T2, &Sigma_6d(1, 1));
+        Sigma_6d(1, 1) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T2, &T3, &Sigma_6d(1, 2));
+        Sigma_6d(1, 2) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T2, &F1, &Sigma_6d(1, 3));
+        Sigma_6d(1, 3) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T2, &F2, &Sigma_6d(1, 4));
+        Sigma_6d(1, 4) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T2, &F3, &Sigma_6d(1, 5));
+        Sigma_6d(1, 5) *= sigma_sq;
+
+        covariance.GetCovarianceBlock(&T3, &T3, &Sigma_6d(2, 2));
+        Sigma_6d(2, 2) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T3, &F1, &Sigma_6d(2, 3));
+        Sigma_6d(2, 3) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T3, &F2, &Sigma_6d(2, 4));
+        Sigma_6d(2, 4) *= sigma_sq;
+        covariance.GetCovarianceBlock(&T3, &F3, &Sigma_6d(2, 5));
+        Sigma_6d(2, 5) *= sigma_sq;
+
+        covariance.GetCovarianceBlock(&F1, &F1, &Sigma_6d(3, 3));
+        Sigma_6d(3, 3) *= sigma_sq;
+        covariance.GetCovarianceBlock(&F1, &F2, &Sigma_6d(3, 4));
+        Sigma_6d(3, 4) *= sigma_sq;
+        covariance.GetCovarianceBlock(&F1, &F3, &Sigma_6d(3, 5));
+        Sigma_6d(3, 5) *= sigma_sq;
+
+        covariance.GetCovarianceBlock(&F2, &F2, &Sigma_6d(4, 4));
+        Sigma_6d(4, 4) *= sigma_sq;
+        covariance.GetCovarianceBlock(&F2, &F3, &Sigma_6d(4, 5));
+        Sigma_6d(4, 5) *= sigma_sq;
+
+        covariance.GetCovarianceBlock(&F3, &F3, &Sigma_6d(5, 5));
+        Sigma_6d(5, 5) *= sigma_sq;
+
+        // 对称填充下三角（协方差矩阵是对称的）
+        for (int i = 1; i < 6; i++)
         {
-            row_str += param_names[i] + "-" + param_names[j] + ": " + std::to_string(Sigma_6d(i, j)) + "\t";
+            for (int j = 0; j < i; j++)
+            {
+                Sigma_6d(i, j) = Sigma_6d(j, i);
+            }
         }
-        LOG(INFO) << row_str;
+
+        // ========== 第五步：输出协方差结果（可选） ==========
+        LOG(INFO) << "6参数协方差矩阵：";
+        std::vector<std::string> param_names = {"T1", "T2", "T3", "F1", "F2", "F3"};
+        for (int i = 0; i < 6; i++)
+        {
+            std::string row_str = "";
+            for (int j = 0; j < 6; j++)
+            {
+                row_str += param_names[i] + "-" + param_names[j] + ": " + std::to_string(Sigma_6d(i, j)) + "\t";
+            }
+            LOG(INFO) << row_str;
+        }
+
+        // ========== 扩展：提取单个参数的方差（用于快速查看） ==========
+        double var_T1 = Sigma_6d(0, 0); // T1的方差
+        double var_T2 = Sigma_6d(1, 1); // T2的方差
+        double var_T3 = Sigma_6d(2, 2); // T3的方差
+        double var_F1 = Sigma_6d(3, 3); // F1的方差
+        double var_F2 = Sigma_6d(4, 4); // F2的方差
+        double var_F3 = Sigma_6d(5, 5); // F3的方差
+        LOG(INFO) << "各参数方差：T1=" << var_T1 << ", T2=" << var_T2 << ", T3=" << var_T3
+                  << ", F1=" << var_F1 << ", F2=" << var_F2 << ", F3=" << var_F3;
+
+        LOG(INFO) << "After optimization: ";
+        LOG(INFO) << "T1: " << T1 << " T2: " << T2 << "T3: " << T3;
+        LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3;
+        std::vector<double> cov_t = {Sigma_6d(0, 0), Sigma_6d(0, 1), Sigma_6d(0, 2), Sigma_6d(1, 1), Sigma_6d(1, 2), Sigma_6d(2, 2)};
+        std::vector<double> cov_f = {Sigma_6d(3, 3), Sigma_6d(3, 4), Sigma_6d(3, 5), Sigma_6d(4, 4), Sigma_6d(4, 5), Sigma_6d(5, 5)};
+        std::vector<double> para = {T1, T2, T3, F1, F2, F3};
+        var_para.push_back(cov_t);
+        var_para.push_back(cov_f);
+        var_para.push_back(para);
     }
-
-    // ========== 扩展：提取单个参数的方差（用于快速查看） ==========
-    double var_T1 = Sigma_6d(0, 0); // T1的方差
-    double var_T2 = Sigma_6d(1, 1); // T2的方差
-    double var_T3 = Sigma_6d(2, 2); // T3的方差
-    double var_F1 = Sigma_6d(3, 3); // F1的方差
-    double var_F2 = Sigma_6d(4, 4); // F2的方差
-    double var_F3 = Sigma_6d(5, 5); // F3的方差
-    LOG(INFO) << "各参数方差：T1=" << var_T1 << ", T2=" << var_T2 << ", T3=" << var_T3
-              << ", F1=" << var_F1 << ", F2=" << var_F2 << ", F3=" << var_F3;
-
-    LOG(INFO) << "After optimization: ";
-    LOG(INFO) << "T1: " << T1 << " T2: " << T2 << "T3: " << T3;
-    LOG(INFO) << "F1: " << F1 << " F2: " << F2 << "F3: " << F3;
-    std::vector<double> cov_t = {Sigma_6d(0, 0), Sigma_6d(0, 1), Sigma_6d(0, 2), Sigma_6d(1, 1), Sigma_6d(1, 2), Sigma_6d(2, 2)};
-    std::vector<double> cov_f = {Sigma_6d(3, 3), Sigma_6d(3, 4), Sigma_6d(3, 5), Sigma_6d(4, 4), Sigma_6d(4, 5), Sigma_6d(5, 5)};
-    std::vector<double> para = {T1, T2, T3, F1, F2, F3};
-    var_para.push_back(cov_t);
-    var_para.push_back(cov_f);
-    var_para.push_back(para);
 }
 
 void Catenary::optimizeTransmissionModelDark(const Eigen::Vector3d &end_point)
@@ -360,7 +386,19 @@ std::vector<std::vector<double>> Catenary::getpara()
         LOG(ERROR) << "There is no enough visual para";
         exit(EXIT_FAILURE);
     }
-    else{
+    else
+    {
         return var_para;
     }
+}
+
+bool Catenary::get_is_visual()
+{
+    return is_visual;
+}
+
+bool Catenary::set_first_time()
+{
+    first_time = true;
+    return true;
 }

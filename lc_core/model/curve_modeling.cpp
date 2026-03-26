@@ -77,6 +77,10 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     {
         dark = yaml["dark"].as<int>();
     }
+    if(!std::filesystem::exists(std::filesystem::path(yaml["curve_point_file"].as<std::string>())))
+    {
+        dark = 0;
+    }
     if (yaml["end_point"])
     {
         bool is_zero = true;
@@ -175,8 +179,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     // load lidar-camera extrinsic
     loadLidar2CameraExtrinsic(yaml);
 
-
-
     // x sample
     if (yaml["xy_interval"])
     {
@@ -208,7 +210,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             cam_->undistortImg(img, last_img_);
         }
     }
-                        LOG(INFO) << "REACH HERE";
 
     if (yaml["curve_point_file"])
     {
@@ -247,7 +248,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             }
         }
     }
-
 
     if (yaml["selected_points"] && !std::filesystem::exists(std::filesystem::path(curve_point_file)))
     {
@@ -382,7 +382,7 @@ void CurveModeling::getRectangle(std::vector<Eigen::Vector3d> &points_)
         pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>);
         pcl::CropBox<pcl::PointXYZ> crop_box;
         crop_box.setInputCloud(raw_cloud);
-        Eigen::Vector4f min_pt(rectang_size[0], rectang_size[2], rectang_size[4], 1.0f);
+        Eigen::Vector4f min_pt(rectang_size[0]-10, rectang_size[2], rectang_size[4], 1.0f);
         Eigen::Vector4f max_pt(rectang_size[1], rectang_size[3], rectang_size[5], 1.0f);
         crop_box.setMin(min_pt);
         crop_box.setMax(max_pt);
@@ -398,6 +398,86 @@ void CurveModeling::getRectangle(std::vector<Eigen::Vector3d> &points_)
     }
 }
 
+float pointToLineSegmentDistance(const Eigen::Vector3f &point, 
+                                 const Eigen::Vector3f &line_start, 
+                                 const Eigen::Vector3f &line_end)
+{
+    Eigen::Vector3f v = line_end - line_start;
+    Eigen::Vector3f w = point - line_start;
+    
+    float c1 = w.dot(v);
+    if (c1 <= 0.0) return w.norm();  // 点在起点外侧，返回点到起点的距离
+    
+    float c2 = v.dot(v);
+    if (c2 <= c1) return (point - line_end).norm();  // 点在终点外侧，返回点到终点的距离
+    
+    float t = c1 / c2;
+    Eigen::Vector3f projection = line_start + t * v;  // 点在直线上的投影
+    return (point - projection).norm();  // 返回垂直距离
+}
+
+
+
+void CurveModeling::getCylinderCloud(std::vector<Eigen::Vector3d> &points_, 
+                                     float cylinder_radius)        
+{
+    float extend_distance = 5;
+    // std::string output_pcd_path = "/home/gct/LC-CurveModel/data/1-13guangzhou/temp/1.pcd";
+    if (!std::filesystem::exists(std::filesystem::path(raw_pcd_file)))
+    {
+        LOG(ERROR) << "Not the first solution and missing the original point cloud file";
+        exit(EXIT_FAILURE);
+    }
+
+    pcl::PointCloud<pcl::PointXYZ>::Ptr filtered_cloud(new pcl::PointCloud<pcl::PointXYZ>);
+
+    // 1. 读取原始中轴线起止点并延伸
+    Eigen::Vector3f line_start(rectang_size[0], rectang_size[3], rectang_size[5]); 
+    Eigen::Vector3f line_end(rectang_size[1], rectang_size[2], rectang_size[4]); 
+    Eigen::Vector3f line_direction = (line_end - line_start).normalized();
+    
+    // 中轴线前后延伸
+    line_end = line_end + line_direction * extend_distance;
+    line_start = line_start - line_direction * extend_distance;
+
+    // 2. 手动过滤：保留圆柱内的点（替代CropCylinder）
+    for (const auto &p : raw_cloud->points)
+    {
+        Eigen::Vector3f point(p.x, p.y, p.z);
+        // 计算点到中轴线线段的垂直距离
+        float distance = pointToLineSegmentDistance(point, line_start, line_end);
+        // 距离小于半径 → 保留该点
+        if (distance <= cylinder_radius)
+        {
+            filtered_cloud->points.push_back(p);
+        }
+    }
+    filtered_cloud->width = filtered_cloud->points.size();
+    filtered_cloud->height = 1;
+    filtered_cloud->is_dense = true;
+
+    LOG(INFO) << "Cylinder cloud size: " << filtered_cloud->size();
+
+    // // 3. 保存PCD文件
+    // if (!output_pcd_path.empty()) {
+    //     if (pcl::io::savePCDFileASCII(output_pcd_path, *filtered_cloud) == -1) {
+    //         LOG(ERROR) << "Failed to save filtered cylinder cloud to PCD file: " << output_pcd_path;
+    //     } else {
+    //         LOG(INFO) << "Filtered cylinder cloud saved to: " << output_pcd_path;
+    //     }
+    // }
+
+    // 转换为Eigen格式
+    points_.clear();
+    points_.reserve(filtered_cloud->points.size());
+    for (const auto &p : filtered_cloud->points)
+    {
+        points_.emplace_back(p.x, p.y, p.z);
+    }
+}
+
+
+
 void CurveModeling::getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, std::vector<Eigen::Vector3d> &line_points)
 {
     for (const Eigen::Vector3d &lp : lidar_points)
@@ -409,7 +489,7 @@ void CurveModeling::getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, 
             double x = p.x - p_img.x();
             double y = p.y - p_img.y();
             double dis = x * x + y * y;
-            if (dis < 80)
+            if (dis < 2500)
             {
                 is_true_point = true;
                 break;
@@ -435,40 +515,28 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
     }
     else
     {
-        getRectangle(lidar_points);
-        getFilteredLine(lidar_points, line_points);
-        std::sort(line_points.begin(), line_points.end(), [](const Eigen::Vector3d &a, const Eigen::Vector3d &b)
-                  { return a(0) < b(0); });
-
-        double min_x = std::numeric_limits<double>::max();
-        double max_x = std::numeric_limits<double>::lowest();
-        double min_y = std::numeric_limits<double>::max();
-        double max_y = std::numeric_limits<double>::lowest();
-        double min_z = std::numeric_limits<double>::max();
-        double max_z = std::numeric_limits<double>::lowest();
-        for (const auto &point : line_points)
-        {
-            min_x = std::min(min_x, point.x());
-            max_x = std::max(max_x, point.x());
-            min_y = std::min(min_y, point.y());
-            max_y = std::max(max_y, point.y());
-            min_z = std::min(min_z, point.z());
-            max_z = std::max(max_z, point.z());
-        }
-        LOG(INFO) << "X range: [" << min_x - 3 << ", " << max_x + 3 << "]";
-        LOG(INFO) << "Y range: [" << min_y - 3 << ", " << max_y + 3 << "]";
-        LOG(INFO) << "Z range: [" << min_z - 3 << ", " << max_z + 3 << "]";
+        //getRectangle(lidar_points);
+        getCylinderCloud(lidar_points,4);
+        //getFilteredLine(lidar_points, line_points);
+        LineExtractor line_extractor;
+        line_extractor.extractTwoLinesIsolated(lidar_points,
+                                              line_points,    
+                                              1,
+                                              3.0,   
+                                              0.05,   
+                                              0.08,   
+                                              5000,
+                                              res_path);
         if (line_points.size() < 10)
         {
             std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
-            ofs << "0  : get filter points fail";
+            ofs << "0";
             LOG(ERROR) << "0  : get filter points fail";
             ofs.close();
             sleep(5);
             exit(EXIT_FAILURE);
         }
     }
-
     LOG(INFO) << "Load " << line_points.size() << " lidar points.\n";
 
     lidar_points_ = std::move(line_points);
@@ -526,7 +594,6 @@ void CurveModeling::lidarPreprocessing()
     updateLidar2PixelPoints();
     int size = 0;
     std::unordered_map<int, std::array<double, 6>> Qxyz;
-    std::cout << "begin to create output QRfile"<< std::endl;
     std::ofstream ofs(res_path + "lidar_points_Q.txt", std::ios::trunc);
     if (!ofs.is_open())
     {
@@ -544,11 +611,12 @@ void CurveModeling::lidarPreprocessing()
         arr[4] = 0;
         arr[5] = cov_f[0] * pow(p.x(), 4) + cov_f[3] + pow(p.x(), 2) * cov_f[5] + 2 * pow(p.x(), 2) * cov_f[1] + 2 * pow(p.x(), 3) * cov_f[2] + 2 * pow(p.x(), 1) * cov_f[4] + arr[2];
         Qxyz[size++] = arr;
-        if ((int)((iy - xy_interval_start_)/ sample) % 2 == 0)
+        if ((int)((iy - xy_interval_start_) / sample) % 2 == 0)
         {
-            ofs << std::left<< std::fixed<< std::setprecision(10) << std::setw(20) << p.x()  << std::left << std::setw(20)<< p.y()  << std::left << std::setw(20)<< p.z()  << std::left << std::setw(20)<< arr[0]  << std::left << std::setw(20)<< arr[1]  << std::left << std::setw(20)<< arr[2]  << std::left << std::setw(20)<< arr[3]  << std::left << std::setw(20)<< arr[4]  << std::left << std::setw(20)<< arr[5] << std::endl;
+            ofs << std::left << std::fixed << std::setprecision(10) << std::setw(20) << p.x() << std::left << std::setw(20) << p.y() << std::left << std::setw(20) << p.z() << std::left << std::setw(20) << arr[0] << std::left << std::setw(20) << arr[1] << std::left << std::setw(20) << arr[2] << std::left << std::setw(20) << arr[3] << std::left << std::setw(20) << arr[4] << std::left << std::setw(20) << arr[5] << std::endl;
         }
     }
+    ofs.close();
 
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "original_output_lidar_points.txt");
@@ -691,7 +759,12 @@ void CurveModeling::optimization()
         optimizationDark();
         std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
         ofs << "1";
+        ofs.close();
         return;
+    }
+    if (first_time)
+    {
+        transmission_model_->set_first_time();
     }
 
     Matcher::MatchResult result = matcher_->match(ori_lidar2img_points_, img_points_);
@@ -714,54 +787,67 @@ void CurveModeling::optimization()
     // update match and re-optimization
     updateMatchAndReOptimization(input);
 
+    bool is_visual = transmission_model_->get_is_visual();
+
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "final_output_lidar_points.txt");
     outputPCD(res_path + "final_output_lidar_points.txt", res_path + "final_line_points.pcd");
-
-    std::vector<std::vector<double>> test = transmission_model_->getpara();
-    int size = 0;
-    std::unordered_map<int, std::array<double, 6>> Rxyz;
-    std::ofstream ofs(res_path + "visual_points_R.txt", std::ios::trunc);
-    for (double &iy : xySamples)
-    {
-        Eigen::Vector3d p = transmission_model_->generateSinglePoint(iy);
-        std::array<double, 6> arr;
-        arr[0] = test[0][0] + pow(p.y(), 2) * test[0][3] + pow(p.y(), 4) * test[0][5] + 2 * p.y() * test[0][1] + 2 * pow(p.y(), 2) * test[0][2] + 2 * pow(p.y(), 3) * test[0][4];
-        arr[1] = 0;
-        arr[2] = arr[0] * (2 * test[2][3] * p.x() + test[2][5]);
-        arr[3] = 0;
-        arr[4] = 0;
-        arr[5] = test[1][0] * pow(p.x(), 4) + test[1][3] + pow(p.x(), 2) * test[1][5] + 2 * pow(p.x(), 2) * test[1][1] + 2 * pow(p.x(), 3) * test[1][2] + 2 * pow(p.x(), 1) * test[1][4] + arr[2];
-        Rxyz[size++] = arr;
-        if ((int)((iy - xy_interval_start_)/ sample) % 2 == 0)
-        {
-            ofs << std::left << std::fixed<< std::setprecision(10)<< std::setw(20) << p.x()  << std::left << std::setw(20)<< p.y()  << std::left << std::setw(20)<< p.z()  << std::left << std::setw(20)<< arr[0]  << std::left << std::setw(20)<< arr[1]  << std::left << std::setw(20)<< arr[2]  << std::left << std::setw(20)<< arr[3]  << std::left << std::setw(20)<< arr[4]  << std::left << std::setw(20)<< arr[5] << std::endl;
-        }
-    }
-
     // save final 3D points to txt file
     savePcd2Txt(res_path + "final_line_points.pcd", res_path + "final_line_points.txt");
 
-    updateLidar2PixelPoints();
-    result = matcher_->match(ori_lidar2img_points_, img_points_);
-    std::tie(avg_err, max_err) = calculateReprojectError(result, ori_lidar2img_points_);
-    LOG(INFO) << "Final match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
-    if (!dark)
+    if (is_visual || first_time)
     {
-        std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
-        if (is_track == false && avg_err > 50)
+
+        std::vector<std::vector<double>> test = transmission_model_->getpara();
+        int size = 0;
+        std::unordered_map<int, std::array<double, 6>> Rxyz;
+        std::ofstream ofs(res_path + "visual_points_R.txt", std::ios::trunc);
+        for (double &iy : xySamples)
         {
-            ofs << "0";
+            Eigen::Vector3d p = transmission_model_->generateSinglePoint(iy);
+            std::array<double, 6> arr;
+            arr[0] = test[0][0] + pow(p.y(), 2) * test[0][3] + pow(p.y(), 4) * test[0][5] + 2 * p.y() * test[0][1] + 2 * pow(p.y(), 2) * test[0][2] + 2 * pow(p.y(), 3) * test[0][4];
+            arr[1] = 0;
+            arr[2] = arr[0] * (2 * test[2][3] * p.x() + test[2][5]);
+            arr[3] = 0;
+            arr[4] = 0;
+            arr[5] = test[1][0] * pow(p.x(), 4) + test[1][3] + pow(p.x(), 2) * test[1][5] + 2 * pow(p.x(), 2) * test[1][1] + 2 * pow(p.x(), 3) * test[1][2] + 2 * pow(p.x(), 1) * test[1][4] + arr[2];
+            Rxyz[size++] = arr;
+            if ((int)((iy - xy_interval_start_) / sample) % 2 == 0)
+            {
+                ofs << std::left << std::fixed << std::setprecision(10) << std::setw(20) << p.x() << std::left << std::setw(20) << p.y() << std::left << std::setw(20) << p.z() << std::left << std::setw(20) << arr[0] << std::left << std::setw(20) << arr[1] << std::left << std::setw(20) << arr[2] << std::left << std::setw(20) << arr[3] << std::left << std::setw(20) << arr[4] << std::left << std::setw(20) << arr[5] << std::endl;
+            }
         }
-        else if (is_track == false && avg_err <= 50)
+        updateLidar2PixelPoints();
+        result = matcher_->match(ori_lidar2img_points_, img_points_);
+        std::tie(avg_err, max_err) = calculateReprojectError(result, ori_lidar2img_points_);
+        LOG(INFO) << "Final match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
+
+        if (!dark)
         {
-            ofs << "2";
-        }
-        else
-        {
-            ofs << "3";
+            std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
+            if (is_track == false && avg_err > 50)
+            {
+                ofs << "0";
+            }
+            else if ((is_track == false && avg_err <= 50))
+            {
+                ofs << "2";
+            }
+            else
+            {
+                ofs << "3";
+            }
+            ofs.close();
         }
     }
+    else
+    {
+        std::ofstream ofs(res_path + "result.txt", std::ios::trunc);
+        ofs << "1";
+        ofs.close();
+    }
+
 #ifdef MY_DEBUG
     drawMatchResultOnImage(img_, temp_path + "match.txt", temp_path + "final_match_visualization.jpg");
 #endif

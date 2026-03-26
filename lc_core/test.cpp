@@ -25,8 +25,6 @@ extern "C"
 #include "rtklib.h"
 }
 
-// DEFINE_string(input_pcd, "/home/zyp/HD2/DATA/Transmisson/0912/test5/filter.pcd", "输入的点云");
-// DEFINE_string(input_pcd, "/ssd/DATA/Transmisson/whu/0103/extracted03/filtered.pcd", "输入的点云");
 DEFINE_string(yaml, "/home/gct/LC-CurveModel/config/whu/model1.yaml", "yaml文件");
 DEFINE_string(dir, "/home/gct/LC-CurveModel/data/temp/log", "日志文件夹");
 DEFINE_bool(visualize, true, "是否可视化");
@@ -83,8 +81,6 @@ int main(int argc, char **argv)
     }
 
     google::InitGoogleLogging(argv[0]);
-    // testing::InitGoogleTest(&argc, argv);
-    // RUN_ALL_TESTS();
     FLAGS_colorlogtostderr = true;
     FLAGS_minloglevel = google::INFO;
     FLAGS_alsologtostderr = true;
@@ -95,12 +91,11 @@ int main(int argc, char **argv)
     google::SetLogFilenameExtension(".log");
     google::FlushLogFiles(google::INFO);
 
-    std::vector<double> rover;
-    std::vector<double> angle;
-
     lc_core::CurveModeling curve_modeling(FLAGS_yaml);
 
     // get end_point if no input
+    std::vector<double> rover;
+    std::vector<double> angle;
     if (curve_modeling.if_no_end_point())
     {
         LOG(INFO) << "Cannot get end point. Begin to estimate it";
@@ -125,7 +120,6 @@ int main(int argc, char **argv)
     //calculate distances
     
     Cal_dist_paragram cal_dist_paragram(curve_modeling.get_res_path()+ "final_line_points.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second,curve_modeling.get_cal_distance_para(), curve_modeling.ex_line_tower_X());
-    //Cal_dist_paragram cal_dist_paragram("/home/gct/LC-CurveModel/lc_tools/filtered_2.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second,curve_modeling.get_cal_distance_para(), curve_modeling.ex_line_tower_X());
     Cal_distance cal_distance(cal_dist_paragram);
     cal_distance.calculate_distance();
 

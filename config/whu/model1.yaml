@@ -3,7 +3,7 @@
 # line number
 line_num: 1
 # environment
-dark: 0
+dark: 1
 # camera yaml
 cam_calib: "cam0.yaml"
 
@@ -14,39 +14,39 @@ end_point: [351.223999, -0.1406000, -19.796001]
 source_file: "/media/gct/T9/canglong/place3/place3_calib_out.pcd"
 target_file: "/media/gct/T9/canglong/place3/line.pcd"
 
-raw_pcd_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/extracted_points.pcd"
+raw_pcd_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/raw.pcd"
 matched_point_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/matched_points.pcd"
 tunnel_cloud_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/filtered_cloud.pcd"
 point_txt_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/matched_points.txt"
 
 ndt_paragram: [0.7, 0.35, 0.55, 200]   #  resolution, step_size, outlier_ratio, max_iterations;
 icp_paragram: [200, 0.2, 1e-8, 1e-8]  #  max_iterations, max_correspondence_distance, transformation_epsilon, fitness_epsilon;
-cal_distance_paragram: [0.3,10,5,0.2,0.15]  # excu_line_threshold, tunnel_radius, match_distance_threshold, excu_raw_radius_threshold, visual_region_radius
-rectang_size: [91.56, 126.958, 5.577, 6.468, 3.208,11.021]
+cal_distance_paragram: [0.3,50,30,0.2,0.15]  # excu_line_threshold, tunnel_radius, match_distance_threshold, excu_raw_radius_threshold, visual_region_radius
+rectang_size: [94.10, 116.958, 5.847, 6.428, 6.39,11.43]
 
 xy_interval:
   start: -0.14
-  end: 6.468
+  end: 8.428
 
 # curve point file
 curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
 
 # last image_path
-last_image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1124.png"
+last_image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1314.png"
 
 # image path
-image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/image_1.png"
+image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1350.png"
 
 # lidar points path
-lidar_points_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1.pcd"
+lidar_points_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/down.pcd"
 
 # res path
-res_path: "/home/gct/LC-CurveModel/data/temp"
+res_path: "/home/gct/LC-CurveModel/data/"
 # res_path: "/home/zyp/Lidar/LC-CurveModel/res/whu/"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/gct/LC-CurveModel/data/1-13guangzhou/image_points_1.txt"
+selected_points: "/home/gct/LC-CurveModel/data/1-13guangzhou/points.txt"
 
 # ex optimization
 ex_optimization: 0
@@ -99,7 +99,7 @@ T_cam_lidar:
   #        -0.00401909,  -0.00180512,   -1.0001, 0.0922477,
   #         0.999912, -0.0197042,  -0.00409888, -0.127265,
   #        0.0, 0.0, 0.0, 1.0]                           
-  data: [-0.0177814, -0.999835, 0.0038292, -0.0025305,
+  data: [-0.0167814, -0.999835, 0.0038292, -0.0025305,
         -0.0125737, 0.013906, -1.00001, 0.0922477,
          0.999929, -0.0100499, -0.1180603, -0.127265,         
          0.0, 0.0, 0.0, 1.0]                                                                                                        
