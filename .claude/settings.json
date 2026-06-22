@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make lc_daemon -j4)",
+      "Bash(pkill -f \"bin/lc_daemon\")",
+      "Bash(ldd /home/gct/LC_Modelcurve/bin/curve)",
+      "Bash(/home/gct/LC_Modelcurve/bin/curve -yaml=/home/gct/LC_Modelcurve/config/whu/model1.yaml -dir=/tmp/test_curve_log -visualize=false)",
+      "Bash(make curve *)",
+      "Bash(/home/gct/LC_Modelcurve/bin/curve --help)",
+      "Bash(xargs sed -i 's|/home/gct/LC-CurveModel|/home/gct/LC_Modelcurve|g')",
+      "Bash(xargs sed -i 's|/home/zyp/Lidar/LC-CurveModel|/home/gct/LC_Modelcurve|g')",
+      "Bash(git checkout *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(ssh -T git@github.com)"
+    ]
+  }
+}

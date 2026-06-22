@@ -1,0 +1,19 @@
+Log file created at: 2026/06/15 17:30:50
+Running on machine: gct-NUC12WSKi5
+Running duration (h:mm:ss): 0:00:00
+Log line format: [IWEF]yyyymmdd hh:mm:ss.uuuuuu threadid file:line] msg
+I20260615 17:30:50.843129 17680 lc_daemon.cpp:149] LC-CurveModel orchestrator started
+I20260615 17:30:50.843331 17680 lc_daemon.cpp:150] Monitoring: /home/gct/LC_Modelcurve/data  (poll 1s)
+I20260615 17:30:50.843451 17680 lc_daemon.cpp:160] First frame selected: 26-06-15-16-59-15 (older folders ignored)
+I20260615 17:30:50.844573 17680 yaml_patcher.h:91] [patch] FIRST frame -> /home/gct/LC_Modelcurve/data/26-06-15-16-59-15  end_point=[351.224,-0.1406,-19.796]
+I20260615 17:30:51.851599 17680 lc_daemon.cpp:114] curve completed successfully
+I20260615 17:30:51.851774 17680 lc_daemon.cpp:194] New frame detected: 26-06-15-17-10-52
+I20260615 17:30:51.852447 17680 yaml_patcher.h:115] [patch] SUBSEQUENT frame -> /home/gct/LC_Modelcurve/data/26-06-15-17-10-52  last_image=/home/gct/LC_Modelcurve/data/26-06-15-16-59-15/image.png
+I20260615 17:30:55.660593 17680 lc_daemon.cpp:114] curve completed successfully
+I20260615 17:30:55.660643 17680 lc_daemon.cpp:194] New frame detected: 26-06-15-17-15-10
+I20260615 17:30:55.661351 17680 yaml_patcher.h:115] [patch] SUBSEQUENT frame -> /home/gct/LC_Modelcurve/data/26-06-15-17-15-10  last_image=/home/gct/LC_Modelcurve/data/26-06-15-17-10-52/image.png
+I20260615 17:30:59.440842 17680 lc_daemon.cpp:114] curve completed successfully
+I20260615 17:31:17.447113 17680 lc_daemon.cpp:194] New frame detected: 26-06-15-17-18-10
+I20260615 17:31:17.447865 17680 yaml_patcher.h:115] [patch] SUBSEQUENT frame -> /home/gct/LC_Modelcurve/data/26-06-15-17-18-10  last_image=/home/gct/LC_Modelcurve/data/26-06-15-17-15-10/image.png
+I20260615 17:31:21.220935 17680 lc_daemon.cpp:114] curve completed successfully
+I20260615 17:35:09.283325 17680 lc_daemon.cpp:194] New frame detected: 26-06-15-17-22-10
