@@ -1,105 +1,28 @@
-%YAML: 1.0
-
-# line number
-line_num: 1
-# environment
 dark: 1
-# camera yaml
-cam_calib: "cam0.yaml"
-
-#end_point: [219.938004, 8.151000, -16.052999]
-end_point: [351.223999, -0.1406000, -19.796001] 
-#end_point_wgs84: [-2273648.000000, 5012386.000000, 3212195.500000]
-
-source_file: "/media/gct/T9/canglong/place3/place3_calib_out.pcd"
-target_file: "/media/gct/T9/canglong/place3/line.pcd"
-
-raw_pcd_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/raw.pcd"
-matched_point_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/matched_points.pcd"
-tunnel_cloud_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/filtered_cloud.pcd"
-point_txt_file: "/home/gct/LC-CurveModel/data/1-13guangzhou/matched_points.txt"
-
-ndt_paragram: [0.7, 0.35, 0.55, 200]   #  resolution, step_size, outlier_ratio, max_iterations;
-icp_paragram: [200, 0.2, 1e-8, 1e-8]  #  max_iterations, max_correspondence_distance, transformation_epsilon, fitness_epsilon;
-cal_distance_paragram: [0.3,50,30,0.2,0.15]  # excu_line_threshold, tunnel_radius, match_distance_threshold, excu_raw_radius_threshold, visual_region_radius
-rectang_size: [94.10, 116.958, 5.847, 6.428, 6.39,11.43]
-
+cam_calib: cam0.yaml
+end_point: [351.22399899999999, -0.1406, -19.795999999999999]
+raw_pcd_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/extracted.pcd
+matched_point_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/matched_points.pcd
+tunnel_cloud_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/filtered_cloud.pcd
+point_txt_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/matched_points.txt
+cal_distance_paragram: [0.3, 50, 30, 0.2, 0.15]
+rectang_size: [91.854331970214844, 138.71600341796875, 5.1810002326965332, 6.3850002288818359, 1.8940000534057617, 11.680999755859375]
 xy_interval:
-  start: -0.14
-  end: 8.428
-
-# curve point file
-curve_point_file: "/home/gct/LC-CurveModel/data/temp/curve_points.txt"
-
-# last image_path
-last_image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1314.png"
-
-# image path
-image_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/1350.png"
-
-# lidar points path
-lidar_points_path: "/home/gct/LC-CurveModel/data/1-13guangzhou/down.pcd"
-
-# res path
-res_path: "/home/gct/LC-CurveModel/data/"
-# res_path: "/home/zyp/Lidar/LC-CurveModel/res/whu/"
-
-# points selected
-# Note: please choose points from far away to near
-selected_points: "/home/gct/LC-CurveModel/data/1-13guangzhou/points.txt"
-
-# ex optimization
+  start: -0.1406
+  end: 6.3850002288818359
+curve_point_file: /home/gct/LC_Modelcurve/data/temp/curve_points.txt
+last_image_path: /home/gct/LC_Modelcurve/data/26-06-15-17-18-10/image.png
+image_path: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/image.png
+lidar_points_path: /home/gct/LC_Modelcurve/data/26-06-15-16-59-15/1.pcd
+res_path: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/
+selected_points: /home/gct/LC_Modelcurve/data/26-06-15-16-59-15/image_points_1.txt
 ex_optimization: 0
-ref_lidar_points: "/home/gct/LC-CurveModel/data/lidar_ref_0103.txt"
-ref_image_points: "/home/gct/LC-CurveModel/data/image_ref_0103.txt"
-
-# matcher config(1: p2p  2: p2l)
-matcher_type: 1
+ref_lidar_points: /home/gct/LC_Modelcurve/data/lidar_ref_0103.txt
+ref_image_points: /home/gct/LC_Modelcurve/data/image_ref_0103.txt
 b_spline_num: 1000
 sample: 0.01
-
-# transmission model(0: straightline  1: catenary)
-transmission_model: 1
-y_optimize: 1           # 0: no optimize, 1: optimize
-
-# lidar-camera extrinsic
 T_cam_lidar:
   rows: 4
   cols: 4
   dt: d
-  # ex for 0103
-  # data: [-0.00656762,   -0.999291,   -0.037034, -0.0425305,
-  #        0.0055339,   0.0369993,   -0.999299, 0.0922477,
-  #         0.999962, -0.00676934,  0.00528832, -0.117265,
-  #        0.0, 0.0, 0.0, 1.0]
-  # 0109
-  # data: [-0.00615688,   -0.999978,  0.00191724, -0.0425305,
-  #         0.0079831,   -0.001965,   -0.999965, 0.0922477,
-  #        0.999948, -0.00614274,  0.00799642, -0.117265,
-  #        0.0, 0.0, 0.0, 1.0] 
-  # 0415
-  # data: [-0.0167814,   -0.999916,   -0.0110512,-0.0025305,
-  #        -0.0114918,  0.0111279,   -0.999986, 0.0922477,
-  #         0.999911, -0.0165367,  -0.0117924, -0.127265,
-  #        0.0, 0.0, 0.0, 1.0]                           
-  # data: [-0.0129485,   -1.00003,   0.000851149, -0.0425305,
-  #        -0.00548969,  -0.000896547,   -1.0001, 0.0922477,
-  #         1.00002, -0.0128372,  -0.005595, -0.117265,
-  #        0.0, 0.0, 0.0, 1.0]            
-  #0725
-  # data: [-0.0344072, -0.999519, -0.00411855, -0.0425305,
-  #        -0.0100747,  0.00435061, -1.00006, 0.0922477,
-  #        0.999477, -0.0342479, -0.0103376, -0.117265,
-  #        0.0, 0.0, 0.0, 1.0]      
-  # data: [-0.0213785,   -0.999868,   -0.00662369, -0.0025305,
-  #        0.000844071,  0.00649145,   -1.00009, 0.0922477,
-  #         0.999889, -0.0212678,  0.000587604, -0.127265,
-  #        0.0, 0.0, 0.0, 1.0]                   #九月苍龙到
-  # data: [-0.0198112,   -0.999918,   0.00177007, -0.0025305,
-  #        -0.00401909,  -0.00180512,   -1.0001, 0.0922477,
-  #         0.999912, -0.0197042,  -0.00409888, -0.127265,
-  #        0.0, 0.0, 0.0, 1.0]                           
-  data: [-0.0167814, -0.999835, 0.0038292, -0.0025305,
-        -0.0125737, 0.013906, -1.00001, 0.0922477,
-         0.999929, -0.0100499, -0.1180603, -0.127265,         
-         0.0, 0.0, 0.0, 1.0]                                                                                                        
+  data: [-0.0167814, -0.999835, 0.0038292, -0.0025305, -0.0125737, 0.013906, -1.00001, 0.0922477, 0.999929, -0.0100499, -0.1180603, -0.127265, 0.0, 0.0, 0.0, 1.0]

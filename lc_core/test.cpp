@@ -1,8 +1,8 @@
 /**
  * @file   test.cpp
  * @brief  Test.
- * @author Yipeng Zhao
- * @date   2024-07
+ * @author Chantian Gao
+ * @date   2026-06
  */
 
 #include <glog/logging.h>
@@ -13,53 +13,15 @@
 #include <errno.h>
 
 #include "curve_modeling.h"
-#include "cloud_registration.h"
-#include "rough_registration.h"
 #include "cal_distance.h"
 #include "loadPCD.h"
 #include "bSpline.h"
 
-extern "C"
-{
-#include "monitor.h"
-#include "rtklib.h"
-}
 
-DEFINE_string(yaml, "/home/gct/LC-CurveModel/config/whu/model1.yaml", "yaml文件");
-DEFINE_string(dir, "/home/gct/LC-CurveModel/data/temp/log", "日志文件夹");
+DEFINE_string(yaml, "/home/gct/LC_Modelcurve/config/whu/model1.yaml", "yaml文件");
+DEFINE_string(dir, "/home/gct/LC_Modelcurve/data/temp/log", "日志文件夹");
 DEFINE_bool(visualize, true, "是否可视化");
 
-void test_gnss(std::vector<double> &rover, std::vector<double> &angle)
-{
-    mInfo moniInfo1;
-    gtime_t ts, te;
-    double es[6] = {2025, 7, 10, 9, 18, 37}, ee[6] = {2025, 7, 10, 9, 24, 37};
-    ts = epoch2time(es);
-    te = epoch2time(ee);
-    gtime_t tn = te;
-    char tsstr[40], testr[40];
-    time2str(ts, tsstr, 0);
-    time2str(tn, testr, 0);
-    sprintf(moniInfo1.configStr, "3@2@%s@%s@@0@rover@base@/media/gct/T9/canglong/place3gnss/@.obs@/media/gct/T9/canglong/BRDM1910.rnx@45@/home/gct/LC-CurveModel/data/test.pos@0@0@0.5@@@", tsstr, testr);
-
-    startMonitor(&moniInfo1);
-
-    printf("solBuf: %s\n", moniInfo1.solBuf);
-    rover.push_back(moniInfo1.blh[0]);
-    rover.push_back(moniInfo1.blh[1]);
-    rover.push_back(moniInfo1.blh[2]);
-
-    double yaw = std::atan2(moniInfo1.enu[0], moniInfo1.enu[1]);
-    if (yaw < 0)
-    {
-        yaw += 2 * M_PI;
-    }
-    angle.push_back(yaw);
-    std::cout.precision(15);
-    LOG(INFO) << "blh:   " << std::setprecision(10) << moniInfo1.blh[0] << "    " << moniInfo1.blh[1] << "        " << moniInfo1.blh[2] << std::endl;
-    LOG(INFO) << "enu:   " << std::setprecision(10) << moniInfo1.enu[0] << "    " << moniInfo1.enu[1] << "        " << moniInfo1.enu[2] << std::endl;
-    LOG(INFO) << "yaw:   " << std::setprecision(10) << yaw << std::endl;
-}
 
 int main(int argc, char **argv)
 {
@@ -93,22 +55,6 @@ int main(int argc, char **argv)
 
     lc_core::CurveModeling curve_modeling(FLAGS_yaml);
 
-    // get end_point if no input
-    std::vector<double> rover;
-    std::vector<double> angle;
-    if (curve_modeling.if_no_end_point())
-    {
-        LOG(INFO) << "Cannot get end point. Begin to estimate it";
-        test_gnss(rover, angle);
-        LidarEcefTransform lidarEcefTransform(rover[0], rover[1], rover[2], 0, -0.23, 2.5 * M_PI - angle[0]);
-        Eigen::Matrix4f T_ecef_l = lidarEcefTransform.get_T_ecef_l();
-
-        Data_paragram data_para(curve_modeling.get_ndt_icp_para().first, curve_modeling.get_ndt_icp_para().second);
-        Cloud_registration cloud_registration(data_para, T_ecef_l);
-        cloud_registration.cal_Tlw(curve_modeling.get_files_point().first, curve_modeling.get_files_point().second);
-        curve_modeling.set_end_point(cloud_registration.get_end_point());
-    }
-
     //process lidar points
     curve_modeling.lidarPreprocessing();
     curve_modeling.optimization();
@@ -118,7 +64,6 @@ int main(int argc, char **argv)
     }
 
     //calculate distances
-    
     Cal_dist_paragram cal_dist_paragram(curve_modeling.get_res_path()+ "final_line_points.pcd",curve_modeling.get_cal_distance_files().first,curve_modeling.get_cal_distance_files().second,curve_modeling.get_cal_distance_para(), curve_modeling.ex_line_tower_X());
     Cal_distance cal_distance(cal_dist_paragram);
     cal_distance.calculate_distance();

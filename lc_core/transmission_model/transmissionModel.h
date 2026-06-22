@@ -12,9 +12,10 @@
 #include <random>
 #include <Eigen/Dense>
 #include "glog/logging.h"
-#include "matcher.h"
 #include "base_type.h"
 
+
+typedef std::vector<cv::Point2d> P2PMatchResult;
 namespace lc_core
 {
 
@@ -43,13 +44,7 @@ namespace lc_core
             return Eigen::Vector3d(0, 0, 0);
         }
 
-        /// @brief  Optimizate transmission model
-        virtual void optimizeTransmissionModel(const P2LMatchResult &lines, const OptimizationInput &input, int y_optimize = 0)
-        {
-            LOG(INFO) << "Choose one transmission model";
-        }
-
-        virtual void optimizeTransmissionModel(const P2PMatchResult &points, const OptimizationInput &input, int y_optimize = 0, int time = 1)
+        virtual void optimizeTransmissionModel(const P2PMatchResult &points, const OptimizationInput &input)
         {
             LOG(INFO) << "Choose one transmission model";
         }

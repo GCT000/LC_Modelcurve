@@ -13,7 +13,6 @@
 #include "loadPCD.h"
 #include "ex_optimization.h"
 #include "matcher.h"
-#include "straight_line.h"
 #include "catenary.h"
 #include "base_type.h"
 #include "imgPreProcess.h"
@@ -37,6 +36,8 @@
 #include <thread>
 #include <utility>
 #include <chrono>
+
+typedef std::vector<cv::Point2d> P2PMatchResult;
 
 namespace lc_core
 {
@@ -66,14 +67,9 @@ public:
     /// @brief  optimize ex
     void optimizationEx();
 
-    /// @brief  is exist end_point
-    bool if_no_end_point();
 
     /// @brief  set end point
     void set_end_point(const Eigen::Vector4f& point);
-
-    /// @brief  get pcd_files and end_point_wgs84
-    std::pair<std::vector<std::string>, Eigen::Vector4f> get_files_point();
     
     /// @brief  get res path 
     std::string get_res_path(){return res_path;}
@@ -81,11 +77,6 @@ public:
     /// @brief  get cal_distance files
     std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, std::vector<std::string>> get_cal_distance_files();
 
-    /// @brief  get ndt and icp paragram
-    std::pair<std::vector<float>, std::vector<float>> get_ndt_icp_para()
-    {
-        return std::make_pair(ndt,icp);
-    }
     /// @brief get cal_distance paragram
     std::vector<float> get_cal_distance_para()
     {
@@ -96,12 +87,7 @@ public:
 
     std::pair<double, double> ex_line_tower_X()
     {
-        if(end_point[0] != 0){
-            return std::make_pair(rectang_size[1], end_point[0]);
-        }
-        else{
-            return std::make_pair(rectang_size[1], end_point_wgs84[0]);
-        }
+        return std::make_pair(rectang_size[1], end_point[0]);
     }
     
     bool is_track;
@@ -143,9 +129,6 @@ private:
     /// @brief  get rectangle
     void getRectangle(std::vector<Eigen::Vector3d> &points_);
 
-    /// @brief  get filtered line
-    void getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, std::vector<Eigen::Vector3d> &line_points);
-
     /// @brief  get cy line
     void getCylinderCloud(std::vector<Eigen::Vector3d> &points_, float cylinder_radius);  
 
@@ -159,7 +142,6 @@ private:
 
     std::vector<Eigen::Vector3d> lidar_points_;
     std::vector<std::string> cal_dis_output_files;
-    std::vector<float> ndt, icp;
     std::vector<double> rectang_size;
     std::vector<double> cov_t, cov_f, para;
     std::vector<float> cal_distance_para;
@@ -172,9 +154,7 @@ private:
     Eigen::Matrix3d R_c_l_;
     Eigen::Vector3d t_c_l_; 
     Eigen::Vector3d end_point;
-    Eigen::Vector4f end_point_wgs84;
-    
-    std::vector<std::string> pcd_files;
+
     std::vector<cv::Point2d> img_points_;
     std::vector<cv::Point2d> ori_lidar2img_points_;
 

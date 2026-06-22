@@ -101,7 +101,7 @@ void ImgPreProcess::visualizeTracking(cv::Mat &cur_img)
         cv::arrowedLine(vis_img, pre_img_points_[i], cur_img_points_[i],
                         cv::Scalar(0, 255, 0), 1, cv::LINE_AA, 0, 0.2);
     }
-    std::string name = "/home/gct/LC-CurveModel/data/tempp/track_result.png";
+    std::string name = "/home/gct/LC_Modelcurve/data/tempp/track_result.png";
     cv::imwrite(name, vis_img);
 }
 
@@ -114,7 +114,7 @@ void ImgPreProcess::visualizeReInterpolated(cv::Mat &cur_img)
     }
     LOG(INFO) << "Re-interpolated points size: " << cur_img_points_.size();
     pre_img_points_ = cur_img_points_;
-    std::string name = "/home/gct/LC-CurveModel/data/temp/re_interpolated_result.png";
+    std::string name = "/home/gct/LC_Modelcurve/data/temp/re_interpolated_result.png";
     cv::imwrite(name, vis_img);
 }
 

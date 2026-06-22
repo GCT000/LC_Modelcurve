@@ -13,7 +13,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <glog/logging.h>
 
-DEFINE_string(input_image, "/home/zyp/Lidar/LC-CurveModel/simulation/data/image.png", "输入图像");
+DEFINE_string(input_image, "/home/gct/LC_Modelcurve/simulation/data/image.png", "输入图像");
 DEFINE_bool(visualize, false, "是否可视化");
 DEFINE_bool(debug, false, "是否输出调试信息");
 DEFINE_bool(resize, false, "是否调整图像大小");
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
     {
         for (int i = 0; i < points.size(); i++)
         {
-            std::string file_name = "/home/zyp/Lidar/LC-CurveModel/simulation/data/curveline" + std::to_string(i + 1) + ".txt";
+            std::string file_name = "/home/gct/LC_Modelcurve/simulation/data/curveline" + std::to_string(i + 1) + ".txt";
             lc_core::outputPoints(file_name, points[i]);
         }
 

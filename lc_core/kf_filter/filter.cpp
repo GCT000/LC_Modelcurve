@@ -4,7 +4,7 @@
 
 
 
-DEFINE_string(yaml, "/home/gct/LC-CurveModel/config/whu/filter.yaml", "yaml文件");
+DEFINE_string(yaml, "/home/gct/LC_Modelcurve/config/whu/filter.yaml", "yaml文件");
 // 构造函数（默认）
 FusionPCDTool::FusionPCDTool() {}
 
@@ -67,7 +67,7 @@ void FusionPCDTool::readSingleFile(std::ifstream &ifs, std::vector<Vector2d> &z,
         throw std::runtime_error("文件流未打开");
     }
 
-    std::ofstream ofs("/home/gct/LC-CurveModel/data/filter_test/tes.txt", std::ios::trunc);
+    std::ofstream ofs("/home/gct/LC_Modelcurve/data/filter_test/tes.txt", std::ios::trunc);
 
     std::string line;
     int line_num = 0;

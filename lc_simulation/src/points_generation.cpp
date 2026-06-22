@@ -18,9 +18,9 @@
 #include <yaml-cpp/yaml.h>
 #include <boost/random.hpp>
 
-DEFINE_string(yaml_file, "/home/zyp/Lidar/LC-CurveModel/simulation/config/points.yaml", "配置文件的路径");
-DEFINE_string(output_file, "/home/zyp/Lidar/LC-CurveModel/simulation/data/points.txt", "输出文件的路径");
-DEFINE_string(ref_points_file, "/home/zyp/Lidar/LC-CurveModel/simulation/data/ref_points.txt", "参考点文件的路径");
+DEFINE_string(yaml_file, "/home/gct/LC_Modelcurve/simulation/config/points.yaml", "配置文件的路径");
+DEFINE_string(output_file, "/home/gct/LC_Modelcurve/simulation/data/points.txt", "输出文件的路径");
+DEFINE_string(ref_points_file, "/home/gct/LC_Modelcurve/simulation/data/ref_points.txt", "参考点文件的路径");
 DEFINE_double(noise, 0.01, "高斯噪声的标准差");
 
 void loadYaml(const std::string &file_name, int &points_num, double &y_base, Eigen::Vector3d &start_point, Eigen::Vector3d &end_point, Eigen::Vector3d &mid_point)

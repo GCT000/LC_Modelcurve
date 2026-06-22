@@ -14,7 +14,6 @@
 #include <fstream>
 #include <Eigen/Dense>
 #include "camera.h"
-#include "matcher.h"
 
 namespace lc_core
 {

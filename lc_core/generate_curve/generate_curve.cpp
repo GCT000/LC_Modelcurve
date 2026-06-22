@@ -58,7 +58,7 @@ std::vector<cv::Point2d> GenerateNewCurve(const std::vector<cv::Point2d> &origin
 
 void DrawCurves(const std::vector<cv::Point2d> &original_points,
                 const std::vector<cv::Point2d> &new_curve,
-                const std::string &save_path = "/home/gct/LC-CurveModel/data/1-13guangzhou/curve_fitting_result.png")
+                const std::string &save_path = "/home/gct/LC_Modelcurve/data/1-13guangzhou/curve_fitting_result.png")
 {
     // 1. 计算坐标范围，确定画布大小（添加边距避免点超出画布）
     double x_min = original_points[0].x, x_max = original_points[0].x;
@@ -137,7 +137,7 @@ int main(int argc, char **argv)
 {
     // 1. 读取像素坐标数据
     std::vector<cv::Point2d> pixel_points;
-    std::string filename = "/home/gct/LC-CurveModel/data/temp/curve_points.txt"; // 文件路径（根据实际情况修改）
+    std::string filename = "/home/gct/LC_Modelcurve/data/temp/curve_points.txt"; // 文件路径（根据实际情况修改）
 
     if (!ReadPixelPoints(filename, pixel_points))
     {
@@ -151,7 +151,7 @@ int main(int argc, char **argv)
     const int total_points = pixel_points.size();
     double last_point_weight = 1.0;
 
-    //std::ofstream ofs("/home/gct/LC-CurveModel/data/1-13guangzhou/generate_curve.txt", std::ios::trunc);
+    //std::ofstream ofs("/home/gct/LC_Modelcurve/data/1-13guangzhou/generate_curve.txt", std::ios::trunc);
     // 3. 为每个数据点添加代价函数
     for (int i = 0; i < total_points; ++i)
     {

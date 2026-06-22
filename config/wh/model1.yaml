@@ -22,16 +22,16 @@ image_path: "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_13.png"
 # lidar points path
 lidar_points_path: "/ssd/DATA/Transmisson/0912/test5/line_10.pcd"
 # res path
-res_path: "/home/zyp/Lidar/LC-CurveModel/res/wh/"
+res_path: "/home/gct/LC_Modelcurve/res/wh/"
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0912_line10.txt"
+selected_points: "/home/gct/LC_Modelcurve/temp/points_0912_line10.txt"
 
 # ex optimization
 ex_optimization: 0
-ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/temp/wh_lidar.txt"
-ref_image_points: "/home/zyp/Lidar/LC-CurveModel/temp/wh_ex.txt"
+ref_lidar_points: "/home/gct/LC_Modelcurve/temp/wh_lidar.txt"
+ref_image_points: "/home/gct/LC_Modelcurve/temp/wh_ex.txt"
 
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1

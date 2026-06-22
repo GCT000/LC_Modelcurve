@@ -15,6 +15,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
 
+typedef std::vector<cv::Point2d> P2PMatchResult;
+
 namespace lc_core
 {
 

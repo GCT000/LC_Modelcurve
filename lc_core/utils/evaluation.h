@@ -12,15 +12,16 @@
 #include <vector>
 #include <opencv2/core/types.hpp>
 
+typedef std::vector<cv::Point2d> P2PMatchResult;
+
 namespace lc_core
 {
 
 ///@brief  average reproject error in image plane
-std::pair<double, double> calculateReprojectError(const Matcher::MatchResult& result,
+std::pair<double, double> calculateReprojectError(const P2PMatchResult& result,
                                                     const std::vector<cv::Point2d>& curve_points);
 
 std::pair<double, double> calMatchError(const P2PMatchResult& result, const std::vector<cv::Point2d>& curve_points);
-std::pair<double, double> calMatchError(const P2LMatchResult& result, const std::vector<cv::Point2d>& curve_points);
 
 }
 

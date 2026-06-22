@@ -18,41 +18,19 @@ namespace lc_core
 {
 
 typedef std::vector<cv::Point2d> P2PMatchResult;
-typedef std::vector<std::pair<double, double>> P2LMatchResult;
-
-struct MatcherConfig {
-    int type;
-};
 
 class Matcher {
 public:
-    enum class MatcherType {
-        P2P = 1,    // point to point
-        P2L = 2     // point to line
-    };
-
     /// @brief  constructor
-    Matcher(const MatcherConfig& config);
+    Matcher(){};
 
     /// @brief  match interface
-    using MatchResult = std::variant<P2PMatchResult, P2LMatchResult>;
-    MatchResult match(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
+    P2PMatchResult match(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
 
     /// @brief  point to point match
     P2PMatchResult p2pMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
 
-    /// @brief  point to line match
-    P2LMatchResult p2lMatch(const std::vector<cv::Point2d>& input, const std::vector<cv::Point2d>& source);
-
-    /// @brief  get match type
-    MatcherType matcher_type() const {
-        return matcher_type_;
-    }
-
-    void buildKdTree(const std::vector<cv::Point2d>& points);
-
 private:
-    MatcherType matcher_type_;
     std::unique_ptr<KdTree> kd_tree_;
 };
 

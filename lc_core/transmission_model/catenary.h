@@ -10,6 +10,8 @@
 
 #include "transmissionModel.h"
 
+typedef std::vector<cv::Point2d> P2PMatchResult;
+
 namespace lc_core
 {
 
@@ -23,9 +25,7 @@ public:
 
     Eigen::Vector3d generateSinglePoint(const double &y) override;
 
-    void optimizeTransmissionModel(const P2LMatchResult& lines, const OptimizationInput& input, int y_optimize = 0) override;
-
-    void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input, int y_optimize = 0, int time = 1) override;
+    void optimizeTransmissionModel(const P2PMatchResult& points, const OptimizationInput& input) override;
 
     void optimizeTransmissionModelDark(const Eigen::Vector3d& end_point) override;
 

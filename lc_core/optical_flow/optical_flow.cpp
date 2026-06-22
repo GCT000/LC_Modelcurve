@@ -1,6 +1,6 @@
 #include "optical_flow.h"
 
-DEFINE_string(yaml, "/home/gct/LC-CurveModel/config/whu/optical_flow.yaml", "yaml文件");
+DEFINE_string(yaml, "/home/gct/LC_Modelcurve/config/whu/optical_flow.yaml", "yaml文件");
 
 using namespace lc_core;
 Optical_flow::Optical_flow() {};

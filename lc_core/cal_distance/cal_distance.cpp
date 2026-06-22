@@ -16,7 +16,7 @@ void Cal_distance::load_pcd_file()
 void Cal_distance::cloud_tunnel_filter()
 {
     auto start = std::chrono::steady_clock::now();
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered = boost::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_filtered = pcl::make_shared<pcl::PointCloud<pcl::PointXYZ>>();
     pcl::KdTreeFLANN<pcl::PointXYZ> kdtree;
     kdtree.setEpsilon(0.0);
     kdtree.setSortedResults(false);

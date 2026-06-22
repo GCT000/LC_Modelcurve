@@ -1,10 +1,3 @@
-/**
- * @file    curve_factor.h
- * @brief   Curve factor(p2p match) for ceres optimization
- * @author  Yipeng Zhao
- * @date    2024-09
- */
-
 #ifndef CATENARY_P2P_FACTOR_H
 #define CATENARY_P2P_FACTOR_H
 
@@ -72,17 +65,10 @@ namespace lc_core
     class CatenaryP2PFactorA : public ceres::SizedCostFunction<1, 1, 1, 1, 1, 1, 1>
     {
     public:
-        CatenaryP2PFactorA(const cv::Point2d &_img_p, const double &_y, const Trans &_Tcl, std::shared_ptr<Camera> _cam, const WeightType &_weight_type = WeightType::Equal)
-            : img_p(_img_p), y(_y), Tcl(_Tcl), cam(_cam), weight_type(_weight_type)
+        CatenaryP2PFactorA(const cv::Point2d &_img_p, const double &_y, const Trans &_Tcl, std::shared_ptr<Camera> _cam)
+            : img_p(_img_p), y(_y), Tcl(_Tcl), cam(_cam)
         {
-            if (weight_type != WeightType::Distance)
-            {
-                sqrt_info = sqrt(ceres::abs(_y));
-            }
-            else
-            {
-                sqrt_info = 1.0;
-            }
+            sqrt_info = 1.0;
         }
         virtual ~CatenaryP2PFactorA() {};
 

@@ -13,71 +13,28 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
 
-# yaml-cpp
 find_package(yaml-cpp REQUIRED)
-set(yaml-cpp_INCLUDE_DIRS /usr/include/yaml-cpp)
-include_directories(${yaml-cpp_INCLUDE_DIRS})
-message(WARNING ${yaml-cpp_INCLUDE_DIRS})
-
-# Ceres
-set(Ceres_DIR /usr/lib/cmake/Ceres)
 find_package(Ceres REQUIRED)
-include_directories(${CERES_INCLUDE_DIRS})
-message(WARNING ${CERES_INCLUDE_DIRS})
-# eigen 3
 find_package(Eigen3 REQUIRED)
-include_directories(${EIGEN3_INCLUDE_DIRS})
-
-# #glog
-include_directories(/usr/include)
-
-if(NOT TARGET glog::glog)
-    add_library(glog::glog UNKNOWN IMPORTED)
-    set_target_properties(glog::glog PROPERTIES
-        IMPORTED_LOCATION /usr/lib/x86_64-linux-gnu/libglog.so
-        INTERFACE_INCLUDE_DIRECTORIES /usr/include
-    )
-endif()
-
-
-# gflags
+find_package(glog REQUIRED)
 find_package(gflags REQUIRED)
-include_directories(${gflags_INCLUDE_DIRS})
-message(WARNING ${gflags_LIBRARIES})
-
-# gtest
 find_package(GTest REQUIRED)
-include_directories(${GTEST_INCLUDE_DIRS})
-
-# opencv 4
 find_package(OpenCV 4 REQUIRED)
-include_directories(${OpenCV_INCLUDE_DIRS})
-
-# pcl
 find_package(PCL REQUIRED)
+find_package(TBB REQUIRED)
+find_package(VTK REQUIRED)
+
+include_directories(${gflags_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS})
 include_directories(${PCL_INCLUDE_DIRS})
+include_directories(${VTK_INCLUDE_DIRS})
+message(WARNING glog::glog)
 
-#rosbag
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  rosbag
-  sensor_msgs
-)
-include_directories(${catkin_INCLUDE_DIRS})
-
-# find_package(TBB REQUIRED)
-set(TBB_INCLUDE_DIRS "/usr/local/include")
-set(TBB_LIBRARIES "/usr/lib/x86_64-linux-gnu/libtbb.so")
-
-include_directories(${TBB_INCLUDE_DIRS})
 
 include_directories(${PROJECT_SOURCE_DIR}/lc_core/camera)
 include_directories(${PROJECT_SOURCE_DIR}/lc_core/fileio)
 include_directories(${PROJECT_SOURCE_DIR}/lc_core/line)
-# include_directories(${PROJECT_SOURCE_DIR}/thirdparty/CannyLines/src)
 
-
-# add_subdirectory(thirdparty/CannyLines)
 add_subdirectory(lc_simulation)
 add_subdirectory(lc_core)
 add_subdirectory(lc_preprocess)

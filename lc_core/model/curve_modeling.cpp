@@ -1,7 +1,5 @@
 // TODO: case of multiple curves
 #include "curve_modeling.h"
-#include "curve_factor.h"
-#include "curve_factor_p2p.h"
 #include "bSpline.h"
 #include "evaluation.h"
 #include "visualization.h"
@@ -19,16 +17,11 @@ using namespace lc_core;
 static int bSplineNum;
 static double sample;
 static std::vector<double> xySamples, xySamplesUsed;
-static int y_optimize = 0;
 #ifdef MY_DEBUG
-static std::string temp_path = "/home/gct/LC-CurveModel/data/temp/";
+static std::string temp_path = "/home/gct/LC_Modelcurve/data/temp/";
 #endif
 static bool dark = false;
 
-bool CurveModeling::if_no_end_point()
-{
-    return (end_point[0] == 0.0) && (end_point[1] == 0.0) && (end_point[2] == 0.0);
-}
 
 std::pair<pcl::PointCloud<pcl::PointXYZ>::Ptr, std::vector<std::string>> CurveModeling::get_cal_distance_files()
 {
@@ -41,11 +34,6 @@ void CurveModeling::set_end_point(const Eigen::Vector4f &point)
     end_point[1] = point[1];
     end_point[2] = point[2];
     LOG(INFO) << "Set end point : [" << end_point[0] << "、" << end_point[1] << "、" << end_point[2] << "]";
-}
-
-std::pair<std::vector<std::string>, Eigen::Vector4f> CurveModeling::get_files_point()
-{
-    return std::make_pair(pcd_files, end_point_wgs84);
 }
 
 void savePcd2Txt(const std::string &pcd_file, const std::string &txt_file)
@@ -64,6 +52,8 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
     first_time = false;
     is_track = true;
     YAML::Node yaml = YAML::LoadFile(yaml_file);
+    transmission_model_ = std::make_shared<Catenary>();
+    matcher_ = std::make_shared<Matcher>();
     if (yaml["res_path"])
     {
         res_path = yaml["res_path"].as<std::string>();
@@ -104,22 +94,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
             exit(EXIT_FAILURE);
         }
     }
-    if (yaml["end_point_wgs84"])
-    {
-        std::vector<double> end_point_wgs84_tmp = yaml["end_point_wgs84"].as<std::vector<double>>();
-        end_point_wgs84 << end_point_wgs84_tmp[0], end_point_wgs84_tmp[1], end_point_wgs84_tmp[2], 1;
-    }
-
-    if (yaml["source_file"])
-    {
-        std::string source_file = yaml["source_file"].as<std::string>();
-        pcd_files.push_back(source_file);
-    }
-    if (yaml["target_file"])
-    {
-        std::string target_file = yaml["target_file"].as<std::string>();
-        pcd_files.push_back(target_file);
-    }
 
     if (yaml["raw_pcd_file"])
     {
@@ -154,14 +128,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
                 exit(EXIT_FAILURE);
             }
         }
-    }
-    if (yaml["ndt_paragram"])
-    {
-        ndt = yaml["ndt_paragram"].as<std::vector<float>>();
-    }
-    if (yaml["icp_paragram"])
-    {
-        icp = yaml["icp_paragram"].as<std::vector<float>>();
     }
     if (yaml["cal_distance_paragram"])
     {
@@ -311,31 +277,6 @@ CurveModeling::CurveModeling(const std::string &yaml_file)
         sample = yaml["sample"].as<double>();
         LOG(INFO) << "Sample interval: " << sample << "\n";
     }
-
-    if (yaml["matcher_type"])
-    {
-        MatcherConfig config;
-        config.type = yaml["matcher_type"].as<int>();
-        matcher_ = std::make_shared<Matcher>(config);
-    }
-
-    if (yaml["transmission_model"])
-    {
-        int transmission_model_type = yaml["transmission_model"].as<int>();
-        if (transmission_model_type == 0)
-        {
-            transmission_model_ = std::make_shared<Parabola>();
-        }
-        else
-        {
-            transmission_model_ = std::make_shared<Catenary>();
-        }
-    }
-
-    if (yaml["y_optimize"])
-    {
-        y_optimize = yaml["y_optimize"].as<int>();
-    }
 }
 
 CurveModeling::~CurveModeling()
@@ -422,7 +363,7 @@ void CurveModeling::getCylinderCloud(std::vector<Eigen::Vector3d> &points_,
                                      float cylinder_radius)        
 {
     float extend_distance = 5;
-    // std::string output_pcd_path = "/home/gct/LC-CurveModel/data/1-13guangzhou/temp/1.pcd";
+    // std::string output_pcd_path = "/home/gct/LC_Modelcurve/data/1-13guangzhou/temp/1.pcd";
     if (!std::filesystem::exists(std::filesystem::path(raw_pcd_file)))
     {
         LOG(ERROR) << "Not the first solution and missing the original point cloud file";
@@ -476,33 +417,6 @@ void CurveModeling::getCylinderCloud(std::vector<Eigen::Vector3d> &points_,
     }
 }
 
-
-
-void CurveModeling::getFilteredLine(std::vector<Eigen::Vector3d> &lidar_points, std::vector<Eigen::Vector3d> &line_points)
-{
-    for (const Eigen::Vector3d &lp : lidar_points)
-    {
-        bool is_true_point = false;
-        Eigen::Vector2d p_img = lidar2pixel(lp);
-        for (const auto &p : img_points_)
-        {
-            double x = p.x - p_img.x();
-            double y = p.y - p_img.y();
-            double dis = x * x + y * y;
-            if (dis < 2500)
-            {
-                is_true_point = true;
-                break;
-            }
-        }
-        if (is_true_point)
-        {
-            line_points.push_back(lp);
-        }
-    }
-    LOG(INFO) << "After filtered line cloud size: " << line_points.size();
-}
-
 void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
 {
     lc_core::LoadPCD input_pcd;
@@ -517,7 +431,6 @@ void CurveModeling::loadLidarPoints(const std::string &lidar_points_path)
     {
         //getRectangle(lidar_points);
         getCylinderCloud(lidar_points,4);
-        //getFilteredLine(lidar_points, line_points);
         LineExtractor line_extractor;
         line_extractor.extractTwoLinesIsolated(lidar_points,
                                               line_points,    
@@ -632,9 +545,9 @@ void CurveModeling::curveLidarFitting()
     // fit transmission model
     transmission_model_->fitTransmissionModel(lidar_points_, end_point, cov_t, cov_f, para);
 
-    LOG(INFO) << "SIGMA_XY " << "    " << cov_t[0] << "    " << cov_t[1] << "    " << cov_t[2] << "    " << cov_t[3] << "    " << cov_t[4] << "    " << cov_t[5];
-    LOG(INFO) << "SIGMA_XZ " << "    " << cov_f[0] << "    " << cov_f[1] << "    " << cov_f[2] << "    " << cov_f[3] << "    " << cov_f[4] << "    " << cov_f[5];
-    LOG(INFO) << "Lidar points size after fitting: " << lidar_points_.size() << "\n";
+    // LOG(INFO) << "SIGMA_XY " << "    " << cov_t[0] << "    " << cov_t[1] << "    " << cov_t[2] << "    " << cov_t[3] << "    " << cov_t[4] << "    " << cov_t[5];
+    // LOG(INFO) << "SIGMA_XZ " << "    " << cov_f[0] << "    " << cov_f[1] << "    " << cov_f[2] << "    " << cov_f[3] << "    " << cov_f[4] << "    " << cov_f[5];
+     LOG(INFO) << "Lidar points size after fitting: " << lidar_points_.size() << "\n";
 }
 
 void CurveModeling::generateCurveImagePoints(const std::string &selected_points)
@@ -767,7 +680,7 @@ void CurveModeling::optimization()
         transmission_model_->set_first_time();
     }
 
-    Matcher::MatchResult result = matcher_->match(ori_lidar2img_points_, img_points_);
+    P2PMatchResult result = matcher_->match(ori_lidar2img_points_, img_points_);
     auto [avg_err, max_err] = calculateReprojectError(result, ori_lidar2img_points_);
     LOG(INFO) << "Original match reproject error, max: " << max_err << " , avg: " << avg_err << "\n";
 
@@ -777,8 +690,7 @@ void CurveModeling::optimization()
 
     OptimizationInput input(xySamplesUsed, R_c_l_, t_c_l_, end_point, cam_);
     // Perform optimization based on the matching result
-    std::visit([this, &input](auto &&matchResult)
-               { transmission_model_->optimizeTransmissionModel(matchResult, input, y_optimize); }, result);
+    transmission_model_->optimizeTransmissionModel(result, input);
 
     // output 3D points to txt file
     output3DPointsToTxt(res_path + "middle_output_lidar_points.txt");
@@ -884,7 +796,7 @@ void CurveModeling::updateMatchAndReOptimization(const OptimizationInput &input)
     // re-optimization
     if (avg_err > 4.0)
     {
-        transmission_model_->optimizeTransmissionModel(points, input, y_optimize, 2);
+        transmission_model_->optimizeTransmissionModel(points, input);
     }
 }
 
@@ -984,7 +896,6 @@ void CurveModeling::optical_flow()
     if (!pp.Is_track())
     {
         img_points_ = pp.Get_pre_point();
-        LOG(INFO) << "  SDFDSFSDFSDFSDF" << img_points_.size();
         is_track = false;
         LOG(INFO) << "Fail to track img";
         return;
@@ -994,7 +905,6 @@ void CurveModeling::optical_flow()
         pp.reInterpolate();
         img_points_ = pp.get_cur_points();
         pp.visualizeReInterpolated(img_);
-
         outputPoints(curve_point_file, img_points_);
         is_track = true;
         LOG(INFO) << "Finish optical_flow";

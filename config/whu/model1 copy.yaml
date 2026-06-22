@@ -1,0 +1,28 @@
+dark: 1
+cam_calib: cam0.yaml
+end_point: [351.22399899999999, -0.1406, -19.795999999999999]
+raw_pcd_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/extracted.pcd
+matched_point_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/matched_points.pcd
+tunnel_cloud_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/filtered_cloud.pcd
+point_txt_file: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/matched_points.txt
+cal_distance_paragram: [0.3, 50, 30, 0.2, 0.15]
+rectang_size: [94.10, 116.958, 5.847, 6.428, 6.39, 11.43]
+xy_interval:
+  start: -0.14
+  end: 8.428
+curve_point_file: /home/gct/LC_Modelcurve/data/temp/curve_points.txt
+last_image_path: /home/gct/LC_Modelcurve/data/26-06-15-17-18-10/image.png
+image_path: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/image.png
+lidar_points_path: /home/gct/LC_Modelcurve/data/26-06-15-17-10-52/1.pcd
+res_path: /home/gct/LC_Modelcurve/data/26-06-15-17-22-10/
+selected_points: /home/gct/LC_Modelcurve/data/26-06-15-17-10-52/image_points_1.txt
+ex_optimization: 0
+ref_lidar_points: /home/gct/LC_Modelcurve/data/lidar_ref_0103.txt
+ref_image_points: /home/gct/LC_Modelcurve/data/image_ref_0103.txt
+b_spline_num: 1000
+sample: 0.01
+T_cam_lidar:
+  rows: 4
+  cols: 4
+  dt: d
+  data: [-0.0167814, -0.999835, 0.0038292, -0.0025305, -0.0125737, 0.013906, -1.00001, 0.0922477, 0.999929, -0.0100499, -0.1180603, -0.127265, 0.0, 0.0, 0.0, 1.0]

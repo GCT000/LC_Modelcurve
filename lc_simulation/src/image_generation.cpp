@@ -17,9 +17,9 @@
 #include <sstream>
 #include <opencv2/highgui/highgui.hpp>
 
-DEFINE_string(camera_yaml_file, "/home/zyp/Lidar/LC-CurveModel/simulation/config/cam0.yaml", "相机内参");
-DEFINE_string(input_points_file, "/home/zyp/Lidar/LC-CurveModel/simulation/data/points.txt", "输入点");
-DEFINE_string(output_image, "/home/zyp/Lidar/LC-CurveModel/simulation/data/image.png", "输出图像");
+DEFINE_string(camera_yaml_file, "/home/gct/LC_Modelcurve/simulation/config/cam0.yaml", "相机内参");
+DEFINE_string(input_points_file, "/home/gct/LC_Modelcurve/simulation/data/points.txt", "输入点");
+DEFINE_string(output_image, "/home/gct/LC_Modelcurve/simulation/data/image.png", "输出图像");
 DEFINE_bool(debug, false, "是否输出点坐标调试信息");
 
 int main(int argc, char **argv)
@@ -65,7 +65,7 @@ int main(int argc, char **argv)
         points.push_back(R * Eigen::Vector3d(x, y, z) + Eigen::Vector3d(-0.5, 0.2, 0.0));
     }
     file.close();
-    if (FLAGS_debug) lc_core::outputPoints("/home/zyp/Lidar/LC-CurveModel/simulation/data/camera_points.txt", points);
+    if (FLAGS_debug) lc_core::outputPoints("/home/gct/LC_Modelcurve/simulation/data/camera_points.txt", points);
 
     std::vector<cv::Point2f> image_points;
     for (auto p : points)
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
         }
         image_points.push_back(cv::Point2f(image_point.x(), image_point.y()));
     }
-    if (FLAGS_debug) lc_core::outputPoints("/home/zyp/Lidar/LC-CurveModel/simulation/data/image_points.txt", image_points);
+    if (FLAGS_debug) lc_core::outputPoints("/home/gct/LC_Modelcurve/simulation/data/image_points.txt", image_points);
 
     // generate image
     cv::Mat image = cv::Mat::zeros(camera->img_h_, camera->img_w_, CV_8UC3);

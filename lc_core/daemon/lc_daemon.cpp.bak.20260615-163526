@@ -1,0 +1,148 @@
+/**
+ * @file   lc_daemon.cpp
+ * @brief  Daemon to monitor /home/gct/data and invoke curve program
+ * @author Generated
+ * @date   2026-06
+ */
+
+#include <sys/inotify.h>
+#include <sys/stat.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <errno.h>
+#include <regex>
+#include <chrono>
+#include <thread>
+#include <glog/logging.h>
+#include <gflags/gflags.h>
+#include "yaml_patcher.h"
+
+DEFINE_string(data_root, "/home/gct/LC_Modelcurve/data", "Data root directory to monitor");
+DEFINE_string(yaml_path, "/home/gct/LC_Modelcurve/config/whu/model1.yaml", "YAML config file");
+DEFINE_string(curve_bin, "/home/gct/LC_Modelcurve/bin/curve", "Curve executable path");
+DEFINE_string(daemon_log_dir, "/home/gct/LC_Modelcurve/data/lc_daemon_logs", "Daemon log directory");
+
+constexpr size_t EVENT_SIZE = sizeof(struct inotify_event);
+constexpr size_t BUF_LEN = 1024 * (EVENT_SIZE + 16);
+
+std::string getCurrentImagePath() {
+    try {
+        YAML::Node config = YAML::LoadFile(FLAGS_yaml_path);
+        return config["image_path"].as<std::string>();
+    } catch (...) {
+        return "";
+    }
+}
+
+bool waitForFiles(const std::string& folder, int timeout_sec = 60) {
+    std::string pcd_file = folder + "/extracted.pcd";
+    std::string png_file = folder + "/image_1.png";
+
+    for (int i = 0; i < timeout_sec; ++i) {
+        struct stat pcd_info, png_info;
+        if (stat(pcd_file.c_str(), &pcd_info) == 0 &&
+            stat(png_file.c_str(), &png_info) == 0) {
+            LOG(INFO) << "Files ready in folder: " << folder;
+            return true;
+        }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
+    LOG(ERROR) << "Timeout waiting for files in: " << folder;
+    return false;
+}
+
+void runCurve(const std::string& log_dir) {
+    pid_t pid = fork();
+    if (pid == 0) {
+        std::string yaml_arg = "-yaml=" + FLAGS_yaml_path;
+        std::string dir_arg = "-dir=" + log_dir;
+        char* args[] = {
+            const_cast<char*>(FLAGS_curve_bin.c_str()),
+            const_cast<char*>(yaml_arg.c_str()),
+            const_cast<char*>(dir_arg.c_str()),
+            const_cast<char*>("-visualize=false"),
+            nullptr
+        };
+        execv(FLAGS_curve_bin.c_str(), args);
+        LOG(ERROR) << "execv failed: " << strerror(errno);
+        exit(EXIT_FAILURE);
+    } else if (pid > 0) {
+        int status;
+        waitpid(pid, &status, 0);
+        if (WIFEXITED(status)) {
+            int exit_code = WEXITSTATUS(status);
+            if (exit_code == 0) {
+                LOG(INFO) << "curve completed successfully";
+            } else {
+                LOG(ERROR) << "curve exited with code: " << exit_code;
+            }
+        }
+    } else {
+        LOG(ERROR) << "fork failed: " << strerror(errno);
+    }
+}
+
+int main(int argc, char** argv) {
+    google::ParseCommandLineFlags(&argc, &argv, true);
+
+    mkdir(FLAGS_daemon_log_dir.c_str(), 0777);
+    google::InitGoogleLogging(argv[0]);
+    FLAGS_colorlogtostderr = true;
+    FLAGS_minloglevel = google::INFO;
+    FLAGS_alsologtostderr = true;
+    FLAGS_log_dir = FLAGS_daemon_log_dir;
+    google::SetLogFilenameExtension(".log");
+
+    LOG(INFO) << "LC-CurveModel daemon started";
+    LOG(INFO) << "Monitoring: " << FLAGS_data_root;
+
+    int fd = inotify_init();
+    if (fd < 0) {
+        LOG(FATAL) << "inotify_init failed: " << strerror(errno);
+    }
+
+    int wd = inotify_add_watch(fd, FLAGS_data_root.c_str(), IN_CREATE);
+    if (wd < 0) {
+        LOG(FATAL) << "inotify_add_watch failed: " << strerror(errno);
+    }
+
+    std::regex date_pattern(R"(\d{4}-\d{2}-\d{2}-\d{2}-\d{2})");
+    char buffer[BUF_LEN];
+    bool first_time = true;
+
+    while (true) {
+        int length = read(fd, buffer, BUF_LEN);
+        if (length < 0) {
+            LOG(ERROR) << "read failed: " << strerror(errno);
+            continue;
+        }
+
+        int i = 0;
+        while (i < length) {
+            struct inotify_event* event = (struct inotify_event*)&buffer[i];
+            if (event->mask & IN_CREATE && event->len > 0) {
+                std::string name(event->name);
+                if (std::regex_match(name, date_pattern)) {
+                    std::string new_folder = FLAGS_data_root + "/" + name;
+                    LOG(INFO) << "New date folder detected: " << new_folder;
+
+                    if (waitForFiles(new_folder)) {
+                        std::string prev_image = getCurrentImagePath();
+                        if (first_time) {
+                            lc_daemon::patchYamlFull(FLAGS_yaml_path, new_folder, prev_image);
+                            first_time = false;
+                        } else {
+                            lc_daemon::patchYamlIncremental(FLAGS_yaml_path, new_folder, prev_image);
+                        }
+                        runCurve(new_folder + "/log");
+                    }
+                }
+            }
+            i += EVENT_SIZE + event->len;
+        }
+    }
+
+    inotify_rm_watch(fd, wd);
+    close(fd);
+    return 0;
+}

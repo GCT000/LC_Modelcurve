@@ -1,8 +1,8 @@
 %YAML: 1.0
 
 # line number
-input_path_R: "/home/gct/LC-CurveModel/data/filter_test/lidar_points_Q.txt"
-input_path_Q: "/home/gct/LC-CurveModel/data/filter_test/lidar_points_Q.txt"
-input_path_Q_raw: "/home/gct/LC-CurveModel/data/filter_test/visual_points_R.txt"
-output_path: "/home/gct/LC-CurveModel/data/filter_test/kalman_out_end.txt"
-pcd_path: "/home/gct/LC-CurveModel/data/filter_test/kalman_out.pcd"
+input_path_R: "/home/gct/LC_Modelcurve/data/filter_test/lidar_points_Q.txt"
+input_path_Q: "/home/gct/LC_Modelcurve/data/filter_test/lidar_points_Q.txt"
+input_path_Q_raw: "/home/gct/LC_Modelcurve/data/filter_test/visual_points_R.txt"
+output_path: "/home/gct/LC_Modelcurve/data/filter_test/kalman_out_end.txt"
+pcd_path: "/home/gct/LC_Modelcurve/data/filter_test/kalman_out.pcd"

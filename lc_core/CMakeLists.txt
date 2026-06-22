@@ -1,23 +1,16 @@
-include_directories(model)
+ include_directories(model)
 include_directories(factor)
 include_directories(utils)
 include_directories(matcher)
 include_directories(transmission_model)
 include_directories(../lc_preprocess/img_preprocess)
-include_directories(cloud_registration)
-include_directories(cal_distance)
-include_directories(gnss/gnss-monitor-tools-v1/include) 
-include_directories(rough_registration)          
+include_directories(cal_distance)     
 include_directories(kf_filter)       
 include_directories(optical_flow)    
 include_directories(generate_curve)                    
-include_directories(line_extractor)         
+include_directories(line_extractor)        
+#include_directories(${CMAKE_SOURCE_DIR}/lc_core)
 
-
-# If this macro definition is turned on, 
-# the optimization elapsed time is reduced by half the time, 
-# but the error at the endpoints increases to the centimeter level.
-# add_definitions(-DMAUNAL_DIFF)
 
 add_library(curveModel_lib SHARED
     camera/camera.cpp
@@ -25,7 +18,6 @@ add_library(curveModel_lib SHARED
     matcher/matcher.cpp
     matcher/kdtree.cpp
     model/curve_modeling.cpp
-    transmission_model/straight_line.cpp
     transmission_model/catenary.cpp
     transmission_model/transmissionModel.cpp
     utils/ex_optimization.cpp
@@ -43,39 +35,27 @@ add_library(camera SHARED
     camera/camera.cpp
 )
 
-add_library(cloud_registration_lib SHARED
-    cloud_registration/cloud_registration.cpp
-)
-
 add_library(cal_distance_lib SHARED
     cal_distance/cal_distance.cpp
 )
 
-add_library(rough_registration_lib SHARED
-    rough_registration/rough_registration.cpp
-)
-
 add_executable(generate_curve generate_curve/generate_curve.cpp)
-target_link_libraries(generate_curve  ${OpenCV_LIBS} ${CERES_LIBRARIES})
-
-add_subdirectory(gnss/gnss-monitor-tools-v1)
-
-# add_executable(rough_registration rough_registration/rough_registration.cpp)
-target_link_libraries(rough_registration_lib curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread ${catkin_LIBRARIES})
+target_link_libraries(generate_curve  ${OpenCV_LIBS} Ceres::ceres)
 
 
-target_link_libraries(curveModel_lib ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp ${OpenCV_LIBS})
-target_link_libraries(cloud_registration_lib ${catkin_LIBRARIES})
-target_link_libraries(cal_distance_lib ${catkin_LIBRARIES})
+target_link_libraries(curveModel_lib PRIVATE Ceres::ceres ${PCL_LIBRARIES} ${VTK_LIBRARIES} glog::glog yaml-cpp::yaml-cpp ${OpenCV_LIBS})
+target_link_libraries(cal_distance_lib )
 
-add_executable(read_imu read_imu.cpp)
-target_link_libraries(read_imu curveModel_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread ${catkin_LIBRARIES})
 add_executable(kf_filter kf_filter/filter.cpp)
-target_link_libraries(kf_filter ${CERES_LIBRARIES} ${PCL_LIBRARIES} glog::glog ${yaml-cpp_LIBRARIES} yaml-cpp)
+target_link_libraries(kf_filter Ceres::ceres ${PCL_LIBRARIES} ${VTK_LIBRARIES} glog::glog  yaml-cpp::yaml-cpp)
 add_executable(optical_flow optical_flow/optical_flow.cpp)
-target_link_libraries(optical_flow glog::glog camera ${yaml-cpp_LIBRARIES} yaml-cpp imgprocess ${OpenCV_LIBS} ${CERES_LIBRARIES})
+target_link_libraries(optical_flow glog::glog camera yaml-cpp::yaml-cpp imgprocess ${OpenCV_LIBS} Ceres::ceres)
 
 enable_testing()
 
 add_executable(curve test.cpp)
-target_link_libraries(curve curveModel_lib DMonitor cloud_registration_lib cal_distance_lib rough_registration_lib ${GTEST_LIBRARIES} ${OpenCV_LIBS} ${TBB_LIBRARIES} pthread)
+target_link_libraries(curve curveModel_lib cal_distance_lib GTest::gtest ${OpenCV_LIBS} TBB::tbb pthread glog::glog)
+
+include_directories(daemon)
+add_executable(lc_daemon daemon/lc_daemon.cpp)
+target_link_libraries(lc_daemon yaml-cpp::yaml-cpp glog::glog gflags ${PCL_LIBRARIES})

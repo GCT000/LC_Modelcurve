@@ -1,0 +1,55 @@
+/**
+ * @file   yaml_patcher.h
+ * @brief  YAML configuration patcher for LC-CurveModel daemon
+ * @author Generated
+ * @date   2026-06
+ */
+
+#ifndef YAML_PATCHER_H
+#define YAML_PATCHER_H
+
+#include <string>
+#include <fstream>
+#include <yaml-cpp/yaml.h>
+#include <glog/logging.h>
+
+namespace lc_daemon {
+
+// First run: update all path fields
+inline void patchYamlFull(const std::string& yaml_path,
+                          const std::string& new_folder,
+                          const std::string& prev_image) {
+    YAML::Node config = YAML::LoadFile(yaml_path);
+
+    config["raw_pcd_file"]       = new_folder + "/extracted.pcd";
+    config["image_path"]         = new_folder + "/image_1.png";
+    config["last_image_path"]    = prev_image;
+    config["matched_point_file"] = new_folder + "/matched_points.pcd";
+    config["tunnel_cloud_file"]  = new_folder + "/filtered_cloud.pcd";
+    config["point_txt_file"]     = new_folder + "/matched_points.txt";
+    config["selected_points"]    = new_folder + "/points.txt";
+    config["res_path"]           = new_folder + "/";
+
+    std::ofstream fout(yaml_path);
+    fout << config;
+    LOG(INFO) << "Full YAML patch for folder: " << new_folder;
+}
+
+// Subsequent runs: only update the three changing fields
+inline void patchYamlIncremental(const std::string& yaml_path,
+                                 const std::string& new_folder,
+                                 const std::string& prev_image) {
+    YAML::Node config = YAML::LoadFile(yaml_path);
+
+    config["raw_pcd_file"]    = new_folder + "/extracted.pcd";
+    config["image_path"]      = new_folder + "/image_1.png";
+    config["last_image_path"] = prev_image;
+
+    std::ofstream fout(yaml_path);
+    fout << config;
+    LOG(INFO) << "Incremental YAML patch for folder: " << new_folder;
+}
+
+} // namespace lc_daemon
+
+#endif

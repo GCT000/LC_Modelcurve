@@ -2,7 +2,7 @@
 #include <glog/logging.h>
 #include <opencv2/highgui/highgui.hpp>
 
-DEFINE_string(points_file, "/home/zyp/Lidar/LC-CurveModel/build/curve_points.txt", "pre-curve points file");
+DEFINE_string(points_file, "/home/gct/LC_Modelcurve/build/curve_points.txt", "pre-curve points file");
 DEFINE_string(pre_img, "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_13.png", "pre-image path");
 DEFINE_string(cur_img, "/home/zyp/HD2/DATA/Transmisson/0912/test5/image_20.png", "current image path");
 

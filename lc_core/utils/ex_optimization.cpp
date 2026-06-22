@@ -110,7 +110,7 @@ void ExOptimization::optimization() {
     // options.max_num_iterations = 8;
     options.trust_region_strategy_type = ceres::LEVENBERG_MARQUARDT;
 
-    problem.AddParameterBlock(q, 4, new ceres::EigenQuaternionParameterization());
+    problem.AddParameterBlock(q, 4, new ceres::QuaternionManifold());
     problem.AddParameterBlock(t, 3);
     problem.SetParameterBlockConstant(t);
 

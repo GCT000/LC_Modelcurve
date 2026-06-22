@@ -168,9 +168,9 @@ bool eigenVectorToPCD(const Eigen::VectorXd& zr,
 
 int main()
 {
-    std::ifstream ifsr("/home/gct/LC-CurveModel/data/filter_test/1747R.txt");
-    std::ifstream ifsq("/home/gct/LC-CurveModel/data/filter_test/1747Q.txt");
-    std::ifstream ifsq_raw("/home/gct/LC-CurveModel/data/filter_test/1742R.txt");
+    std::ifstream ifsr("/home/gct/LC_Modelcurve/data/filter_test/1747R.txt");
+    std::ifstream ifsq("/home/gct/LC_Modelcurve/data/filter_test/1747Q.txt");
+    std::ifstream ifsq_raw("/home/gct/LC_Modelcurve/data/filter_test/1742R.txt");
     if (!ifsr.is_open() || !ifsq.is_open() || !ifsq_raw.is_open())
     {
         std::cout << "error to open R file";
@@ -242,9 +242,9 @@ int main()
     // std::cout << "Z: " << yq <<std::endl;
     // std::cout << "Z: " << yq_raw <<std::endl;
 
-    std::string d1747L_path = "/home/gct/LC-CurveModel/data/filter_test/1747L.pcd";
-    std::string d1747V_path = "/home/gct/LC-CurveModel/data/filter_test/1747V.pcd";
-    std::string d1747VL_path = "/home/gct/LC-CurveModel/data/filter_test/1747VL.pcd";
+    std::string d1747L_path = "/home/gct/LC_Modelcurve/data/filter_test/1747L.pcd";
+    std::string d1747V_path = "/home/gct/LC_Modelcurve/data/filter_test/1747V.pcd";
+    std::string d1747VL_path = "/home/gct/LC_Modelcurve/data/filter_test/1747VL.pcd";
     if (!eigenVectorToPCD(zq, yq ,d1747L_path))
     {
         return -1;

@@ -20,13 +20,13 @@ lidar_points_path: "/ssd/DATA/Transmisson/PJ/data/20241226_0340/extracted/line_6
 
 # points selected
 # Note: please choose points from far away to near
-selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0340_line6.txt"
-# selected_points: "/home/zyp/Lidar/LC-CurveModel/temp/points_0830_line2.txt"
+selected_points: "/home/gct/LC_Modelcurve/temp/points_0340_line6.txt"
+# selected_points: "/home/gct/LC_Modelcurve/temp/points_0830_line2.txt"
 
 # ex optimization
 ex_optimization: 0
-ref_lidar_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/lidar_ref.txt"
-ref_image_points: "/home/zyp/Lidar/LC-CurveModel/lc_tools/points_ref.txt"
+ref_lidar_points: "/home/gct/LC_Modelcurve/lc_tools/lidar_ref.txt"
+ref_image_points: "/home/gct/LC_Modelcurve/lc_tools/points_ref.txt"
 
 # matcher config(1: p2p  2: p2l)
 matcher_type: 1
